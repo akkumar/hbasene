@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
@@ -38,25 +39,24 @@ import org.junit.Test;
 
 public class TestBuildIndex {
 
-  private final static HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
-  private HBaseAdmin admin;
+  private final static HBaseTestingUtility TEST_UTIL;
 
   private static final String TABLE = "buildindex-testtable";
 
   private static final String COLUMN = "col2";
 
-  @Test
-  public void testBuildIndex() throws IOException {
-    BuildTableIndex build = new BuildTableIndex();
-    String dir = System.getProperty("user.dir") + File.separator + "index";
+  private static final String INDEX_DIR = System.getProperty("user.dir")
+      + File.separator + "index";
 
-    String[] args = new String[] { "-indexDir", dir, "-table", TABLE,
-        "-columns", COLUMN };
-    build.run(args);
+  private HBaseAdmin admin;
+
+  static {
+    TEST_UTIL = new HBaseTestingUtility();
   }
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
+    FileUtils.deleteDirectory(new File(INDEX_DIR));
     TEST_UTIL.getConfiguration().setInt("hbase.regionserver.msginterval", 100);
     TEST_UTIL.getConfiguration().setInt("hbase.client.pause", 250);
     TEST_UTIL.getConfiguration().setInt("hbase.client.retries.number", 6);
@@ -85,6 +85,15 @@ public class TestBuildIndex {
     }
     this.admin.addColumn(TABLE, new HColumnDescriptor(COLUMN));
     this.admin.enableTable(TABLE);
+  }
+
+  @Test
+  public void testBuildIndex() throws IOException {
+    BuildTableIndex build = new BuildTableIndex();
+
+    String[] args = new String[] { "-m", "2", "-r", "1", "-indexDir",
+        INDEX_DIR, "-table", TABLE, "-columns", COLUMN };
+    build.run(args);
   }
 
 }
