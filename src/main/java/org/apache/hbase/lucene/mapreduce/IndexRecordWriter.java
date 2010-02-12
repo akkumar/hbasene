@@ -21,6 +21,7 @@
 package org.apache.hbase.lucene.mapreduce;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,17 +30,18 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hbase.lucene.LuceneDocumentWrapper;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexWriter;
 
 /**
  * Writes the records into a Lucene index writer.
  */
-public class IndexRecordWriter 
-extends RecordWriter<ImmutableBytesWritable, LuceneDocumentWrapper> {
+public class IndexRecordWriter extends
+    RecordWriter<ImmutableBytesWritable, LuceneDocumentWrapper> {
 
   static final Log LOG = LogFactory.getLog(IndexRecordWriter.class);
-  
+
   private long docCount = 0;
   private TaskAttemptContext context = null;
   private FileSystem fs = null;
@@ -47,18 +49,24 @@ extends RecordWriter<ImmutableBytesWritable, LuceneDocumentWrapper> {
   private IndexConfiguration indexConf = null;
   private Path perm = null;
   private Path temp = null;
-  
+
   /**
    * Creates a new instance.
    * 
-   * @param context  The task context.
-   * @param fs  The file system.
-   * @param writer  The index writer.
-   * @param indexConf  The index configuration.
-   * @param perm  The permanent path in the DFS.
-   * @param temp  The temporary local path.
+   * @param context
+   *          The task context.
+   * @param fs
+   *          The file system.
+   * @param writer
+   *          The index writer.
+   * @param indexConf
+   *          The index configuration.
+   * @param perm
+   *          The permanent path in the DFS.
+   * @param temp
+   *          The temporary local path.
    */
-  public IndexRecordWriter(TaskAttemptContext context, FileSystem fs, 
+  public IndexRecordWriter(TaskAttemptContext context, FileSystem fs,
       IndexWriter writer, IndexConfiguration indexConf, Path perm, Path temp) {
     this.context = context;
     this.fs = fs;
@@ -67,30 +75,36 @@ extends RecordWriter<ImmutableBytesWritable, LuceneDocumentWrapper> {
     this.perm = perm;
     this.temp = temp;
   }
-  
+
   /**
    * Writes the record into an index.
    * 
-   * @param key  The current key.
-   * @param value  The current value.
-   * @throws IOException When the index is faulty.
-   * @see org.apache.hadoop.mapreduce.RecordWriter#write(java.lang.Object, java.lang.Object)
+   * @param key
+   *          The current key.
+   * @param value
+   *          The current value.
+   * @throws IOException
+   *           When the index is faulty.
+   * @see org.apache.hadoop.mapreduce.RecordWriter#write(java.lang.Object,
+   *      java.lang.Object)
    */
   @Override
   public void write(ImmutableBytesWritable key, LuceneDocumentWrapper value)
-  throws IOException {
+      throws IOException {
     // unwrap and index doc
     Document doc = value.get();
-    writer.addDocument(doc); 
+    writer.addDocument(doc);
     docCount++;
     context.progress();
-  } 
+  }
 
   /**
    * Closes the writer.
    * 
-   * @param context  The current context.
-   * @throws IOException When closing the writer fails.
+   * @param context
+   *          The current context.
+   * @throws IOException
+   *           When closing the writer fails.
    * @see org.apache.hadoop.mapreduce.RecordWriter#close(org.apache.hadoop.mapreduce.TaskAttemptContext)
    */
   @Override
@@ -116,6 +130,7 @@ extends RecordWriter<ImmutableBytesWritable, LuceneDocumentWrapper> {
 
       // copy to perm destination in dfs
       fs.completeLocalOutput(perm, temp);
+      LOG.info("Copied from " + temp + " to " + perm);
       if (LOG.isInfoEnabled()) {
         LOG.info("Copy done.");
       }
@@ -127,8 +142,8 @@ extends RecordWriter<ImmutableBytesWritable, LuceneDocumentWrapper> {
   class HeartbeatsThread extends Thread {
 
     /** Flag to track when to finish. */
-    private boolean closed = false;
-    
+    private AtomicBoolean closed = new AtomicBoolean(false);
+
     /**
      * Runs the thread. Sending heart beats to the framework.
      * 
@@ -137,9 +152,9 @@ extends RecordWriter<ImmutableBytesWritable, LuceneDocumentWrapper> {
     @Override
     public void run() {
       context.setStatus("Closing");
-      while (!closed) {
+      while (!closed.get()) {
         try {
-          context.progress();            
+          context.progress();
           Thread.sleep(1000);
         } catch (InterruptedException e) {
           continue;
@@ -148,14 +163,14 @@ extends RecordWriter<ImmutableBytesWritable, LuceneDocumentWrapper> {
         }
       }
     }
-    
+
     /**
-     * Switches the flag. 
+     * Switches the flag.
      */
     public void setClosed() {
-      closed = true;
+      closed.set(true);
     }
-    
+
   }
-  
+
 }

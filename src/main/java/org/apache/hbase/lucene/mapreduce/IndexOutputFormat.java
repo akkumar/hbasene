@@ -32,6 +32,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hbase.lucene.LuceneDocumentWrapper;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriter.MaxFieldLength;
@@ -71,10 +72,10 @@ public class IndexOutputFormat extends
     final Path temp = context.getConfiguration().getLocalPath(
         "mapred.local.dir", "index/_" + Integer.toString(random.nextInt()));
 
-    LOG.info("To index into " + perm);
+    LOG.info("To index into " + perm +  " using temporary " + temp);
     FileSystem fs = FileSystem.get(context.getConfiguration());
     // delete old, if any
-    fs.delete(perm, true);
+    // fs.delete(perm, true);
 
     final IndexConfiguration indexConf = new IndexConfiguration();
     String content = context.getConfiguration().get("hbase.index.conf");

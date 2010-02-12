@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,6 +35,8 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.Progressable;
+import org.apache.hbase.lucene.IndexConfiguration;
+import org.apache.hbase.lucene.LuceneDocumentWrapper;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexWriter;
@@ -113,7 +116,7 @@ public class IndexOutputFormat extends
     writer.setUseCompoundFile(indexConf.isUseCompoundFile());
 
     return new RecordWriter<ImmutableBytesWritable, LuceneDocumentWrapper>() {
-      boolean closed;
+      AtomicBoolean closed = new AtomicBoolean(false);
       private long docCount = 0;
 
       public void write(ImmutableBytesWritable key, LuceneDocumentWrapper value)
@@ -130,7 +133,7 @@ public class IndexOutputFormat extends
         Thread prog = new Thread() {
           @Override
           public void run() {
-            while (!closed) {
+            while (!closed.get()) {
               try {
                 reporter.setStatus("closing");
                 Thread.sleep(1000);
@@ -166,7 +169,7 @@ public class IndexOutputFormat extends
             LOG.info("Copy done.");
           }
         } finally {
-          closed = true;
+          closed.set(true);
         }
       }
     };

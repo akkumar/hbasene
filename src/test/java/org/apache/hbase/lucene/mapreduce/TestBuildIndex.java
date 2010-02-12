@@ -128,7 +128,8 @@ public class TestBuildIndex {
     String[] args = new String[] { "-r", "1", "-indexDir", INDEX_DIR, "-table",
         TABLE, "-columns", HConstants.CATALOG_FAMILY_STR };
     Job job = build.createSubmittableJob(TEST_UTIL.getConfiguration(), args);
-    job.waitForCompletion(true);
+    boolean status = job.waitForCompletion(true);
+    LOG.info("Job Completed with status " + status);
 
     // Do some search.
     IndexSearcher searcher = new IndexSearcher(FSDirectory.open(new File(

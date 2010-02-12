@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hbase.lucene.mapred;
+package org.apache.hbase.lucene;
 
 import java.io.ByteArrayInputStream;
 import java.io.OutputStream;

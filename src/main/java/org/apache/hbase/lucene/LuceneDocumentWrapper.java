@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hbase.lucene.mapred;
+package org.apache.hbase.lucene;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -28,7 +28,6 @@ import org.apache.lucene.document.Document;
  * A utility class used to pass a lucene document from reduce to OutputFormat.
  * It doesn't really serialize/deserialize a lucene document.
  */
-@Deprecated
 public class LuceneDocumentWrapper implements Writable {
   protected Document doc;
 
