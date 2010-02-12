@@ -132,7 +132,7 @@ public class TestBuildIndex {
 
     // Do some search.
     IndexSearcher searcher = new IndexSearcher(FSDirectory.open(new File(
-        INDEX_DIR + File.separator + "part-00000")));
+        INDEX_DIR + File.separator + "part-r-00000")));
 
     Assert.assertEquals("Total number of docs for searching is 3", 3, searcher
         .getIndexReader().numDocs());
