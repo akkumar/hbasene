@@ -21,6 +21,7 @@
   <properties>
     <lucene.version>3.0.0</lucene.version>
     <log4j.version>1.2.15</log4j.version>
+    <hadoop-core.version>0.21.0-SNAPSHOT</hadoop-core.version>
   </properties>
   <scm>
     <connection>scm:git:git://github.com/akkumar/lucene-hbase.git</connection>
@@ -80,11 +81,51 @@
     </plugins>
   </build>
 
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jxr-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
+
+
+
+  <repositories>
+    <repository>
+
+      <id>apache-snapshot</id>
+      <name>Apache Snapshot repository</name>
+      <url>https://repository.apache.org/content/repositories/snapshots/</url>
+    </repository>
+  </repositories>
+
+
   <dependencies>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <version>${hadoop-core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-mapred</artifactId>
+      <version>${hadoop-core.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-core</artifactId>
       <version>${lucene.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.1.1</version>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
@@ -106,20 +147,15 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
+      <version>0.21.0-SNAPSHOT</version>
+      <systemPath>${basedir}/lib/hbase-0.21.0-dev.jar</systemPath>
+      <scope>system</scope>
+    </dependency>
   </dependencies>
 
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jxr-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </reporting>
 
   <distributionManagement>
     <repository>
