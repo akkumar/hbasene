@@ -114,6 +114,11 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-hdfs</artifactId>
+      <version>${hadoop-core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-mapred</artifactId>
       <version>${hadoop-core.version}</version>
     </dependency>
@@ -128,10 +133,14 @@
       <version>1.1.1</version>
     </dependency>
     <dependency>
+      <groupId>org.mortbay.jetty</groupId>
+      <artifactId>jetty-util</artifactId>
+      <version>6.1.14</version>
+    </dependency>
+    <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <version>${log4j.version}</version>
-      <scope>compile</scope>
       <exclusions>
         <exclusion>
           <groupId>javax.jms</groupId>
@@ -154,18 +163,26 @@
       <systemPath>${basedir}/lib/hbase-0.21.0-dev.jar</systemPath>
       <scope>system</scope>
     </dependency>
-    
+
+
+
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapred-test</artifactId>
+      <artifactId>hadoop-core-test</artifactId>
       <version>${hadoop-core.version}</version>
       <scope>test</scope>
     </dependency>
     
-    
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs-test</artifactId>
+      <version>${hadoop-core.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-mapred-test</artifactId>
       <version>${hadoop-core.version}</version>
       <scope>test</scope>
     </dependency>
@@ -177,8 +194,21 @@
       <systemPath>${basedir}/lib/hbase-0.21.0-dev-test.jar</systemPath>
       <scope>system</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.hadoop.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
+      <version>3.2.2</version>
+      <systemPath>${basedir}/lib/zookeeper-3.2.2.jar</systemPath>
+      <scope>system</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.5.8</version>
       
-            
+    </dependency>
   </dependencies>
 
 

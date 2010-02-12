@@ -113,7 +113,7 @@ public class BuildTableIndex {
         "be specified");
     }
 
-    Configuration conf = new HBaseConfiguration();
+    Configuration conf = HBaseConfiguration.create();
     if (iconfFile != null) {
       // set index configuration content from a file
       String content = readContent(iconfFile);
