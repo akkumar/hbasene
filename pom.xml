@@ -59,7 +59,6 @@
           <target>1.6</target>
         </configuration>
       </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
@@ -98,7 +97,6 @@
 
   <repositories>
     <repository>
-
       <id>apache-snapshot</id>
       <name>Apache Snapshot repository</name>
       <url>https://repository.apache.org/content/repositories/snapshots/</url>
@@ -122,6 +120,15 @@
       <artifactId>hadoop-mapred</artifactId>
       <version>${hadoop-core.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
+      <version>0.21.0-SNAPSHOT</version>
+      <systemPath>${basedir}/lib/hbase-0.21.0-dev.jar</systemPath>
+      <scope>system</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-core</artifactId>
@@ -157,22 +164,25 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase</artifactId>
-      <version>0.21.0-SNAPSHOT</version>
-      <systemPath>${basedir}/lib/hbase-0.21.0-dev.jar</systemPath>
-      <scope>system</scope>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.5.8</version>
     </dependency>
 
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>1.4.3</version>
+    </dependency>
 
-
+    <!--  TEST  -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core-test</artifactId>
       <version>${hadoop-core.version}</version>
       <scope>test</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs-test</artifactId>
@@ -186,7 +196,7 @@
       <version>${hadoop-core.version}</version>
       <scope>test</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-test</artifactId>
@@ -203,12 +213,7 @@
       <scope>system</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.5.8</version>
-      
-    </dependency>
+
   </dependencies>
 
 
