@@ -1,0 +1,13 @@
+Lucene interface with HBase:
+---------------------------
+Released under Apache License 2.0 .  See LICENSE.txt for more details.
+
+
+
+Indexes columns / column families based on Lucene. 
+
+Originally present as part of Apache HBase project. 
+
+Refactored here, under Apache 2.0 License , as before, to be developed independently.
+
+ 
