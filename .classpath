@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="target/dependency/lucene-core-3.0.0.jar"/>
 	<classpathentry kind="lib" path="target/dependency/log4j-1.2.15.jar"/>
@@ -9,5 +10,9 @@
 	<classpathentry kind="lib" path="target/dependency/hadoop-core-0.21.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="target/dependency/hadoop-mapred-0.21.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/hbase-0.21.0-dev.jar"/>
+	<classpathentry kind="lib" path="target/dependency/hadoop-mapred-test-0.21.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="target/dependency/hadoop-hdfs-test-0.21.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="target/dependency/junit-4.5.jar"/>
+	<classpathentry kind="lib" path="lib/hbase-0.21.0-dev-test.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

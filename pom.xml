@@ -154,6 +154,31 @@
       <systemPath>${basedir}/lib/hbase-0.21.0-dev.jar</systemPath>
       <scope>system</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-mapred-test</artifactId>
+      <version>${hadoop-core.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+    
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-hdfs-test</artifactId>
+      <version>${hadoop-core.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-test</artifactId>
+      <version>0.21.0-SNAPSHOT</version>
+      <systemPath>${basedir}/lib/hbase-0.21.0-dev-test.jar</systemPath>
+      <scope>system</scope>
+    </dependency>
+      
+            
   </dependencies>
 
 
