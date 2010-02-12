@@ -83,8 +83,7 @@ public class IndexTableReduce extends MapReduceBase implements
       // each column (name-value pair) is a field (name-value pair)
       for (KeyValue kv: r.list()) {
         // name is already UTF-8 encoded
-        String column = Bytes.toString(KeyValue.makeColumn(kv.getFamily(),
-            kv.getQualifier()));
+        String column = Bytes.toString(kv.getQualifier());
         byte[] columnValue = kv.getValue();
         Field.Store store = indexConf.isStore(column)?
           Field.Store.YES: Field.Store.NO;

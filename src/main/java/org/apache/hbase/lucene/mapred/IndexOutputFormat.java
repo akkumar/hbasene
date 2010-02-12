@@ -21,6 +21,7 @@ package org.apache.hbase.lucene.mapred;
 
 import java.io.IOException;
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.util.Random;
 
 import org.apache.commons.logging.Log;
@@ -38,6 +39,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.Version;
 
 /**
  * Create a local index, unwrap Lucene documents created by reduce, add them to
@@ -51,10 +53,9 @@ public class IndexOutputFormat extends
   private Random random = new Random();
 
   @Override
-  public RecordWriter<ImmutableBytesWritable, LuceneDocumentWrapper>
-  getRecordWriter(final FileSystem fs, JobConf job, String name,
-      final Progressable progress)
-  throws IOException {
+  public RecordWriter<ImmutableBytesWritable, LuceneDocumentWrapper> getRecordWriter(
+      final FileSystem fs, JobConf job, String name, final Progressable progress)
+      throws IOException {
 
     final Path perm = new Path(FileOutputFormat.getOutputPath(job), name);
     final Path temp = job.getLocalPath("index/_"
@@ -74,16 +75,21 @@ public class IndexOutputFormat extends
     String analyzerName = indexConf.getAnalyzerName();
     Analyzer analyzer;
     try {
-      Class<?> analyzerClass = Class.forName(analyzerName);
-      analyzer = (Analyzer) analyzerClass.newInstance();
+      Class<? extends Analyzer> analyzerClass = Class.forName(analyzerName)
+          .asSubclass(Analyzer.class);
+      Constructor<? extends Analyzer> analyzerCtor = analyzerClass
+          .getConstructor(Version.class);
+
+      analyzer = analyzerCtor.newInstance(Version.LUCENE_30);
     } catch (Exception e) {
       throw new IOException("Error in creating an analyzer object "
           + analyzerName);
     }
 
     // build locally first
-    final IndexWriter writer = new IndexWriter(FSDirectory.open(new File(fs.startLocalOutput(perm, temp)
-        .toString())), analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
+    final IndexWriter writer = new IndexWriter(FSDirectory.open(new File(fs
+        .startLocalOutput(perm, temp).toString())), analyzer, true,
+        IndexWriter.MaxFieldLength.LIMITED);
 
     // no delete, so no need for maxBufferedDeleteTerms
     writer.setMaxBufferedDocs(indexConf.getMaxBufferedDocs());
@@ -93,11 +99,14 @@ public class IndexOutputFormat extends
     String similarityName = indexConf.getSimilarityName();
     if (similarityName != null) {
       try {
-        Class<?> similarityClass = Class.forName(similarityName);
-        Similarity similarity = (Similarity) similarityClass.newInstance();
+        Class<? extends Similarity> similarityClass = Class.forName(
+            similarityName).asSubclass(Similarity.class);
+        Constructor<? extends Similarity> ctor = similarityClass
+            .getConstructor(Version.class);
+        Similarity similarity = ctor.newInstance(Version.LUCENE_30);
         writer.setSimilarity(similarity);
       } catch (Exception e) {
-        throw new IOException("Error in creating a similarty object "
+        throw new IOException("Error in creating a similarity object "
             + similarityName);
       }
     }
@@ -107,9 +116,8 @@ public class IndexOutputFormat extends
       boolean closed;
       private long docCount = 0;
 
-      public void write(ImmutableBytesWritable key,
-          LuceneDocumentWrapper value)
-      throws IOException {
+      public void write(ImmutableBytesWritable key, LuceneDocumentWrapper value)
+          throws IOException {
         // unwrap and index doc
         Document doc = value.get();
         writer.addDocument(doc);

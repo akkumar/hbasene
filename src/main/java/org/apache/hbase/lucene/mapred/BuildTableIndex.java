@@ -31,32 +31,32 @@ import org.apache.hadoop.hbase.mapred.IdentityTableMap;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RunningJob;
 
 /**
- * Example table column indexing class.  Runs a mapreduce job to index
- * specified table columns.
- * <ul><li>Each row is modeled as a Lucene document: row key is indexed in
- * its untokenized form, column name-value pairs are Lucene field name-value
- * pairs.</li>
+ * Example table column indexing class. Runs a mapreduce job to index specified
+ * table columns.
+ * <ul>
+ * <li>Each row is modeled as a Lucene document: row key is indexed in its
+ * untokenized form, column name-value pairs are Lucene field name-value pairs.</li>
  * <li>A file passed on command line is used to populate an
  * {@link IndexConfiguration} which is used to set various Lucene parameters,
- * specify whether to optimize an index and which columns to index and/or
- * store, in tokenized or untokenized form, etc. For an example, see the
- * <code>createIndexConfContent</code> method in TestTableIndex
- * </li>
+ * specify whether to optimize an index and which columns to index and/or store,
+ * in tokenized or untokenized form, etc. For an example, see the
+ * <code>createIndexConfContent</code> method in TestTableIndex</li>
  * <li>The number of reduce tasks decides the number of indexes (partitions).
  * The index(es) is stored in the output path of job configuration.</li>
- * <li>The index build process is done in the reduce phase. Users can use
- * the map phase to join rows from different tables or to pre-parse/analyze
- * column content, etc.</li>
+ * <li>The index build process is done in the reduce phase. Users can use the
+ * map phase to join rows from different tables or to pre-parse/analyze column
+ * content, etc.</li>
  * </ul>
  */
 @Deprecated
 public class BuildTableIndex {
-  private static final String USAGE = "Usage: BuildTableIndex " +
-    "-m <numMapTasks> -r <numReduceTasks>\n  -indexConf <iconfFile> " +
-    "-indexDir <indexDir>\n  -table <tableName> -columns <columnName1> " +
-    "[<columnName2> ...]";
+  private static final String USAGE = "Usage: BuildTableIndex "
+      + "-m <numMapTasks> -r <numReduceTasks>\n  -indexConf <iconfFile> "
+      + "-indexDir <indexDir>\n  -table <tableName> -columns <columnName1> "
+      + "[<columnName2> ...]";
 
   private static void printUsage(String message) {
     System.err.println(message);
@@ -70,6 +70,8 @@ public class BuildTableIndex {
   }
 
   /**
+   * Block and do not return until the job is complete.
+   * 
    * @param args
    * @throws IOException
    */
@@ -83,7 +85,7 @@ public class BuildTableIndex {
     String iconfFile = null;
     String indexDir = null;
     String tableName = null;
-    StringBuffer columnNames = null;
+    StringBuilder columnNames = null;
 
     // parse args
     for (int i = 0; i < args.length - 1; i++) {
@@ -98,7 +100,7 @@ public class BuildTableIndex {
       } else if ("-table".equals(args[i])) {
         tableName = args[++i];
       } else if ("-columns".equals(args[i])) {
-        columnNames = new StringBuffer(args[++i]);
+        columnNames = new StringBuilder(args[++i]);
         while (i + 1 < args.length && !args[i + 1].startsWith("-")) {
           columnNames.append(" ");
           columnNames.append(args[++i]);
@@ -109,8 +111,8 @@ public class BuildTableIndex {
     }
 
     if (indexDir == null || tableName == null || columnNames == null) {
-      printUsage("Index directory, table name and at least one column must " +
-        "be specified");
+      printUsage("Index directory, table name and at least one column must "
+          + "be specified");
     }
 
     Configuration conf = HBaseConfiguration.create();
@@ -126,7 +128,8 @@ public class BuildTableIndex {
     if (columnNames != null) {
       JobConf jobConf = createJob(conf, numMapTasks, numReduceTasks, indexDir,
           tableName, columnNames.toString());
-      JobClient.runJob(jobConf);
+      RunningJob runningJob = JobClient.runJob(jobConf);
+      runningJob.waitForCompletion();
     }
   }
 
@@ -140,8 +143,7 @@ public class BuildTableIndex {
    * @return JobConf
    */
   public JobConf createJob(Configuration conf, int numMapTasks,
-      int numReduceTasks, String indexDir, String tableName,
-      String columnNames) {
+      int numReduceTasks, String indexDir, String tableName, String columnNames) {
     JobConf jobConf = new JobConf(conf, BuildTableIndex.class);
     jobConf.setJobName("build index for table " + tableName);
     jobConf.setNumMapTasks(numMapTasks);
@@ -161,11 +163,14 @@ public class BuildTableIndex {
   }
 
   /*
-   * Read xml file of indexing configurations.  The xml format is similar to
-   * hbase-default.xml and hadoop-default.xml. For an example configuration,
-   * see the <code>createIndexConfContent</code> method in TestTableIndex
+   * Read xml file of indexing configurations. The xml format is similar to
+   * hbase-default.xml and hadoop-default.xml. For an example configuration, see
+   * the <code>createIndexConfContent</code> method in TestTableIndex
+   * 
    * @param fileName File to read.
+   * 
    * @return XML configuration read from file
+   * 
    * @throws IOException
    */
   private String readContent(String fileName) throws IOException {
