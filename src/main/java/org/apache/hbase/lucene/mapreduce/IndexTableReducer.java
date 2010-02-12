@@ -80,7 +80,7 @@ implements Configurable {
         Field.Store store = indexConf.isStore(column)?
           Field.Store.YES: Field.Store.NO;
         Field.Index index = indexConf.isIndex(column)?
-          (indexConf.isTokenize(column)?
+          (indexConf.isAnalyze(column)?
             Field.Index.ANALYZED: Field.Index.NOT_ANALYZED):
             Field.Index.NO;
 

@@ -55,12 +55,6 @@ public class IndexConfiguration extends Configuration {
   static final String HBASE_COLUMN_STORE = "hbase.column.store";
   static final String HBASE_COLUMN_INDEX = "hbase.column.index";
   
-  /**
-   * Tokenize property terminology is deprecated in lucene / replaced by analyze.
-   * @see #HBASE_COLUMN_ANALYZE
-   * @deprecated
-   */
-  static final String HBASE_COLUMN_TOKENIZE = "hbase.column.tokenize";
   static final String HBASE_COLUMN_ANALYZE = "hbase.column.analyze";
   
   static final String HBASE_COLUMN_BOOST = "hbase.column.boost";
@@ -140,25 +134,6 @@ public class IndexConfiguration extends Configuration {
     getColumn(columnName).setBoolean(HBASE_COLUMN_STORE, store);
   }
 
-  /**
-   * @deprecated 
-   * See {@link #isAnalyze(String)} for replacement.
-   * @param columnName
-   * @return true, if column needs to be tokenized
-   */
-  public boolean isTokenize(String columnName) {
-    return getColumn(columnName).getBoolean(HBASE_COLUMN_TOKENIZE, true);
-  }
-
-  /**
-   * @deprecated
-   * See {@link #setAnalyze(String, boolean)} for replacement.
-   * @param columnName
-   * @param tokenize
-   */
-  public void setTokenize(String columnName, boolean tokenize) {
-    getColumn(columnName).setBoolean(HBASE_COLUMN_TOKENIZE, tokenize);
-  }
 
   public boolean isAnalyze(String columnName) {
 	    return getColumn(columnName).getBoolean(HBASE_COLUMN_ANALYZE, true);
