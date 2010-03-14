@@ -101,6 +101,11 @@
       <name>Apache Snapshot repository</name>
       <url>https://repository.apache.org/content/repositories/snapshots/</url>
     </repository>
+    <repository>
+      <id>apache-releases</id>
+      <name>Apache Releases repository</name>
+      <url>https://repository.apache.org/content/repositories/releases/</url>
+    </repository>
   </repositories>
 
 
