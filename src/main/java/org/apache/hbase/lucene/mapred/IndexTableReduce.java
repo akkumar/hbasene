@@ -33,8 +33,8 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hbase.lucene.IndexConfiguration;
-import org.apache.hbase.lucene.LuceneDocumentWrapper;
+import org.apache.hbase.lucene.index.IndexConfiguration;
+import org.apache.hbase.lucene.index.LuceneDocumentWrapper;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 

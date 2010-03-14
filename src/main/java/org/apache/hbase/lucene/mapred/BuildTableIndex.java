@@ -32,7 +32,7 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RunningJob;
-import org.apache.hbase.lucene.IndexConfiguration;
+import org.apache.hbase.lucene.index.IndexConfiguration;
 
 /**
  * Example table column indexing class. Runs a mapreduce job to index specified
