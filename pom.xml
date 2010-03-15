@@ -19,7 +19,7 @@
     </license>
   </licenses>
   <properties>
-    <lucene.version>3.0.0</lucene.version>
+    <lucene.version>3.0.1</lucene.version>
     <log4j.version>1.2.15</log4j.version>
     <hadoop-core.version>0.21.0-SNAPSHOT</hadoop-core.version>
   </properties>
