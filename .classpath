@@ -3,7 +3,6 @@
 	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="src" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="target/dependency/lucene-core-3.0.0.jar"/>
 	<classpathentry kind="lib" path="target/dependency/log4j-1.2.15.jar"/>
 	<classpathentry kind="lib" path="target/dependency/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="lib" path="target/dependency/commons-cli-1.2.jar"/>
@@ -22,6 +21,6 @@
 	<classpathentry kind="lib" path="target/dependency/servlet-api-2.5-6.1.14.jar"/>
 	<classpathentry kind="lib" path="target/dependency/avro-1.2.0.jar"/>
 	<classpathentry kind="lib" path="target/dependency/commons-io-1.4.jar"/>
-	<classpathentry kind="lib" path="target/dependency/lucene-queryparser-3.0.0.jar"/>
+	<classpathentry kind="lib" path="target/dependency/lucene-core-3.0.1.jar" sourcepath="/lucene"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
