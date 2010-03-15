@@ -107,7 +107,7 @@ public class HBaseTermEnum extends TermEnum {
     String backingRow = Bytes.toString(writable.get(), writable.getOffset(),
         writable.getLength() - 1 - writable.getOffset());
     int index = backingRow.indexOf(SEPARATOR);
-    if (index == -1) {
+    if (index != -1) {
       String fieldName = backingRow.substring(writable.getOffset(), index);
       String termName = backingRow.substring(index + 1);
       return new Term(fieldName, termName);
