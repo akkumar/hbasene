@@ -21,7 +21,7 @@
   <properties>
     <lucene.version>3.0.1</lucene.version>
     <log4j.version>1.2.15</log4j.version>
-    <hadoop-core.version>0.21.0-SNAPSHOT</hadoop-core.version>
+    <hadoop-core.version>0.20.2</hadoop-core.version>
   </properties>
   <scm>
     <connection>scm:git:git://github.com/akkumar/lucene-hbase.git</connection>
@@ -111,6 +111,18 @@
       <name>Java Net</name>
       <url>http://download.java.net/maven/2</url>
     </repository>
+    <repository>
+      <id>temp-hadoop</id>
+      <name>Hadoop 0.20.1/2 packaging, thrift, zk</name>
+      <url>http://people.apache.org/~rawson/repo/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
+    
   </repositories>
 
 
@@ -121,21 +133,10 @@
       <version>${hadoop-core.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-hdfs</artifactId>
-      <version>${hadoop-core.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapred</artifactId>
-      <version>${hadoop-core.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase</artifactId>
       <version>0.21.0-SNAPSHOT</version>
-      <systemPath>${basedir}/lib/hbase-0.21.0-dev.jar</systemPath>
+      <systemPath>${basedir}/lib/hbase-core-0.21.0-SNAPSHOT.jar</systemPath>
       <scope>system</scope>
     </dependency>
 
@@ -193,30 +194,16 @@
     <!--  TEST  -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core-test</artifactId>
-      <version>${hadoop-core.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-hdfs-test</artifactId>
-      <version>${hadoop-core.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-mapred-test</artifactId>
+      <artifactId>hadoop-test</artifactId>
       <version>${hadoop-core.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-test</artifactId>
+      <artifactId>hbase-core-test</artifactId>
       <version>0.21.0-SNAPSHOT</version>
-      <systemPath>${basedir}/lib/hbase-0.21.0-dev-test.jar</systemPath>
+      <systemPath>${basedir}/lib/hbase-core-0.21.0-SNAPSHOT-tests.jar</systemPath>
       <scope>system</scope>
     </dependency>
 
@@ -226,15 +213,6 @@
       <version>${lucene.version}</version>
       <scope>test</scope>
     </dependency>
-
-    <dependency>
-      <groupId>org.apache.hadoop.zookeeper</groupId>
-      <artifactId>zookeeper</artifactId>
-      <version>3.2.2</version>
-      <systemPath>${basedir}/lib/zookeeper-3.2.2.jar</systemPath>
-      <scope>system</scope>
-    </dependency>
-
 
   </dependencies>
 
