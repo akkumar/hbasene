@@ -38,6 +38,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.nosql.lucene.mapred.hbase.BuildTableIndex;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;

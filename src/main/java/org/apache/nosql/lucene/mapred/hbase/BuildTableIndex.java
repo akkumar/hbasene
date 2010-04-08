@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hbase.lucene.mapred;
+package org.apache.nosql.lucene.mapred.hbase;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,7 +32,7 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RunningJob;
-import org.apache.hbase.lucene.index.IndexConfiguration;
+import org.apache.nosql.lucene.index.IndexConfiguration;
 
 /**
  * Example table column indexing class. Runs a mapreduce job to index specified

@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hbase.lucene.mapred;
+package org.apache.nosql.lucene.mapred.hbase;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -33,10 +33,10 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hbase.lucene.index.IndexConfiguration;
-import org.apache.hbase.lucene.index.LuceneDocumentWrapper;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.nosql.lucene.index.IndexConfiguration;
+import org.apache.nosql.lucene.index.LuceneDocumentWrapper;
 
 /**
  * Construct a Lucene document per row, which is consumed by IndexOutputFormat
