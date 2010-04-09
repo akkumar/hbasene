@@ -111,12 +111,26 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
   }
 
   static byte[] toBytes(final Integer[] array) {
-    String delimiter = Joiner.on(JOIN_CHAR).join(array);
-    return Bytes.toBytes(delimiter);
+    String tf = Joiner.on(JOIN_CHAR).join(array);
+    return Bytes.toBytes(tf);
     // TODO: Rudimentary implementation of a comma-separated join for the
     // representation of integer array in place.
     // A better encoding algorithm for encoding the document Ids might be
     // useful and space efficient.
+  }
+
+  static int getTermFrequency(final byte[] termFreqRepresentation) {
+    if (termFreqRepresentation == null) {
+      return 0;
+    }
+    String tf = Bytes.toString(termFreqRepresentation);
+    int count = 1;
+    for (int i = 0; i < tf.length(); ++i) {
+      if (tf.charAt(i) == JOIN_CHAR) {
+        count++;
+      }
+    }
+    return count;
   }
 
   static byte[] toBytes(final List<Integer> array) {
