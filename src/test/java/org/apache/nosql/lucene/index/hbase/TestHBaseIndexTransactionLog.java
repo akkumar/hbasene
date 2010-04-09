@@ -67,8 +67,7 @@ public class TestHBaseIndexTransactionLog {
       LockObtainFailedException, IOException {
     NoSqlIndexWriter writer = new NoSqlIndexWriter(hbaseIndex, PK_FIELD);
 
-    this.addDocument(writer, "FactTimes",
-        "Messi plays for Barcelona");
+    this.addDocument(writer, "FactTimes", "Messi plays for Barcelona");
     this.addDocument(writer, "UtopiaTimes",
         "Lionel M plays for Manchester United");
 
@@ -92,11 +91,12 @@ public class TestHBaseIndexTransactionLog {
     Result result = scanner.next();
     while (result != null) {
       NavigableMap<byte[], byte[]> map = result.getFamilyMap(family);
+      final StringBuilder sb = new StringBuilder();
       for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
-        LOGGER.info(Bytes.toString(result.getRow()) + "("
-            + Bytes.toString(entry.getKey()) + ", "
+        sb.append(" (" + Bytes.toString(entry.getKey()) + ", "
             + Bytes.toString(entry.getValue()) + ")");
       }
+      LOGGER.info(Bytes.toString(result.getRow()) + sb.toString());
       result = scanner.next();
     }
     table.close();
