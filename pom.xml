@@ -22,6 +22,7 @@
     <lucene.version>3.0.1</lucene.version>
     <log4j.version>1.2.15</log4j.version>
     <hadoop-core.version>0.20.2</hadoop-core.version>
+    <zookeeper.version>3.3.0</zookeeper.version>
   </properties>
   <scm>
     <connection>scm:git:git://github.com/akkumar/lucene-hbase.git</connection>
@@ -128,6 +129,13 @@
       <systemPath>${basedir}/lib/hbase-core-0.21.0-SNAPSHOT.jar</systemPath>
       <scope>system</scope>
     </dependency>
+    
+    
+    <dependency>
+       <groupId>org.apache.hadoop</groupId>
+       <artifactId>zookeeper</artifactId>
+       <version>${zookeeper.version}</version>
+     </dependency>
 
     <dependency>
       <groupId>org.apache.lucene</groupId>
