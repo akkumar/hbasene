@@ -21,7 +21,7 @@
   <properties>
     <lucene.version>3.0.1</lucene.version>
     <log4j.version>1.2.15</log4j.version>
-    <hadoop-core.version>0.20.2</hadoop-core.version>
+    <hadoop-core.version>0.20.2-with-200-826</hadoop-core.version>
     <zookeeper.version>3.3.0</zookeeper.version>
   </properties>
   <scm>
@@ -98,6 +98,17 @@
 
   <repositories>
     <repository>
+      <id>private repo</id>
+      <name>hadoop 0.20.2 custom ( hdfs sync + others)</name>
+      <url>http://people.apache.org/~rawson/repo/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
+    <repository>
       <id>apache-snapshot</id>
       <name>Apache Snapshot repository</name>
       <url>https://repository.apache.org/content/repositories/snapshots/</url>
@@ -112,7 +123,7 @@
       <name>Java Net</name>
       <url>http://download.java.net/maven/2</url>
     </repository>
-    
+
   </repositories>
 
 
@@ -129,13 +140,12 @@
       <systemPath>${basedir}/lib/hbase-core-0.21.0-SNAPSHOT.jar</systemPath>
       <scope>system</scope>
     </dependency>
-    
-    
+
     <dependency>
-       <groupId>org.apache.hadoop</groupId>
-       <artifactId>zookeeper</artifactId>
-       <version>${zookeeper.version}</version>
-     </dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>zookeeper</artifactId>
+      <version>${zookeeper.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.lucene</groupId>
