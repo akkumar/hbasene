@@ -29,10 +29,8 @@ import java.util.Map;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
-import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttributeImpl;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;
@@ -40,7 +38,7 @@ import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.store.LockObtainFailedException;
 
 /**
- * Index Writer specific to HBase
+ * Index Writer in the noSQL world.
  * 
  */
 public class NoSqlIndexWriter { // TODO: extends IndexWriter {
@@ -66,6 +64,15 @@ public class NoSqlIndexWriter { // TODO: extends IndexWriter {
   private static final List<Integer> EMPTY_TERM_VECTOR = Arrays
       .asList(new Integer[] { 0 });
 
+  /**
+   * 
+   * @param indexTransactionLog
+   * @param primaryKeyField
+   *          The primary key field of the lucene Document schema to be used.
+   * @throws CorruptIndexException
+   * @throws LockObtainFailedException
+   * @throws IOException
+   */
   public NoSqlIndexWriter(final NoSqlIndexTransactionLog indexTransactionLog,
       final String primaryKeyField) throws CorruptIndexException,
       LockObtainFailedException, IOException {
@@ -169,7 +176,6 @@ public class NoSqlIndexWriter { // TODO: extends IndexWriter {
     }
 
     this.indexTransactionLog.commit();
-
   }
 
   // TODO: This method needs to be refactored to the NoSqlIndexWriter
