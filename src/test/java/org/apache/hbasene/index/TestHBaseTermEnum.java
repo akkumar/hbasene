@@ -34,6 +34,7 @@ import org.junit.Test;
 
 public class TestHBaseTermEnum extends AbstractHBaseneTest {
 
+  @SuppressWarnings("unused")
   private static final Logger LOGGER = Logger.getLogger(TestHBaseTermEnum.class
       .getName());
 

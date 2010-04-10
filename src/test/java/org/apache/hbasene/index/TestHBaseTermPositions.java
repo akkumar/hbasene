@@ -34,6 +34,7 @@ import org.junit.Test;
 
 public class TestHBaseTermPositions extends AbstractHBaseneTest {
 
+  @SuppressWarnings("unused")
   private static final Logger LOGGER = Logger
       .getLogger(TestHBaseTermPositions.class.getName());
 

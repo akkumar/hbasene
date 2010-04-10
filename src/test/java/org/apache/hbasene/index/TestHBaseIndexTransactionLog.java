@@ -29,6 +29,7 @@ import org.junit.Test;
 
 public class TestHBaseIndexTransactionLog extends AbstractHBaseneTest {
 
+  @SuppressWarnings("unused")
   private static final Logger LOGGER = Logger
       .getLogger(TestHBaseIndexTransactionLog.class.getName());
 
