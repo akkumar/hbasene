@@ -47,9 +47,9 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestHBaseTermDocs {
+public class TestHBaseTermPositions {
 
-  private static final Logger LOGGER = Logger.getLogger(TestHBaseTermDocs.class
+  private static final Logger LOGGER = Logger.getLogger(TestHBaseTermPositions.class
       .getName());
   private final static HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
@@ -61,7 +61,7 @@ public class TestHBaseTermDocs {
 
   private static HBaseIndexTransactionLog hbaseIndex;
 
-  private static HBaseTermDocs termDocs;
+  private static HBaseTermPositions termPositions;
 
   /**
    * @throws java.lang.Exception
@@ -96,7 +96,7 @@ public class TestHBaseTermDocs {
     assertTermVectorDocumentMapping("content/messi", 1);
     assertTermVectorDocumentMapping("content/lionel", 2);
 
-    termDocs = new HBaseTermDocs(conf, TEST_INDEX);
+    termPositions = new HBaseTermPositions(conf, TEST_INDEX);
 
   }
 
@@ -106,7 +106,7 @@ public class TestHBaseTermDocs {
   @AfterClass
   public static void tearDownAfterClass() throws Exception {
     LOGGER.info("***   Shut down the HBase Cluster  ****");
-    termDocs.close();
+    termPositions.close();
     HBaseIndexTransactionLog.dropLuceneIndexTable(TEST_INDEX, conf);
     TEST_UTIL.shutdownMiniCluster();
   }
@@ -114,9 +114,9 @@ public class TestHBaseTermDocs {
   @Test
   public void testTermDocs() throws CorruptIndexException,
       LockObtainFailedException, IOException {
-    termDocs.seek(new Term("content", "plays"));
+    termPositions.seek(new Term("content", "plays"));
     int count = 0;
-    while (termDocs.next()) {
+    while (termPositions.next()) {
       ++count;
     }
     Assert.assertEquals("plays occurs 4 ", 4, count);

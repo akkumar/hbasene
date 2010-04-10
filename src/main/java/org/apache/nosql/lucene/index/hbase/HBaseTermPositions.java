@@ -39,7 +39,7 @@ import org.apache.lucene.index.TermPositions;
 /**
  * Term Docs implementation for HBase.
  */
-public class HBaseTermDocs implements TermPositions {
+public class HBaseTermPositions implements TermPositions {
 
   private final HTable table;
 
@@ -80,7 +80,7 @@ public class HBaseTermDocs implements TermPositions {
 
   };
 
-  public HBaseTermDocs(final Configuration conf, final String indexName)
+  public HBaseTermPositions(final Configuration conf, final String indexName)
       throws IOException {
     this.table = new HTable(conf, indexName);
   }
@@ -113,22 +113,24 @@ public class HBaseTermDocs implements TermPositions {
   }
 
   void resetTermPositions() throws IOException {
-    Get get = new Get(this.currentRow);
-    get.addColumn(HBaseIndexTransactionLog.FAMILY_TERMVECTOR, this.documents
-        .get(this.currentIndex));
-    Result result = table.get(get);
-    byte[] tfArray = result.getValue(
-        HBaseIndexTransactionLog.FAMILY_TERMVECTOR, this.documents
-            .get(this.currentIndex));
-    String tf = Bytes.toString(tfArray);
-    currentTermPositionIndex = 0;
-    if (tf == null) {
-      currentTermPositions = new int[0];
-    } else {
-      String[] tfs = tf.split(",");
-      this.currentTermPositions = new int[tfs.length];
-      for (int i = 0; i < tfs.length; ++i) {
-        this.currentTermPositions[i] = Integer.valueOf(tfs[i]);
+    if (this.currentIndex < this.documents.size()) {
+      Get get = new Get(this.currentRow);
+      get.addColumn(HBaseIndexTransactionLog.FAMILY_TERMVECTOR, this.documents
+          .get(this.currentIndex));
+      Result result = table.get(get);
+      byte[] tfArray = result.getValue(
+          HBaseIndexTransactionLog.FAMILY_TERMVECTOR, this.documents
+              .get(this.currentIndex));
+      String tf = Bytes.toString(tfArray);
+      currentTermPositionIndex = 0;
+      if (tf == null) {
+        currentTermPositions = new int[0];
+      } else {
+        String[] tfs = tf.split(",");
+        this.currentTermPositions = new int[tfs.length];
+        for (int i = 0; i < tfs.length; ++i) {
+          this.currentTermPositions[i] = Integer.valueOf(tfs[i]);
+        }
       }
     }
 
