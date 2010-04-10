@@ -10,4 +10,8 @@ Originally present as part of Apache HBase project.
 
 Refactored here, under Apache 2.0 License , as before, to be developed independently.
 
- 
+
+IndexReaders/IndexWriters on top of HBase:
+-----------------------------------------
+
+Similar to the idea of Lucandra project by Jake L, with HBase being the sink for the TF-IDF representations.
