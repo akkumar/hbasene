@@ -39,7 +39,7 @@ import com.google.common.base.Joiner;
 
 /**
  * An index formed on-top of HBase. This requires a table with the following
- * column families.
+ * column families, at the minimum.
  * 
  * <ul>
  * <li>termVector</li>
