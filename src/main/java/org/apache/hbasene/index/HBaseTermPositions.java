@@ -79,8 +79,7 @@ public class HBaseTermPositions implements TermPositions {
 
   };
 
-  public HBaseTermPositions(final HBaseIndexReader reader)
-      throws IOException {
+  public HBaseTermPositions(final HBaseIndexReader reader) throws IOException {
     this.table = reader.createHTable();
   }
 
@@ -104,8 +103,8 @@ public class HBaseTermPositions implements TermPositions {
   @Override
   public boolean next() throws IOException {
     if (currentIndex < this.documents.size()) {
-      this.currentIndex++;
       resetTermPositions();
+      this.currentIndex++;
       return true;
     } else {
       return false;
@@ -113,24 +112,22 @@ public class HBaseTermPositions implements TermPositions {
   }
 
   void resetTermPositions() throws IOException {
-    if (this.currentIndex < this.documents.size()) {
-      Get get = new Get(this.currentRow);
-      get.addColumn(HBaseIndexTransactionLog.FAMILY_TERMVECTOR, this.documents
-          .get(this.currentIndex));
-      Result result = table.get(get);
-      byte[] tfArray = result.getValue(
-          HBaseIndexTransactionLog.FAMILY_TERMVECTOR, this.documents
-              .get(this.currentIndex));
-      String tf = Bytes.toString(tfArray);
-      currentTermPositionIndex = 0;
-      if (tf == null) {
-        currentTermPositions = new int[0];
-      } else {
-        String[] tfs = tf.split(",");
-        this.currentTermPositions = new int[tfs.length];
-        for (int i = 0; i < tfs.length; ++i) {
-          this.currentTermPositions[i] = Integer.valueOf(tfs[i]);
-        }
+    Get get = new Get(this.currentRow);
+    get.addColumn(HBaseIndexTransactionLog.FAMILY_TERMVECTOR, this.documents
+        .get(this.currentIndex));
+    Result result = table.get(get);
+    byte[] tfArray = result.getValue(
+        HBaseIndexTransactionLog.FAMILY_TERMVECTOR, this.documents
+            .get(this.currentIndex));
+    String tf = Bytes.toString(tfArray);
+    currentTermPositionIndex = 0;
+    if (tf == null) {
+      currentTermPositions = new int[0];
+    } else {
+      String[] tfs = tf.split(",");
+      this.currentTermPositions = new int[tfs.length];
+      for (int i = 0; i < tfs.length; ++i) {
+        this.currentTermPositions[i] = Integer.valueOf(tfs[i]);
       }
     }
 
