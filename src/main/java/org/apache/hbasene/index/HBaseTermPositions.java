@@ -27,7 +27,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.NavigableMap;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
@@ -80,15 +79,16 @@ public class HBaseTermPositions implements TermPositions {
 
   };
 
-  public HBaseTermPositions(final Configuration conf, final String indexName)
+  public HBaseTermPositions(final HBaseIndexReader reader)
       throws IOException {
-    this.table = new HTable(conf, indexName);
+    this.table = reader.createHTable();
   }
 
   @Override
   public void close() throws IOException {
     documents.clear();
     currentIndex = 0;
+    this.table.close();
   }
 
   @Override

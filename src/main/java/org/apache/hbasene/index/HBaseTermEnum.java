@@ -22,7 +22,6 @@ package org.apache.hbasene.index;
 import java.io.IOException;
 import java.util.NavigableMap;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
@@ -46,10 +45,9 @@ public class HBaseTermEnum extends TermEnum {
 
   private Term currentTerm;
 
-  public HBaseTermEnum(final Configuration conf, final String indexName)
+  public HBaseTermEnum(final HBaseIndexReader hbaseIndexReader)
       throws IOException {
-    // TODO: Check out some scanner caching options.
-    table = new HTable(conf, indexName);
+    table = hbaseIndexReader.createHTable();
     this.resultScanner = table
         .getScanner(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
   }
@@ -103,7 +101,7 @@ public class HBaseTermEnum extends TermEnum {
   /**
    * Directly skip to a given term.
    * 
-   * @param t 
+   * @param t
    * @throws IOException
    */
   public void skipTo(Term t) throws IOException {

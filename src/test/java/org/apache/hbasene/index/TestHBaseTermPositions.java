@@ -51,8 +51,8 @@ import org.junit.Test;
 
 public class TestHBaseTermPositions {
 
-  private static final Logger LOGGER = Logger.getLogger(TestHBaseTermPositions.class
-      .getName());
+  private static final Logger LOGGER = Logger
+      .getLogger(TestHBaseTermPositions.class.getName());
   private final static HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
   private static final String TEST_INDEX = "idx-hbase-lucene";
@@ -98,7 +98,8 @@ public class TestHBaseTermPositions {
     assertTermVectorDocumentMapping("content/messi", 1);
     assertTermVectorDocumentMapping("content/lionel", 2);
 
-    termPositions = new HBaseTermPositions(conf, TEST_INDEX);
+    HBaseIndexReader indexReader = new HBaseIndexReader(conf, TEST_INDEX);
+    termPositions = new HBaseTermPositions(indexReader);
 
   }
 

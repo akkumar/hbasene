@@ -103,17 +103,21 @@ public class HBaseIndexReader extends IndexReader {
     final String rowKey = t.field() + "/" + t.text();
     Get get = new Get(Bytes.toBytes(rowKey));
     get.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
-    HTable table = this.getHTable();
-    Result result = table.get(get);
-    if (result == null) {
-      return 0;
+    HTable table = this.createHTable();
+    try {
+      Result result = table.get(get);
+      if (result == null) {
+        return 0;
+      }
+      NavigableMap<byte[], byte[]> map = result
+          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
+      if (map == null) {
+        return 0;
+      }
+      return map.size();
+    } finally {
+      table.close();
     }
-    NavigableMap<byte[], byte[]> map = result
-        .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
-    if (map == null) {
-      return 0;
-    }
-    return map.size();
   }
 
   @Override
@@ -194,28 +198,34 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   public TermDocs termDocs() throws IOException {
-    return new HBaseTermPositions(this.conf, this.indexName);
+    return new HBaseTermPositions(this);
   }
 
   @Override
   public TermPositions termPositions() throws IOException {
-    return new HBaseTermPositions(this.conf, this.indexName);
+    return new HBaseTermPositions(this);
 
   }
 
   @Override
   public TermEnum terms() throws IOException {
-    return new HBaseTermEnum(this.conf, this.indexName);
+    return new HBaseTermEnum(this);
   }
 
   @Override
   public TermEnum terms(Term t) throws IOException {
-    HBaseTermEnum termEnum = new HBaseTermEnum(this.conf, this.indexName);
+    HBaseTermEnum termEnum = new HBaseTermEnum(this);
     termEnum.skipTo(t);
     return termEnum;
   }
 
-  private HTable getHTable() throws IOException {
+  /**
+   * Create a reference to HTable to the index under consideration.
+   * 
+   * @return
+   * @throws IOException
+   */
+  HTable createHTable() throws IOException {
     return new HTable(this.conf, this.indexName);
   }
 }
