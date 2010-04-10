@@ -99,6 +99,7 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   public int docFreq(Term t) throws IOException {
+    // same as in TermEnum. Avoid duplication.
     final String rowKey = t.field() + "/" + t.text();
     Get get = new Get(Bytes.toBytes(rowKey));
     get.addFamily(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
@@ -210,8 +211,9 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   public TermEnum terms(Term t) throws IOException {
-    // TODO Auto-generated method stub
-    return null;
+    HBaseTermEnum termEnum = new HBaseTermEnum(this.conf, this.indexName);
+    termEnum.skipTo(t);
+    return termEnum;
   }
 
   private HTable getHTable() throws IOException {

@@ -179,7 +179,8 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
     boolean assigned = false;
     int newId = -1;
     for (int i = 0; i < 100; ++i) { // Use a better way to allocate the uniquely
-      // increasing docId. This can result in starvation.
+      // increasing docId. This can result in starvation and very rudimentary /
+      // decrease throughput for a given index.
       Get get = new Get(MAX_ID);
       get.addFamily(FAMILY_SEQUENCE);
       Result result = this.table.get(get);

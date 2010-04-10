@@ -27,6 +27,7 @@ import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
@@ -41,7 +42,7 @@ public class HBaseTermEnum extends TermEnum {
 
   private final HTable table;
 
-  private final ResultScanner resultScanner;
+  private ResultScanner resultScanner;
 
   private Term currentTerm;
 
@@ -97,6 +98,22 @@ public class HBaseTermEnum extends TermEnum {
   @Override
   public Term term() {
     return this.currentTerm;
+  }
+
+  /**
+   * Directly skip to a given term.
+   * 
+   * @param t 
+   * @throws IOException
+   */
+  public void skipTo(Term t) throws IOException {
+    if (this.resultScanner != null) {
+      this.resultScanner.close();
+    }
+    Scan scan = new Scan();
+    scan.addFamily(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+    scan.setStartRow(Bytes.toBytes(t.field() + "/" + t.text()));
+    this.resultScanner = this.table.getScanner(scan);
   }
 
 }

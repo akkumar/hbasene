@@ -33,13 +33,13 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.TermPositions;
 
 /**
  * Term Docs implementation for HBase.
  */
-public class HBaseTermDocs implements TermDocs {
+public class HBaseTermDocs implements TermPositions {
 
   private final HTable table;
 
@@ -54,7 +54,14 @@ public class HBaseTermDocs implements TermDocs {
    */
   private int currentIndex;
 
+  /**
+   * Current row (field/text) of the term under consideration.
+   */
   private byte[] currentRow;
+
+  private int[] currentTermPositions;
+
+  private int currentTermPositionIndex;
 
   private Comparator<byte[]> INT_COMPARATOR = new Comparator<byte[]>() {
 
@@ -91,28 +98,40 @@ public class HBaseTermDocs implements TermDocs {
 
   @Override
   public int freq() {
-    try {
-      Get get = new Get(this.currentRow);
-      get.addColumn(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR, this.documents
-          .get(this.currentIndex));
-      Result result = table.get(get);
-      byte[] tfArray = result.getValue(
-          HBaseIndexTransactionLog.FAMILY_TERM_VECTOR, this.documents
-              .get(this.currentIndex));
-      return HBaseIndexTransactionLog.getTermFrequency(tfArray);
-    } catch (Exception ex) {
-      return 0;
-    }
+    return this.currentTermPositions.length;
   }
 
   @Override
   public boolean next() throws IOException {
     if (currentIndex < this.documents.size()) {
       this.currentIndex++;
+      resetInternalData();
       return true;
     } else {
       return false;
     }
+  }
+
+  private void resetInternalData() throws IOException {
+    Get get = new Get(this.currentRow);
+    get.addColumn(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR, this.documents
+        .get(this.currentIndex));
+    Result result = table.get(get);
+    byte[] tfArray = result.getValue(
+        HBaseIndexTransactionLog.FAMILY_TERM_VECTOR, this.documents
+            .get(this.currentIndex));
+    String tf = Bytes.toString(tfArray);
+    currentTermPositionIndex = 0;
+    if (tf == null) {
+      currentTermPositions = new int[0];
+    } else {
+      String[] tfs = tf.split(",");
+      this.currentTermPositions = new int[tfs.length];
+      for (int i = 0; i < tfs.length; ++i) {
+        this.currentTermPositions[i] = Integer.valueOf(tfs[i]);
+      }
+    }
+
   }
 
   @Override
@@ -165,4 +184,23 @@ public class HBaseTermDocs implements TermDocs {
     return false;
   }
 
+  @Override
+  public byte[] getPayload(byte[] data, int offset) throws IOException {
+    return null;
+  }
+
+  @Override
+  public int getPayloadLength() {
+    return 0;
+  }
+
+  @Override
+  public boolean isPayloadAvailable() {
+    return false;
+  }
+
+  @Override
+  public int nextPosition() throws IOException {
+    return this.currentTermPositions[this.currentTermPositionIndex++];
+  }
 }
