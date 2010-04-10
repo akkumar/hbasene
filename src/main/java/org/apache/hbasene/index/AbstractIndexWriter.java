@@ -20,7 +20,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.nosql.lucene.index;
+package org.apache.hbasene.index;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -44,7 +44,7 @@ import org.apache.lucene.store.LockObtainFailedException;
  * Index Writer in the noSQL world.
  * 
  */
-public class NoSqlIndexWriter { // TODO: extends IndexWriter {
+public class AbstractIndexWriter { // TODO: extends IndexWriter {
 
   /**
    * Commit Log from the given index.
@@ -76,7 +76,7 @@ public class NoSqlIndexWriter { // TODO: extends IndexWriter {
    * @throws LockObtainFailedException
    * @throws IOException
    */
-  public NoSqlIndexWriter(final NoSqlIndexTransactionLog indexTransactionLog,
+  public AbstractIndexWriter(final NoSqlIndexTransactionLog indexTransactionLog,
       final String primaryKeyField) throws CorruptIndexException,
       LockObtainFailedException, IOException {
     // super(d, a, create, deletionPolicy, mfl);

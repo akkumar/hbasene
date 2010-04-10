@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.nosql.lucene.mapred.hbase;
+package org.apache.hbasene.index.create.mapred;
 
 import java.io.IOException;
 import java.io.File;
@@ -35,14 +35,14 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.Progressable;
+import org.apache.hbasene.index.create.IndexConfiguration;
+import org.apache.hbasene.index.create.LuceneDocumentWrapper;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
-import org.apache.nosql.lucene.index.IndexConfiguration;
-import org.apache.nosql.lucene.index.LuceneDocumentWrapper;
 
 /**
  * Create a local index, unwrap Lucene documents created by reduce, add them to

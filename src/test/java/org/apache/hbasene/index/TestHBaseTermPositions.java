@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.nosql.lucene.index.hbase;
+package org.apache.hbasene.index;
 
 import java.io.IOException;
 import java.util.Map;
@@ -34,6 +34,9 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hbasene.index.AbstractIndexWriter;
+import org.apache.hbasene.index.HBaseIndexTransactionLog;
+import org.apache.hbasene.index.HBaseTermPositions;
 import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -42,7 +45,6 @@ import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.util.Version;
-import org.apache.nosql.lucene.index.NoSqlIndexWriter;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -73,7 +75,7 @@ public class TestHBaseTermPositions {
     HBaseIndexTransactionLog.dropLuceneIndexTable(TEST_INDEX, conf);
     hbaseIndex = new HBaseIndexTransactionLog(conf, TEST_INDEX);
 
-    NoSqlIndexWriter writer = new NoSqlIndexWriter(hbaseIndex, PK_FIELD);
+    AbstractIndexWriter writer = new AbstractIndexWriter(hbaseIndex, PK_FIELD);
 
     addDocument(writer, "FactTimes", "Messi plays for Barcelona");
     addDocument(writer, "UtopiaTimes", "Lionel M plays for Manchester United");
@@ -161,7 +163,7 @@ public class TestHBaseTermPositions {
     LOGGER.info("****** Close " + Bytes.toString(family) + "****");
   }
 
-  static void addDocument(final NoSqlIndexWriter writer, final String id,
+  static void addDocument(final AbstractIndexWriter writer, final String id,
       final String content) throws CorruptIndexException, IOException {
     Document doc = new Document();
     doc.add(new Field("content", content, Field.Store.NO,

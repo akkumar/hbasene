@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hbase.lucene.mapred;
+package org.apache.hbasene.index.create;
 
 import static org.junit.Assert.assertEquals;
 
@@ -35,10 +35,10 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hbasene.index.create.mapred.BuildTableIndex;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.nosql.lucene.mapred.hbase.BuildTableIndex;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
