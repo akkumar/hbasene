@@ -52,7 +52,7 @@ public class AbstractHBaseneTest {
     addDocument(writer, "FactTimes", "Messi plays for Barcelona");
     addDocument(writer, "UtopiaTimes", "Lionel M plays for Manchester United");
     addDocument(writer, "ThirdTimes", "Rooney plays for Manchester United");
-    addDocument(writer, "FourthTimes", "Messi plays for argentina as well");
+    addDocument(writer, "FourthTimes", "Messi plays for argentina as well. He plays better than any one else");
 
     Assert.assertTrue(new HBaseAdmin(conf).tableExists(TEST_INDEX));
   }
