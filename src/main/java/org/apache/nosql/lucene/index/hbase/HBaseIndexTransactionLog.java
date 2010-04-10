@@ -58,7 +58,7 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
    * values containing the actual term positions in them, if they were
    * available.
    */
-  static final byte[] FAMILY_TERM_VECTOR = Bytes.toBytes("termVector");
+  static final byte[] FAMILY_TERMVECTOR = Bytes.toBytes("termVector");
 
   /**
    * Column family that contains the document's stored content. The columns are
@@ -163,7 +163,7 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
   public void addTermVectors(String fieldTerm, byte[] docId,
       List<Integer> termVectors) {
     Put put = new Put(Bytes.toBytes(fieldTerm));
-    put.add(FAMILY_TERM_VECTOR, docId, toBytes(termVectors));
+    put.add(FAMILY_TERMVECTOR, docId, toBytes(termVectors));
     this.puts.add(put);
   }
 
@@ -306,7 +306,7 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
     tableDescriptor.addFamily(createUniversionLZO(admin,
         HBaseIndexTransactionLog.FAMILY_DOCUMENTS));
     tableDescriptor.addFamily(createUniversionLZO(admin,
-        HBaseIndexTransactionLog.FAMILY_TERM_VECTOR));
+        HBaseIndexTransactionLog.FAMILY_TERMVECTOR));
     tableDescriptor.addFamily(createUniversionLZO(admin,
         HBaseIndexTransactionLog.FAMILY_DOC_TO_INT));
     tableDescriptor.addFamily(createUniversionLZO(admin,

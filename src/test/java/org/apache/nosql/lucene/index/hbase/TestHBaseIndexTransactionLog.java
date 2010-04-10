@@ -96,7 +96,7 @@ public class TestHBaseIndexTransactionLog {
     this.assertDocumentPresent("FactTimes");
     this.assertDocumentPresent("UtopiaTimes");
 
-    this.listAll(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+    this.listAll(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
     this.listAll(HBaseIndexTransactionLog.FAMILY_DOCUMENTS);
     this.listAll(HBaseIndexTransactionLog.FAMILY_INT_TO_DOC);
     this.listIntQualifiers(HBaseIndexTransactionLog.FAMILY_DOC_TO_INT);
@@ -178,12 +178,12 @@ public class TestHBaseIndexTransactionLog {
   void assertTermVectorDocumentMapping(final String term, final byte[] docId)
       throws IOException {
     Get get = new Get(Bytes.toBytes(term));
-    get.addFamily(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+    get.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
     HTable table = new HTable(conf, TEST_INDEX);
     try {
       Result result = table.get(get);
       NavigableMap<byte[], byte[]> map = result
-          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
       Assert.assertTrue(map.size() > 0);
       Assert.assertNotNull(map.get(docId));
     } finally {

@@ -102,14 +102,14 @@ public class HBaseIndexReader extends IndexReader {
     // same as in TermEnum. Avoid duplication.
     final String rowKey = t.field() + "/" + t.text();
     Get get = new Get(Bytes.toBytes(rowKey));
-    get.addFamily(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+    get.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
     HTable table = this.getHTable();
     Result result = table.get(get);
     if (result == null) {
       return 0;
     }
     NavigableMap<byte[], byte[]> map = result
-        .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+        .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
     if (map == null) {
       return 0;
     }

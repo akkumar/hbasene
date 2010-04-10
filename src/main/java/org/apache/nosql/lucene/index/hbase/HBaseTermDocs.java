@@ -114,11 +114,11 @@ public class HBaseTermDocs implements TermPositions {
 
   void resetTermPositions() throws IOException {
     Get get = new Get(this.currentRow);
-    get.addColumn(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR, this.documents
+    get.addColumn(HBaseIndexTransactionLog.FAMILY_TERMVECTOR, this.documents
         .get(this.currentIndex));
     Result result = table.get(get);
     byte[] tfArray = result.getValue(
-        HBaseIndexTransactionLog.FAMILY_TERM_VECTOR, this.documents
+        HBaseIndexTransactionLog.FAMILY_TERMVECTOR, this.documents
             .get(this.currentIndex));
     String tf = Bytes.toString(tfArray);
     currentTermPositionIndex = 0;
@@ -155,7 +155,7 @@ public class HBaseTermDocs implements TermPositions {
     this.currentRow = Bytes.toBytes(rowKey);
     Result result = this.getRowWithTermVectors();
     NavigableMap<byte[], byte[]> map = result
-        .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+        .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
     this.documents = new ArrayList<byte[]>(map.keySet());
     Collections.sort(documents, INT_COMPARATOR);
     this.currentIndex = 0;
@@ -163,7 +163,7 @@ public class HBaseTermDocs implements TermPositions {
 
   Result getRowWithTermVectors() throws IOException {
     Get get = new Get(this.currentRow);
-    get.addFamily(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+    get.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
     return this.table.get(get);
   }
 

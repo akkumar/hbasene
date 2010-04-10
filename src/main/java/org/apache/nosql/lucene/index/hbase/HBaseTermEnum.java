@@ -51,7 +51,7 @@ public class HBaseTermEnum extends TermEnum {
     // TODO: Check out some scanner caching options.
     table = new HTable(conf, indexName);
     this.resultScanner = table
-        .getScanner(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+        .getScanner(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
   }
 
   @Override
@@ -65,13 +65,13 @@ public class HBaseTermEnum extends TermEnum {
     try {
       Get get = new Get(Bytes.toBytes(this.currentTerm.field() + "/"
           + this.currentTerm.text()));
-      get.addFamily(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+      get.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
       Result result = this.table.get(get);
       if (result == null) {
         return 0;
       }
       NavigableMap<byte[], byte[]> map = result
-          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
       return map.size();
     } catch (Exception ex) {
       return 0;
@@ -111,7 +111,7 @@ public class HBaseTermEnum extends TermEnum {
       this.resultScanner.close();
     }
     Scan scan = new Scan();
-    scan.addFamily(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+    scan.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
     scan.setStartRow(Bytes.toBytes(t.field() + "/" + t.text()));
     this.resultScanner = this.table.getScanner(scan);
   }
