@@ -22,14 +22,12 @@ package org.apache.nosql.lucene.index.hbase;
 import java.io.IOException;
 import java.util.NavigableMap;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.mapred.TableRecordReaderImpl;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.hbase.util.Pair;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 
@@ -37,90 +35,68 @@ import org.apache.lucene.index.TermEnum;
  * Implementation of Term Enumerator. <br />
  * 
  * 
- * @author akkumar
  * 
  */
 public class HBaseTermEnum extends TermEnum {
 
-  /**
-   * IDF Family
-   */
-  static final byte[] IDF_FAMILY = Bytes.toBytes("idf-family");
+  private final HTable table;
 
-  /**
-   * Look-Ahead buffer for the scan. Given that some common terms (across the
-   * entire corpus) - the idf can be large, 5 is a reasonable number to begin
-   * with.
-   * 
-   */
-  static final int MAX_LOOK_AHEAD_BUFFER = 5;
+  private final ResultScanner resultScanner;
 
-  /**
-   * Field/Term separator
-   */
-  static final int SEPARATOR = '/';
+  private Term currentTerm;
 
-  /**
-   * Default scan associated with the term enum.
-   */
-  final HTable table;
-
-  /**
-   * Scanner
-   */
-  final ResultScanner scanner;
-
-  /**
-   * Current Row
-   */
-  Result currentRow;
-
-  public HBaseTermEnum(final HTable table,
-      final TableRecordReaderImpl recordReader) throws IOException {
-    Pair<byte[][], byte[][]> startEndKeys = table.getStartEndKeys();
-    this.table = table;
-    Scan scan = this.createScan();
-    scan.setStartRow(startEndKeys.getFirst()[0]);
-    this.scanner = this.table.getScanner(scan);
+  public HBaseTermEnum(final Configuration conf, final String indexName)
+      throws IOException {
+    // TODO: Check out some scanner caching options.
+    table = new HTable(conf, indexName);
+    this.resultScanner = table
+        .getScanner(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
   }
 
   @Override
   public void close() throws IOException {
-    this.scanner.close();
+    this.resultScanner.close();
+    this.table.close();
   }
 
   @Override
   public int docFreq() {
-    NavigableMap<byte[], byte[]> map = this.currentRow.getNoVersionMap().get(
-        IDF_FAMILY);
-    return map.values().size();
+    try {
+      Get get = new Get(Bytes.toBytes(this.currentTerm.field() + "/"
+          + this.currentTerm.text()));
+      get.addFamily(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+      Result result = this.table.get(get);
+      if (result == null) {
+        return 0;
+      }
+      NavigableMap<byte[], byte[]> map = result
+          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+      return map.size();
+    } catch (Exception ex) {
+      return 0;
+    }
   }
 
   @Override
-  public boolean next() throws IOException {
-    this.currentRow = this.scanner.next();
-    return this.currentRow != null;
+  public boolean next() {
+    try {
+      Result result = resultScanner.next();
+      if (result != null) {
+        String fieldTerm = Bytes.toString(result.getRow());
+        String[] fieldTerms = fieldTerm.split(",");
+        this.currentTerm = new Term(fieldTerms[0], fieldTerms[1]);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (Exception ex) {
+      return false;
+    }
   }
 
   @Override
   public Term term() {
-    ImmutableBytesWritable writable = this.currentRow.getBytes();
-    String backingRow = Bytes.toString(writable.get(), writable.getOffset(),
-        writable.getLength() - 1 - writable.getOffset());
-    int index = backingRow.indexOf(SEPARATOR);
-    if (index != -1) {
-      String fieldName = backingRow.substring(writable.getOffset(), index);
-      String termName = backingRow.substring(index + 1);
-      return new Term(fieldName, termName);
-    } else {
-      return null;
-    }
+    return this.currentTerm;
   }
 
-  Scan createScan() {
-    Scan scan = new Scan();
-    scan.addFamily(IDF_FAMILY);
-    scan.setBatch(MAX_LOOK_AHEAD_BUFFER);
-    return scan;
-  }
 }
