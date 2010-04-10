@@ -49,7 +49,7 @@ public class AbstractIndexWriter { // TODO: extends IndexWriter {
   /**
    * Commit Log from the given index.
    */
-  private final NoSqlIndexTransactionLog indexTransactionLog;
+  private final AbstractIndexTransactionLog indexTransactionLog;
 
   /**
    * Field representing the primary key in the given search index.
@@ -76,7 +76,7 @@ public class AbstractIndexWriter { // TODO: extends IndexWriter {
    * @throws LockObtainFailedException
    * @throws IOException
    */
-  public AbstractIndexWriter(final NoSqlIndexTransactionLog indexTransactionLog,
+  public AbstractIndexWriter(final AbstractIndexTransactionLog indexTransactionLog,
       final String primaryKeyField) throws CorruptIndexException,
       LockObtainFailedException, IOException {
     // super(d, a, create, deletionPolicy, mfl);

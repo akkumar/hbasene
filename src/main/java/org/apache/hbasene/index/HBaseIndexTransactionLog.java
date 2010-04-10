@@ -49,7 +49,7 @@ import com.google.common.base.Joiner;
  * To create a HBase Table, specific to the index schema, refer to
  * {@link #createLuceneIndexTable(String, HBaseConfiguration, boolean)} .
  */
-public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
+public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
 
   /**
    * Column Family representing the term vector of a given term ( Field:Term, a
