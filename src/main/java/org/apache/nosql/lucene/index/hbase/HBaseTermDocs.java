@@ -105,14 +105,14 @@ public class HBaseTermDocs implements TermPositions {
   public boolean next() throws IOException {
     if (currentIndex < this.documents.size()) {
       this.currentIndex++;
-      resetInternalData();
+      resetTermPositions();
       return true;
     } else {
       return false;
     }
   }
 
-  private void resetInternalData() throws IOException {
+  void resetTermPositions() throws IOException {
     Get get = new Get(this.currentRow);
     get.addColumn(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR, this.documents
         .get(this.currentIndex));
