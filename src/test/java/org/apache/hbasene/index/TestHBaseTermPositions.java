@@ -63,6 +63,8 @@ public class TestHBaseTermPositions extends AbstractHBaseneTest {
     termPositions.seek(new Term("content", "plays"));
     int count = 0;
     while (termPositions.next()) {
+      Assert.assertTrue(termPositions.doc() > 0);
+      Assert.assertTrue(termPositions.freq() > 0);
       ++count;
     }
     Assert.assertEquals("plays occurs 4 ", 4, count);
