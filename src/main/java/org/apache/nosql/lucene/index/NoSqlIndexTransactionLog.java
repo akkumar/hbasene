@@ -50,4 +50,13 @@ public abstract class NoSqlIndexTransactionLog {
    */
   public abstract void storeField(final byte[] docId, final String fieldName,
       byte[] value);
+
+  /**
+   * Assign a docId to the given primary key in the Lucene schema.
+   * 
+   * @param primaryKey
+   * @return correct docId, if in place. -1, otherwise.
+   * @throws IOException
+   */
+  public abstract int assignDocId(byte[] primaryKey) throws IOException;
 }

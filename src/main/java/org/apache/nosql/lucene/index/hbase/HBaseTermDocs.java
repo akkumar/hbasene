@@ -1,12 +1,13 @@
 package org.apache.nosql.lucene.index.hbase;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.NavigableMap;
-import java.util.NoSuchElementException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
@@ -16,20 +17,41 @@ import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 
 /**
- * 
+ * Term Docs implementation for HBase.
  */
 public class HBaseTermDocs implements TermDocs {
 
   private final HTable table;
 
   /**
-   * Current result of the term under consideration.
+   * List of documents corresponding to the term docs under consideration.
    */
-  private Iterator<KeyValue> itKeyValue;
+  private List<byte[]> documents;
+  // TODO:WeakRef this and load on demand, if taken away, to save memory.
 
-  private KeyValue currentKV;
+  /**
+   * Current index into the documents array.
+   */
+  private int currentIndex;
 
   private byte[] currentRow;
+
+  private Comparator<byte[]> INT_COMPARATOR = new Comparator<byte[]>() {
+
+    @Override
+    public int compare(byte[] o1, byte[] o2) {
+      int lhs = Bytes.toInt(o1);
+      int rhs = Bytes.toInt(o2);
+      if (lhs < rhs)
+        return -1;
+      else if (lhs > rhs)
+        return 1;
+      else
+        return 0;
+
+    }
+
+  };
 
   public HBaseTermDocs(final Configuration conf, final String indexName)
       throws IOException {
@@ -38,25 +60,35 @@ public class HBaseTermDocs implements TermDocs {
 
   @Override
   public void close() throws IOException {
-    // Do nothing on close.
+    documents.clear();
+    currentIndex = 0;
   }
 
   @Override
   public int doc() {
-    return currentKV.getQualifier().length;
-    // TODO: Better representation of docId need to be in place.
+    return Bytes.toInt(this.documents.get(this.currentIndex));
   }
 
   @Override
   public int freq() {
-    return HBaseIndexTransactionLog.getTermFrequency(currentKV.getValue());
+    try {
+      Get get = new Get(this.currentRow);
+      get.addColumn(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR, this.documents
+          .get(this.currentIndex));
+      Result result = table.get(get);
+      byte[] tfArray = result.getValue(
+          HBaseIndexTransactionLog.FAMILY_TERM_VECTOR, this.documents
+              .get(this.currentIndex));
+      return HBaseIndexTransactionLog.getTermFrequency(tfArray);
+    } catch (Exception ex) {
+      return 0;
+    }
   }
 
   @Override
   public boolean next() throws IOException {
-    if (itKeyValue.hasNext()) {
-
-      currentKV = itKeyValue.next();
+    if (currentIndex < this.documents.size()) {
+      this.currentIndex++;
       return true;
     } else {
       return false;
@@ -83,7 +115,11 @@ public class HBaseTermDocs implements TermDocs {
     final String rowKey = term.field() + "/" + term.text();
     this.currentRow = Bytes.toBytes(rowKey);
     Result result = this.getRowWithTermVectors();
-    this.itKeyValue = result.list().iterator();
+    NavigableMap<byte[], byte[]> map = result
+        .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+    this.documents = new ArrayList<byte[]>(map.keySet());
+    Collections.sort(documents, INT_COMPARATOR);
+    this.currentIndex = 0;
   }
 
   Result getRowWithTermVectors() throws IOException {
@@ -94,13 +130,18 @@ public class HBaseTermDocs implements TermDocs {
 
   @Override
   public void seek(TermEnum termEnum) throws IOException {
-    // TODO Auto-generated method stub
-
+    seek(termEnum.term());
   }
 
   @Override
   public boolean skipTo(int target) throws IOException {
-    // TODO Auto-generated method stub
+    // TODO: Should the starting Index of the loop be 0 or currentIndex ?
+    for (int i = 0; i < this.documents.size(); ++i) {
+      if (Bytes.toInt(this.documents.get(i)) >= target) {
+        currentIndex = i;
+        return true;
+      }
+    }
     return false;
   }
 

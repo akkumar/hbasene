@@ -8,9 +8,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.nosql.lucene.index.NoSqlIndexTransactionLog;
 
@@ -43,6 +45,43 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
    * usually the field names with the values being the contents of the same.
    */
   static final byte[] FAMILY_DOCUMENTS = Bytes.toBytes("documents");
+
+  /**
+   * Column family that contains the mapping from the docId to an integer
+   */
+  static final byte[] FAMILY_DOC_TO_INT = Bytes.toBytes("doc2int");
+
+  /**
+   * Qualifier belonging to family, {@link #FAMILY_DOC_TO_INT} , representing an
+   * uniquely increasing integer used by Lucene for internal purposes.
+   */
+  static final byte[] QUALIFIER_INT = Bytes.toBytes("qualifierInt");
+
+  /**
+   * Column family that contains the mapping from an integer to a docId.
+   */
+  static final byte[] FAMILY_INT_TO_DOC = Bytes.toBytes("int2doc");
+
+  /**
+   * Qualifier belonging to family {@link #FAMILY_INT_TO_DOC}, representing the
+   * document Id as defined by the application.
+   */
+  static final byte[] QUALIFIER_DOC = Bytes.toBytes("document");
+
+  /**
+   * Column family to store the sequence of the counter used by lucene.
+   */
+  static final byte[] FAMILY_SEQUENCE = Bytes.toBytes("sequence");
+
+  /**
+   * Qualifier that represents a sequence.
+   */
+  static final byte[] QUALIFIER_SEQUENCE = Bytes.toBytes("sequence");
+
+  /**
+   * Row Key for a special entry
+   */
+  static final byte[] MAX_ID = Bytes.toBytes("max");
 
   /**
    * Character used to join the elements of a term document array.
@@ -81,6 +120,11 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
   public void init() throws IOException {
     this.table = createLuceneIndexTable(indexName, configuration, false);
     this.table.setAutoFlush(false);
+
+    Put put = new Put(MAX_ID);
+    put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(0));
+    this.table.put(put);
+    this.table.flushCommits();
   }
 
   @Override
@@ -108,6 +152,49 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
     Put put = new Put(docId);
     put.add(FAMILY_DOCUMENTS, Bytes.toBytes(fieldName), value);
     this.puts.add(put);
+  }
+
+  @Override
+  public int assignDocId(final byte[] primaryKey) throws IOException {
+    boolean assigned = false;
+    int newId = -1;
+    for (int i = 0; i < 100; ++i) { // Use a better way to allocate the uniquely
+      // increasing docId. This can result in starvation.
+      Get get = new Get(MAX_ID);
+      get.addFamily(FAMILY_SEQUENCE);
+      Result result = this.table.get(get);
+      if (result == null) {
+        throw new IllegalStateException("result is not supposed to be null");
+      }
+      byte[] oldValue = result.getValue(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE);
+      int oldCount = Bytes.toInt(oldValue);
+      Put put = new Put(MAX_ID);
+      put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(oldCount + 1));
+      if (this.table.checkAndPut(MAX_ID, FAMILY_SEQUENCE, QUALIFIER_SEQUENCE,
+          oldValue, put)) {
+        this.table.flushCommits();
+        assigned = true;
+        newId = oldCount + 1;
+        break;
+      }
+    }
+    if (assigned) {
+      insertBiMap(primaryKey, Bytes.toBytes(newId));
+    }
+    return newId;
+  }
+
+  void insertBiMap(final byte[] primaryKey, final byte[] docId)
+      throws IOException {
+    Put put = new Put(primaryKey);
+    put.add(FAMILY_DOC_TO_INT, QUALIFIER_INT, docId);
+    this.table.put(put);
+
+    Put put2 = new Put(docId);
+    put2.add(FAMILY_INT_TO_DOC, QUALIFIER_DOC, primaryKey);
+    this.table.put(put2);
+
+    this.table.flushCommits();
   }
 
   static byte[] toBytes(final Integer[] array) {
@@ -199,6 +286,12 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
         HBaseIndexTransactionLog.FAMILY_DOCUMENTS));
     tableDescriptor.addFamily(createUniversionLZO(admin,
         HBaseIndexTransactionLog.FAMILY_TERM_VECTOR));
+    tableDescriptor.addFamily(createUniversionLZO(admin,
+        HBaseIndexTransactionLog.FAMILY_DOC_TO_INT));
+    tableDescriptor.addFamily(createUniversionLZO(admin,
+        HBaseIndexTransactionLog.FAMILY_INT_TO_DOC));
+    tableDescriptor.addFamily(createUniversionLZO(admin,
+        HBaseIndexTransactionLog.FAMILY_SEQUENCE));
 
     admin.createTable(tableDescriptor);
     HTableDescriptor descriptor = admin.getTableDescriptor(Bytes

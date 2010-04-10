@@ -19,6 +19,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.util.Version;
 import org.apache.nosql.lucene.index.NoSqlIndexWriter;
@@ -26,10 +27,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestHBaseIndexTransactionLog {
+public class TestHBaseTermDocs {
 
-  private static final Logger LOGGER = Logger
-      .getLogger(TestHBaseIndexTransactionLog.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(TestHBaseTermDocs.class
+      .getName());
   private final static HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
   private static final String TEST_INDEX = "idx-hbase-lucene";
@@ -39,6 +40,8 @@ public class TestHBaseIndexTransactionLog {
   private static Configuration conf;
 
   private static HBaseIndexTransactionLog hbaseIndex;
+
+  private static HBaseTermDocs termDocs;
 
   /**
    * @throws java.lang.Exception
@@ -50,6 +53,31 @@ public class TestHBaseIndexTransactionLog {
     HBaseIndexTransactionLog.dropLuceneIndexTable(TEST_INDEX, conf);
     hbaseIndex = new HBaseIndexTransactionLog(conf, TEST_INDEX);
 
+    NoSqlIndexWriter writer = new NoSqlIndexWriter(hbaseIndex, PK_FIELD);
+
+    addDocument(writer, "FactTimes", "Messi plays for Barcelona");
+    addDocument(writer, "UtopiaTimes", "Lionel M plays for Manchester United");
+    addDocument(writer, "ThirdTimes", "Rooney plays for Manchester United");
+    addDocument(writer, "FourthTimes", "Messi plays for argentina as well");
+
+    Assert.assertTrue(new HBaseAdmin(conf).tableExists(TEST_INDEX));
+
+    assertDocumentPresent("FactTimes");
+    assertDocumentPresent("UtopiaTimes");
+    assertDocumentPresent("ThirdTimes");
+    assertDocumentPresent("FourthTimes");
+
+    listAll(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
+    listAll(HBaseIndexTransactionLog.FAMILY_DOCUMENTS);
+    listAll(HBaseIndexTransactionLog.FAMILY_INT_TO_DOC);
+    listIntQualifiers(HBaseIndexTransactionLog.FAMILY_DOC_TO_INT);
+    listAll(HBaseIndexTransactionLog.FAMILY_SEQUENCE);
+
+    assertTermVectorDocumentMapping("content/messi", 1);
+    assertTermVectorDocumentMapping("content/lionel", 2);
+
+    termDocs = new HBaseTermDocs(conf, TEST_INDEX);
+
   }
 
   /**
@@ -58,36 +86,24 @@ public class TestHBaseIndexTransactionLog {
   @AfterClass
   public static void tearDownAfterClass() throws Exception {
     LOGGER.info("***   Shut down the HBase Cluster  ****");
+    termDocs.close();
     HBaseIndexTransactionLog.dropLuceneIndexTable(TEST_INDEX, conf);
     TEST_UTIL.shutdownMiniCluster();
   }
 
   @Test
-  public void testAddDocuments() throws CorruptIndexException,
+  public void testTermDocs() throws CorruptIndexException,
       LockObtainFailedException, IOException {
-    NoSqlIndexWriter writer = new NoSqlIndexWriter(hbaseIndex, PK_FIELD);
-
-    this.addDocument(writer, "FactTimes", "Messi plays for Barcelona");
-    this.addDocument(writer, "UtopiaTimes",
-        "Lionel M plays for Manchester United");
-
-    Assert.assertTrue(new HBaseAdmin(conf).tableExists(TEST_INDEX));
-
-    this.assertDocumentPresent("FactTimes");
-    this.assertDocumentPresent("UtopiaTimes");
-
-    this.listAll(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
-    this.listAll(HBaseIndexTransactionLog.FAMILY_DOCUMENTS);
-    this.listAll(HBaseIndexTransactionLog.FAMILY_INT_TO_DOC);
-    this.listIntQualifiers(HBaseIndexTransactionLog.FAMILY_DOC_TO_INT);
-    this.listAll(HBaseIndexTransactionLog.FAMILY_SEQUENCE);
-
-    this.assertTermVectorDocumentMapping("content/messi", 1);
-    this.assertTermVectorDocumentMapping("content/lionel", 2);
+    termDocs.seek(new Term("content", "plays"));
+    int count = 0;
+    while (termDocs.next()) {
+      ++count;
+    }
+    Assert.assertEquals("plays occurs 4 ", 4, count);
 
   }
 
-  void listAll(final byte[] family) throws IOException {
+  static void listAll(final byte[] family) throws IOException {
     LOGGER.info("****** " + Bytes.toString(family) + "****");
     HTable table = new HTable(conf, TEST_INDEX);
     ResultScanner scanner = table.getScanner(family);
@@ -106,7 +122,7 @@ public class TestHBaseIndexTransactionLog {
     LOGGER.info("****** Close " + Bytes.toString(family) + "****");
   }
 
-  void listIntQualifiers(final byte[] family) throws IOException {
+  static void listIntQualifiers(final byte[] family) throws IOException {
     LOGGER.info("****** " + Bytes.toString(family) + "****");
     HTable table = new HTable(conf, TEST_INDEX);
     ResultScanner scanner = table.getScanner(family);
@@ -125,7 +141,7 @@ public class TestHBaseIndexTransactionLog {
     LOGGER.info("****** Close " + Bytes.toString(family) + "****");
   }
 
-  void addDocument(final NoSqlIndexWriter writer, final String id,
+  static void addDocument(final NoSqlIndexWriter writer, final String id,
       final String content) throws CorruptIndexException, IOException {
     Document doc = new Document();
     doc.add(new Field("content", content, Field.Store.NO,
@@ -134,7 +150,7 @@ public class TestHBaseIndexTransactionLog {
     writer.addDocument(doc, new StandardAnalyzer(Version.LUCENE_30));
   }
 
-  void assertDocumentPresent(final String docId) throws IOException {
+  static void assertDocumentPresent(final String docId) throws IOException {
     Get get = new Get(Bytes.toBytes(docId));
     get.addFamily(HBaseIndexTransactionLog.FAMILY_DOCUMENTS);
     HTable table = new HTable(conf, TEST_INDEX);
@@ -155,8 +171,8 @@ public class TestHBaseIndexTransactionLog {
    * @param docId
    * @throws IOException
    */
-  void assertTermVectorDocumentMapping(final String term, final byte[] docId)
-      throws IOException {
+  static void assertTermVectorDocumentMapping(final String term,
+      final byte[] docId) throws IOException {
     Get get = new Get(Bytes.toBytes(term));
     get.addFamily(HBaseIndexTransactionLog.FAMILY_TERM_VECTOR);
     HTable table = new HTable(conf, TEST_INDEX);
@@ -178,8 +194,8 @@ public class TestHBaseIndexTransactionLog {
    * @param docId
    * @throws IOException
    */
-  void assertTermVectorDocumentMapping(final String term, final int docId)
+  static void assertTermVectorDocumentMapping(final String term, final int docId)
       throws IOException {
-    this.assertTermVectorDocumentMapping(term, Bytes.toBytes(docId));
+    assertTermVectorDocumentMapping(term, Bytes.toBytes(docId));
   }
 }

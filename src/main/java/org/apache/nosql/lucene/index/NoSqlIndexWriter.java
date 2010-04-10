@@ -95,6 +95,9 @@ public class NoSqlIndexWriter { // TODO: extends IndexWriter {
       // TODO: Special type of exception needed ?
 
     }
+
+    int internalDocId = indexTransactionLog.assignDocId(Bytes.toBytes(docId));
+
     List<String> allIndexedTerms = new ArrayList<String>(DEFAULT_TERM_CAPACITY);
 
     int position = 0;
@@ -140,7 +143,7 @@ public class NoSqlIndexWriter { // TODO: extends IndexWriter {
 
         for (Map.Entry<String, List<Integer>> term : termPositions.entrySet()) {
           String key = term.getKey();
-          indexTransactionLog.addTermVectors(key, Bytes.toBytes(docId), term
+          indexTransactionLog.addTermVectors(key, Bytes.toBytes(internalDocId), term
               .getValue());
         }
       }
@@ -152,7 +155,7 @@ public class NoSqlIndexWriter { // TODO: extends IndexWriter {
 
         String key = term;
 
-        indexTransactionLog.addTermVectors(key, Bytes.toBytes(docId),
+        indexTransactionLog.addTermVectors(key, Bytes.toBytes(internalDocId),
             EMPTY_TERM_VECTOR);
       }
 

@@ -191,13 +191,12 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   public TermDocs termDocs() throws IOException {
-    // TODO Auto-generated method stub
-    return null;
+    return new HBaseTermDocs(this.conf, this.indexName);
   }
 
   @Override
   public TermPositions termPositions() throws IOException {
-    // TODO Auto-generated method stub
+    // TODO: Do something
     return null;
   }
 
