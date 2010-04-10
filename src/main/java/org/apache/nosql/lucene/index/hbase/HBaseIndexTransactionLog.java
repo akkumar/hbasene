@@ -101,7 +101,7 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
   /**
    * Row Key for a special entry
    */
-  static final byte[] MAX_ID = Bytes.toBytes("max");
+  static final byte[] ROW_SEQUENCE_ID = Bytes.toBytes("sequenceId");
 
   /**
    * Character used to join the elements of a term document array.
@@ -141,7 +141,7 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
     this.table = createLuceneIndexTable(indexName, configuration, false);
     this.table.setAutoFlush(false);
 
-    Put put = new Put(MAX_ID);
+    Put put = new Put(ROW_SEQUENCE_ID);
     put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(0));
     this.table.put(put);
     this.table.flushCommits();
@@ -181,7 +181,7 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
     for (int i = 0; i < 100; ++i) { // Use a better way to allocate the uniquely
       // increasing docId. This can result in starvation and very rudimentary /
       // decrease throughput for a given index.
-      Get get = new Get(MAX_ID);
+      Get get = new Get(ROW_SEQUENCE_ID);
       get.addFamily(FAMILY_SEQUENCE);
       Result result = this.table.get(get);
       if (result == null) {
@@ -189,9 +189,9 @@ public class HBaseIndexTransactionLog extends NoSqlIndexTransactionLog {
       }
       byte[] oldValue = result.getValue(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE);
       int oldCount = Bytes.toInt(oldValue);
-      Put put = new Put(MAX_ID);
+      Put put = new Put(ROW_SEQUENCE_ID);
       put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(oldCount + 1));
-      if (this.table.checkAndPut(MAX_ID, FAMILY_SEQUENCE, QUALIFIER_SEQUENCE,
+      if (this.table.checkAndPut(ROW_SEQUENCE_ID, FAMILY_SEQUENCE, QUALIFIER_SEQUENCE,
           oldValue, put)) {
         this.table.flushCommits();
         assigned = true;
