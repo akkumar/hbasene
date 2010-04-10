@@ -102,9 +102,9 @@ public class HBaseTermPositions implements TermPositions {
 
   @Override
   public boolean next() throws IOException {
-    if (currentIndex < this.documents.size()) {
-      resetTermPositions();
+    if (currentIndex < (this.documents.size() - 1)) {
       this.currentIndex++;
+      resetTermPositions();
       return true;
     } else {
       return false;
@@ -157,7 +157,7 @@ public class HBaseTermPositions implements TermPositions {
         .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
     this.documents = new ArrayList<byte[]>(map.keySet());
     Collections.sort(documents, INT_COMPARATOR);
-    this.currentIndex = 0;
+    this.currentIndex = -1;
   }
 
   Result getRowWithTermVectors() throws IOException {
