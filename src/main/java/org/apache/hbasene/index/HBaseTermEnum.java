@@ -32,9 +32,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 
 /**
- * Implementation of Term Enumerator. <br />
- * 
- * 
+ * Enumerator of Terms in the HBase schema.
  * 
  */
 public class HBaseTermEnum extends TermEnum {
