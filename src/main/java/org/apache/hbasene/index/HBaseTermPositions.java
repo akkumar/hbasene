@@ -85,8 +85,8 @@ public class HBaseTermPositions implements TermPositions {
 
   @Override
   public void close() throws IOException {
-    documents.clear();
-    currentIndex = 0;
+    this.documents.clear();
+    this.currentIndex = 0;
     this.table.close();
   }
 
