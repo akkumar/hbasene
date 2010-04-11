@@ -139,7 +139,7 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
     this.table.setAutoFlush(false);
 
     Put put = new Put(ROW_SEQUENCE_ID);
-    put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(0L));
+    put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(-1L));
     this.table.put(put);
     this.table.flushCommits();
   }
