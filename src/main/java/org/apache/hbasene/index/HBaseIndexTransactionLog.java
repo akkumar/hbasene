@@ -180,7 +180,7 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
       // false.
       // High-performant, of course, but at what cost ?
       newId = table.incrementColumnValue(ROW_SEQUENCE_ID, FAMILY_SEQUENCE,
-          QUALIFIER_SEQUENCE, 1, false);
+          QUALIFIER_SEQUENCE, 1, true);
       if (newId >= Integer.MAX_VALUE) {
         throw new IllegalStateException(
             "Lucene cannot store more than the integer count. Hold on until the limitation of the same is fixed in the Lucene API-s");
