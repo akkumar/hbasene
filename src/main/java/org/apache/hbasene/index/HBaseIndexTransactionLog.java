@@ -172,7 +172,7 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
   }
 
   @Override
-  public int assignDocId(final byte[] primaryKey) throws IOException {
+  public long assignDocId(final byte[] primaryKey) throws IOException {
     HTable table = new HTable(this.configuration, this.indexName);
     long newId = -1;
     try {

@@ -78,5 +78,5 @@ public abstract class AbstractIndexTransactionLog {
    * @return correct docId, if in place. -1, otherwise.
    * @throws IOException
    */
-  public abstract int assignDocId(byte[] primaryKey) throws IOException;
+  public abstract long assignDocId(byte[] primaryKey) throws IOException;
 }
