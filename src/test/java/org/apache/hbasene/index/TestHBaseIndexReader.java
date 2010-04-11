@@ -36,8 +36,10 @@ public class TestHBaseIndexReader extends AbstractHBaseneTest {
     Assert.assertTrue("At least 3 terms with the keyword plays available",
         docs.totalHits > 3);
     for (ScoreDoc doc : docs.scoreDocs) {
-      Assert.assertTrue(doc.doc > 0); // valid docId
-      Assert.assertTrue(doc.score > 0.0f); // valid Score
+      Assert.assertTrue("Doc Id  " + doc.doc + " is >= 0", doc.doc >= 0); // valid
+                                                                          // docId
+      Assert.assertTrue("Score " + doc.score + " > 0.0f", doc.score > 0.0f); // valid
+                                                                             // Score
     }
   }
 }
