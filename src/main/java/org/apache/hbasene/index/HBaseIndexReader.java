@@ -113,7 +113,7 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   protected void doClose() throws IOException {
-    // HBASE-2435 in place.
+    // TODO: HBASE-2435 in place.
     // this.tablePool.closeTablePool(this.indexName);
     for (int i = 0; i < this.talePoolSize; ++i) {
       this.tablePool.getTable(this.indexName).close();
