@@ -66,8 +66,8 @@ public class HBaseTermPositions implements TermPositions {
 
     @Override
     public int compare(byte[] o1, byte[] o2) {
-      int lhs = Bytes.toInt(o1);
-      int rhs = Bytes.toInt(o2);
+      long lhs = Bytes.toLong(o1);
+      long rhs = Bytes.toLong(o2);
       if (lhs < rhs)
         return -1;
       else if (lhs > rhs)
@@ -92,7 +92,7 @@ public class HBaseTermPositions implements TermPositions {
 
   @Override
   public int doc() {
-    return Bytes.toInt(this.documents.get(this.currentIndex));
+    return (int) Bytes.toLong(this.documents.get(this.currentIndex));
   }
 
   @Override
@@ -175,7 +175,7 @@ public class HBaseTermPositions implements TermPositions {
   public boolean skipTo(int target) throws IOException {
     // TODO: Should the starting Index of the loop be 0 or currentIndex ?
     for (int i = 0; i < this.documents.size(); ++i) {
-      if (Bytes.toInt(this.documents.get(i)) >= target) {
+      if (Bytes.toLong(this.documents.get(i)) >= target) {
         currentIndex = i;
         return true;
       }
