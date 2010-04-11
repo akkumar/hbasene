@@ -35,6 +35,7 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldSelector;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
@@ -134,12 +135,14 @@ public class HBaseIndexReader extends IndexReader {
   @Override
   public Document document(int n, FieldSelector fieldSelector)
       throws CorruptIndexException, IOException {
-    Document doc = new Document();
+    Document doc = null;
     HTable table = this.createHTable();
     Get get = new Get(Bytes.toBytes(n));
     get.addColumn(HBaseIndexTransactionLog.FAMILY_INT_TO_DOC,
         HBaseIndexTransactionLog.QUALIFIER_DOC);
     try {
+      doc = new Document();
+
       Result result = table.get(get);
       byte[] docId = result.getValue(
           HBaseIndexTransactionLog.FAMILY_INT_TO_DOC,
@@ -147,6 +150,11 @@ public class HBaseIndexReader extends IndexReader {
       // TODO: Get the document schema, for the given document.
       // Change the HBaseIndexWriter appropriately to enable easy
       // reconstruction.
+
+      // For now, only the id is available for assertion back.
+      doc.add(new Field("id", Bytes.toString(docId), Field.Store.YES,
+          Field.Index.NO));
+
     } finally {
       table.close();
     }
