@@ -72,7 +72,10 @@ public class AbstractHBaseneTest {
     addDocument(writer, "FactTimes", "Messi plays for Barcelona");
     addDocument(writer, "UtopiaTimes", "Lionel M plays for Manchester United");
     addDocument(writer, "ThirdTimes", "Rooney plays for Manchester United");
-    addDocument(writer, "FourthTimes", "Messi plays for argentina as well. He plays better than any one else");
+    addDocument(
+        writer,
+        "FourthTimes",
+        "Messi plays for argentina as well. He plays as a mid-fielder and plays really well.");
 
     Assert.assertTrue(new HBaseAdmin(conf).tableExists(TEST_INDEX));
   }
@@ -164,7 +167,7 @@ public class AbstractHBaseneTest {
     LOGGER.info("****** Close " + Bytes.toString(family) + "****");
   }
 
-  static void listIntQualifiers(final byte[] family) throws IOException {
+  static void listLongQualifiers(final byte[] family) throws IOException {
     LOGGER.info("****** " + Bytes.toString(family) + "****");
     HTable table = new HTable(conf, TEST_INDEX);
     ResultScanner scanner = table.getScanner(family);
@@ -174,9 +177,28 @@ public class AbstractHBaseneTest {
       final StringBuilder sb = new StringBuilder();
       for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
         sb.append(" (" + Bytes.toString(entry.getKey()) + ", "
-            + Bytes.toInt(entry.getValue()) + ")");
+            + Bytes.toLong(entry.getValue()) + ")");
       }
       LOGGER.info(Bytes.toString(result.getRow()) + sb.toString());
+      result = scanner.next();
+    }
+    table.close();
+    LOGGER.info("****** Close " + Bytes.toString(family) + "****");
+  }
+
+  static void listLongRows(final byte[] family) throws IOException {
+    LOGGER.info("****** " + Bytes.toString(family) + "****");
+    HTable table = new HTable(conf, TEST_INDEX);
+    ResultScanner scanner = table.getScanner(family);
+    Result result = scanner.next();
+    while (result != null) {
+      NavigableMap<byte[], byte[]> map = result.getFamilyMap(family);
+      final StringBuilder sb = new StringBuilder();
+      for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
+        sb.append(" (" + Bytes.toString(entry.getKey()) + ", "
+            + Bytes.toString(entry.getValue()) + ")");
+      }
+      LOGGER.info(Bytes.toLong(result.getRow()) + sb.toString());
       result = scanner.next();
     }
     table.close();
