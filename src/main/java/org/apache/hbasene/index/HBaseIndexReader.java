@@ -204,8 +204,7 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   public byte[] norms(String field) throws IOException {
-    int numDocs = this.numDocs();
-    byte[] result = new byte[numDocs];
+    byte[] result = new byte[this.maxDoc()];
     Arrays.fill(result, DEFAULT_NORM);
     return result;
   }
@@ -240,9 +239,6 @@ public class HBaseIndexReader extends IndexReader {
         }
       }
     }
-    // TODO: Off-by-one error due to ArrayIndexOutOfBoundsException occurring in
-    // TermScorer. Revisit above ..
-    numDocs = 1000;
     return numDocs;
   }
 
