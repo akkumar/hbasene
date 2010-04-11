@@ -25,7 +25,7 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.store.LockObtainFailedException;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 public class TestHBaseIndexTransactionLog extends AbstractHBaseneTest {
 

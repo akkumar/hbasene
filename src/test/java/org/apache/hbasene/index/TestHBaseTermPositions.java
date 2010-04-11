@@ -22,15 +22,12 @@ package org.apache.hbasene.index;
 
 import java.io.IOException;
 
-import junit.framework.Assert;
-
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.Term;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 public class TestHBaseTermPositions extends AbstractHBaseneTest {
 
@@ -38,38 +35,29 @@ public class TestHBaseTermPositions extends AbstractHBaseneTest {
   private static final Logger LOGGER = Logger
       .getLogger(TestHBaseTermPositions.class.getName());
 
-  private static HBaseIndexReader indexReader;
+  private HBaseIndexReader indexReader;
 
   private HBaseTermPositions termPositions;
 
   /**
    * @throws java.lang.Exception
    */
-  @BeforeClass
-  public static void setUp() throws Exception {
+  @BeforeMethod
+  public void setUp() throws Exception {
     indexReader = new HBaseIndexReader(conf, TEST_INDEX);
+    termPositions = new HBaseTermPositions(indexReader);
 
   }
 
   /**
    * @throws java.lang.Exception
    */
-  @AfterClass
-  public static void tearDown() throws Exception {
+  @AfterMethod
+  public void tearDown() throws Exception {
+    termPositions.close();
     indexReader.close();
   }
-
-  @Before
-  public void beforeTest() throws IOException {
-    termPositions = new HBaseTermPositions(indexReader);
-
-  }
-
-  @After
-  public void afterTest() throws IOException {
-    termPositions.close();
-  }
-
+  
   @Test
   public void testTermDocs() throws IOException {
     termPositions.seek(new Term("content", "plays"));
@@ -79,7 +67,7 @@ public class TestHBaseTermPositions extends AbstractHBaseneTest {
       Assert.assertTrue(termPositions.freq() > 0);
       ++count;
     }
-    Assert.assertEquals("plays occurs 4 ", 4, count);
+    Assert.assertEquals( 4, count, "plays occurs 4 ");
   }
 
   @Test

@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.NavigableMap;
 
-import junit.framework.Assert;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.Get;
@@ -40,17 +38,18 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.util.Version;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 
 public class AbstractHBaseneTest {
 
   private static final Logger LOGGER = Logger
       .getLogger(AbstractHBaseneTest.class.getName());
 
-  private final static HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
+  private final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
-  protected static Configuration conf;
+  protected Configuration conf;
 
   protected static final String TEST_INDEX = "idx-hbase-lucene";
 
@@ -60,7 +59,7 @@ public class AbstractHBaseneTest {
    * @throws java.lang.Exception
    */
   @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
+  public void setUpBeforeClass() throws Exception {
     TEST_UTIL.startMiniCluster(1);
     conf = TEST_UTIL.getConfiguration();
     HBaseIndexTransactionLog.dropLuceneIndexTable(TEST_INDEX, conf);
@@ -84,13 +83,13 @@ public class AbstractHBaseneTest {
    * @throws java.lang.Exception
    */
   @AfterClass
-  public static void tearDownAfterClass() throws Exception {
+  public void tearDownAfterClass() throws Exception {
     LOGGER.info("***   Shut down the HBase Cluster  ****");
     HBaseIndexTransactionLog.dropLuceneIndexTable(TEST_INDEX, conf);
     TEST_UTIL.shutdownMiniCluster();
   }
 
-  static void addDocument(final AbstractIndexWriter writer, final String id,
+  protected void addDocument(final AbstractIndexWriter writer, final String id,
       final String content) throws CorruptIndexException, IOException {
     Document doc = new Document();
     doc.add(new Field("content", content, Field.Store.NO,
@@ -99,7 +98,7 @@ public class AbstractHBaseneTest {
     writer.addDocument(doc, new StandardAnalyzer(Version.LUCENE_30));
   }
 
-  static void assertDocumentPresent(final String docId) throws IOException {
+  protected void assertDocumentPresent(final String docId) throws IOException {
     Get get = new Get(Bytes.toBytes(docId));
     get.addFamily(HBaseIndexTransactionLog.FAMILY_DOCUMENTS);
     HTable table = new HTable(conf, TEST_INDEX);
@@ -113,7 +112,7 @@ public class AbstractHBaseneTest {
     }
   }
 
-  static void listAll(final byte[] family) throws IOException {
+  protected void listAll(final byte[] family) throws IOException {
     LOGGER.info("****** " + Bytes.toString(family) + "****");
     HTable table = new HTable(conf, TEST_INDEX);
     ResultScanner scanner = table.getScanner(family);
@@ -132,7 +131,7 @@ public class AbstractHBaseneTest {
     LOGGER.info("****** Close " + Bytes.toString(family) + "****");
   }
 
-  static void listLongQualifiers(final byte[] family) throws IOException {
+  protected void listLongQualifiers(final byte[] family) throws IOException {
     LOGGER.info("****** " + Bytes.toString(family) + "****");
     HTable table = new HTable(conf, TEST_INDEX);
     ResultScanner scanner = table.getScanner(family);
@@ -151,7 +150,7 @@ public class AbstractHBaseneTest {
     LOGGER.info("****** Close " + Bytes.toString(family) + "****");
   }
 
-  static void listLongRows(final byte[] family) throws IOException {
+  protected void listLongRows(final byte[] family) throws IOException {
     LOGGER.info("****** " + Bytes.toString(family) + "****");
     HTable table = new HTable(conf, TEST_INDEX);
     ResultScanner scanner = table.getScanner(family);
@@ -170,7 +169,7 @@ public class AbstractHBaseneTest {
     LOGGER.info("****** Close " + Bytes.toString(family) + "****");
   }
 
-  static void listTermVectors() throws IOException {
+  protected void listTermVectors() throws IOException {
     final byte[] family = HBaseIndexTransactionLog.FAMILY_TERMVECTOR;
     LOGGER.info("****** " + Bytes.toString(family) + "****");
     HTable table = new HTable(conf, TEST_INDEX);
@@ -197,7 +196,7 @@ public class AbstractHBaseneTest {
    * @param docId
    * @throws IOException
    */
-  static void assertTermVectorDocumentMapping(final String term,
+  protected void assertTermVectorDocumentMapping(final String term,
       final byte[] docId) throws IOException {
     Get get = new Get(Bytes.toBytes(term));
     get.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
@@ -220,7 +219,7 @@ public class AbstractHBaseneTest {
    * @param docId
    * @throws IOException
    */
-  static void assertTermVectorDocumentMapping(final String term,
+  protected void assertTermVectorDocumentMapping(final String term,
       final long docId) throws IOException {
     assertTermVectorDocumentMapping(term, Bytes.toBytes(docId));
   }

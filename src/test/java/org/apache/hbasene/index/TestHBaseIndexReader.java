@@ -22,8 +22,6 @@ package org.apache.hbasene.index;
 
 import java.io.IOException;
 
-import junit.framework.Assert;
-
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -31,21 +29,22 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 public class TestHBaseIndexReader extends AbstractHBaseneTest {
 
-  private static IndexReader reader;
+  private IndexReader reader;
 
-  @BeforeClass
-  public static void setUp() {
+  @BeforeMethod
+  public void setUp() {
     reader = new HBaseIndexReader(conf, TEST_INDEX);
   }
 
-  @AfterClass
-  public static void tearDown() throws IOException {
+  @AfterMethod
+  public void tearDown() throws IOException {
     reader.close();
   }
 
@@ -54,22 +53,23 @@ public class TestHBaseIndexReader extends AbstractHBaseneTest {
     IndexSearcher searcher = new IndexSearcher(reader);
     TopDocs docs = searcher.search(new TermQuery(new Term("content", "plays")),
         3);
-    Assert.assertTrue("At least 3 terms with the keyword plays available",
-        docs.totalHits > 3);
+    Assert.assertTrue(docs.totalHits > 3,
+        "At least 3 terms with the keyword plays available");
     for (ScoreDoc scoreDoc : docs.scoreDocs) {
-      Assert.assertTrue("Doc Id  " + scoreDoc.doc + " is >= 0",
-          scoreDoc.doc >= 0); // valid
+      Assert.assertTrue(scoreDoc.doc >= 0, "Doc Id  " + scoreDoc.doc
+          + " is >= 0"); // valid
       // docId
-      Assert.assertTrue("Score " + scoreDoc.score + " > 0.0f",
-          scoreDoc.score > 0.0f); // valid
+      Assert.assertTrue(scoreDoc.score > 0.0f, "Score " + scoreDoc.score
+          + " > 0.0f"); // valid
       // Score
 
       try {
-        Assert.assertNotNull("Retrieving document for " + scoreDoc.doc, reader
-            .document(scoreDoc.doc));
+        Assert.assertNotNull(reader.document(scoreDoc.doc),
+            "Retrieving document for " + scoreDoc.doc);
       } catch (Exception ex) {
-        Assert.assertTrue("Exception occurred while retrieving document for "
-            + scoreDoc.doc + " " + ex, false);
+        Assert.assertTrue(false,
+            "Exception occurred while retrieving document for " + scoreDoc.doc
+                + " " + ex);
       }
 
       // valid document

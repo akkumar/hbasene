@@ -22,15 +22,14 @@ package org.apache.hbasene.index;
 
 import java.io.IOException;
 
-import junit.framework.Assert;
-
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.LockObtainFailedException;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 public class TestHBaseTermEnum extends AbstractHBaseneTest {
 
@@ -38,14 +37,16 @@ public class TestHBaseTermEnum extends AbstractHBaseneTest {
   private static final Logger LOGGER = Logger.getLogger(TestHBaseTermEnum.class
       .getName());
 
-  private static HBaseTermEnum termEnum;
+  private HBaseTermEnum termEnum;
+
+  private HBaseIndexReader indexReader;
 
   /**
    * @throws java.lang.Exception
    */
-  @BeforeClass
-  public static void setUp() throws Exception {
-    HBaseIndexReader indexReader = new HBaseIndexReader(conf, TEST_INDEX);
+  @BeforeMethod
+  public void setUp() throws Exception {
+    indexReader = new HBaseIndexReader(conf, TEST_INDEX);
     termEnum = new HBaseTermEnum(indexReader);
 
   }
@@ -53,9 +54,11 @@ public class TestHBaseTermEnum extends AbstractHBaseneTest {
   /**
    * @throws java.lang.Exception
    */
-  @AfterClass
-  public static void tearDown() throws Exception {
+  @AfterMethod
+  public void tearDown() throws Exception {
     termEnum.close();
+    indexReader.close();
+
   }
 
   @Test
@@ -65,8 +68,8 @@ public class TestHBaseTermEnum extends AbstractHBaseneTest {
       Term term = termEnum.term();
       String field = term.field();
       Assert.assertTrue(field.contains("content") || field.contains("id"));
-      Assert.assertTrue("At least one document present with the given term",
-          termEnum.docFreq() > 0);
+      Assert.assertTrue(termEnum.docFreq() > 0,
+          "At least one document present with the given term");
     }
 
   }
