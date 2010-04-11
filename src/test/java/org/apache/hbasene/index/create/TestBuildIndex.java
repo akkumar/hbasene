@@ -40,14 +40,14 @@ import org.apache.lucene.store.FSDirectory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestBuildIndex {
 
   private static final Log LOG = LogFactory.getLog(TestBuildIndex.class);
 
-  private final static HBaseTestingUtility TEST_UTIL;
+  private final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
   private static final String TABLE = "buildindex-testtable";
 
@@ -58,25 +58,22 @@ public class TestBuildIndex {
 
   private HBaseAdmin admin;
 
-  static {
-    TEST_UTIL = new HBaseTestingUtility();
-  }
-
   @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
+  public void setUpBeforeClass() throws Exception {
     FileUtils.deleteDirectory(new File(INDEX_DIR));
-    TEST_UTIL.getConfiguration().setInt("hbase.regionserver.msginterval", 100);
-    TEST_UTIL.getConfiguration().setInt("hbase.client.pause", 250);
-    TEST_UTIL.getConfiguration().setInt("hbase.client.retries.number", 6);
-    TEST_UTIL.startMiniCluster(3);
+    TEST_UTIL.startMiniCluster(1);
+    // TEST_UTIL.getConfiguration().setInt("hbase.regionserver.msginterval",
+    // 100);
+    // TEST_UTIL.getConfiguration().setInt("hbase.client.pause", 250);
+    // TEST_UTIL.getConfiguration().setInt("hbase.client.retries.number", 6);
   }
 
   @AfterClass
-  public static void tearDownAfterClass() throws Exception {
+  public void tearDownAfterClass() throws Exception {
     TEST_UTIL.shutdownMiniCluster();
   }
 
-  @BeforeTest
+  @BeforeMethod
   public void setUp() throws Exception {
     this.admin = new HBaseAdmin(TEST_UTIL.getConfiguration());
     HTableDescriptor[] tables = admin.listTables();
@@ -117,7 +114,7 @@ public class TestBuildIndex {
     ht.flushCommits();
   }
 
-  @Test(enabled = false)
+  @Test
   public void testBuildIndex() throws IOException, ParseException {
     final int MAX_RESULTS = 10;
     BuildTableIndex build = new BuildTableIndex();
