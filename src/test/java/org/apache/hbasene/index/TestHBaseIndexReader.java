@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import junit.framework.Assert;
 
+import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
@@ -55,11 +56,26 @@ public class TestHBaseIndexReader extends AbstractHBaseneTest {
         3);
     Assert.assertTrue("At least 3 terms with the keyword plays available",
         docs.totalHits > 3);
-    for (ScoreDoc doc : docs.scoreDocs) {
-      Assert.assertTrue("Doc Id  " + doc.doc + " is >= 0", doc.doc >= 0); // valid
-                                                                          // docId
-      Assert.assertTrue("Score " + doc.score + " > 0.0f", doc.score > 0.0f); // valid
-                                                                             // Score
+    for (ScoreDoc scoreDoc : docs.scoreDocs) {
+      Assert.assertTrue("Doc Id  " + scoreDoc.doc + " is >= 0",
+          scoreDoc.doc >= 0); // valid
+      // docId
+      Assert.assertTrue("Score " + scoreDoc.score + " > 0.0f",
+          scoreDoc.score > 0.0f); // valid
+      // Score
+
+      try {
+        Assert.assertNotNull("Retrieving document for " + scoreDoc.doc, reader
+            .document(scoreDoc.doc));
+      } catch (Exception ex) {
+        Assert.assertTrue("Exception occurred while retrieving document for "
+            + scoreDoc.doc + " " + ex, false);
+      }
+
+      // valid document
     }
+    Document doc = reader.document(docs.scoreDocs[0].doc);
+    Assert.assertEquals("FourthTimes", doc.get(PK_FIELD));
+    // maximum # of plays - hence expecting it to be top-most rank.
   }
 }
