@@ -135,9 +135,10 @@ public class HBaseIndexReader extends IndexReader {
   @Override
   public Document document(int n, FieldSelector fieldSelector)
       throws CorruptIndexException, IOException {
+    final long index = (long) n; // internally, all row keys are long.
     Document doc = null;
     HTable table = this.createHTable();
-    Get get = new Get(Bytes.toBytes(n));
+    Get get = new Get(Bytes.toBytes(index));
     get.addColumn(HBaseIndexTransactionLog.FAMILY_INT_TO_DOC,
         HBaseIndexTransactionLog.QUALIFIER_DOC);
     try {
