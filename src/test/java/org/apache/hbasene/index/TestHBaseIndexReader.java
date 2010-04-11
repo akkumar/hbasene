@@ -37,7 +37,7 @@ public class TestHBaseIndexReader extends AbstractHBaseneTest {
         docs.totalHits > 3);
     for (ScoreDoc doc : docs.scoreDocs) {
       Assert.assertTrue(doc.doc > 0); // valid docId
-      // Assert.assertTrue(doc.score > 0.0f); // valid Score
+      Assert.assertTrue(doc.score > 0.0f); // valid Score
     }
   }
 }

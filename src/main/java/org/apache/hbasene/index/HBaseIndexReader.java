@@ -22,6 +22,7 @@
 package org.apache.hbasene.index;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -41,6 +42,7 @@ import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermPositions;
 import org.apache.lucene.index.TermVectorMapper;
+import org.apache.lucene.search.DefaultSimilarity;
 
 /**
  * Index Reader specific to HBase
@@ -51,6 +53,11 @@ public class HBaseIndexReader extends IndexReader {
   private final Configuration conf;
 
   private final String indexName;
+
+  /**
+   * The default norm as per the given field.
+   */
+  static final byte DEFAULT_NORM = DefaultSimilarity.encodeNorm(1.0f);
 
   /**
    * 
@@ -123,14 +130,28 @@ public class HBaseIndexReader extends IndexReader {
   @Override
   public Document document(int n, FieldSelector fieldSelector)
       throws CorruptIndexException, IOException {
-    // TODO Auto-generated method stub
-    return null;
+    Document doc = new Document();
+    HTable table = this.createHTable();
+    Get get = new Get(Bytes.toBytes(n));
+    get.addColumn(HBaseIndexTransactionLog.FAMILY_INT_TO_DOC,
+        HBaseIndexTransactionLog.QUALIFIER_DOC);
+    try {
+      Result result = table.get(get);
+      byte[] docId = result.getValue(
+          HBaseIndexTransactionLog.FAMILY_INT_TO_DOC,
+          HBaseIndexTransactionLog.QUALIFIER_DOC);
+      // TODO: Get the document schema, for the given document.
+      // Change the HBaseIndexWriter appropriately to enable easy
+      // reconstruction.
+    } finally {
+      table.close();
+    }
+    return doc;
   }
 
   @Override
   public Collection<String> getFieldNames(FieldOption fldOption) {
-    // TODO Auto-generated method stub
-    return null;
+    return Arrays.asList(new String[] {});
   }
 
   @Override
@@ -174,14 +195,15 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   public int maxDoc() {
-    // TODO Auto-generated method stub
-    return 0;
+    return this.numDocs() + 1;
   }
 
   @Override
   public byte[] norms(String field) throws IOException {
-    // TODO Auto-generated method stub
-    return null;
+    int numDocs = this.numDocs();
+    byte[] result = new byte[numDocs];
+    Arrays.fill(result, DEFAULT_NORM);
+    return result;
   }
 
   @Override
@@ -192,8 +214,8 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   public int numDocs() {
-    // TODO Auto-generated method stub
-    return 0;
+    // TODO: Retrieve the number of documents in the given index from the table.
+    return 1000;
   }
 
   @Override
@@ -214,7 +236,7 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   public TermEnum terms(Term t) throws IOException {
-    HBaseTermEnum termEnum = new HBaseTermEnum(this);
+    HBaseTermEnum termEnum = (HBaseTermEnum) terms();
     termEnum.skipTo(t);
     return termEnum;
   }
