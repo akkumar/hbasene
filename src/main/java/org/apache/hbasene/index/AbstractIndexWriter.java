@@ -76,7 +76,8 @@ public class AbstractIndexWriter { // TODO: extends IndexWriter {
    * @throws LockObtainFailedException
    * @throws IOException
    */
-  public AbstractIndexWriter(final AbstractIndexTransactionLog indexTransactionLog,
+  public AbstractIndexWriter(
+      final AbstractIndexTransactionLog indexTransactionLog,
       final String primaryKeyField) throws CorruptIndexException,
       LockObtainFailedException, IOException {
     // super(d, a, create, deletionPolicy, mfl);
@@ -99,7 +100,7 @@ public class AbstractIndexWriter { // TODO: extends IndexWriter {
 
     }
 
-    int internalDocId = indexTransactionLog.assignDocId(Bytes.toBytes(docId));
+    long internalDocId = indexTransactionLog.assignDocId(Bytes.toBytes(docId));
 
     List<String> allIndexedTerms = new ArrayList<String>(DEFAULT_TERM_CAPACITY);
 
@@ -146,8 +147,8 @@ public class AbstractIndexWriter { // TODO: extends IndexWriter {
 
         for (Map.Entry<String, List<Integer>> term : termPositions.entrySet()) {
           String key = term.getKey();
-          indexTransactionLog.addTermVectors(key, Bytes.toBytes(internalDocId), term
-              .getValue());
+          indexTransactionLog.addTermVectors(key, Bytes.toBytes(internalDocId),
+              term.getValue());
         }
       }
 
@@ -185,7 +186,7 @@ public class AbstractIndexWriter { // TODO: extends IndexWriter {
   }
 
   // TODO: This method needs to be refactored to the NoSqlIndexWriter
-  private String createColumnName(final String fieldName, final String term) {
+  String createColumnName(final String fieldName, final String term) {
     return fieldName + "/" + term;
   }
 }
