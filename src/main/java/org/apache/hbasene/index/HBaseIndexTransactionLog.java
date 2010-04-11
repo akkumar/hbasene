@@ -28,11 +28,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.google.common.base.Joiner;
@@ -141,7 +139,7 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
     this.table.setAutoFlush(false);
 
     Put put = new Put(ROW_SEQUENCE_ID);
-    put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(0));
+    put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(0L));
     this.table.put(put);
     this.table.flushCommits();
   }
@@ -175,33 +173,24 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
 
   @Override
   public int assignDocId(final byte[] primaryKey) throws IOException {
-    boolean assigned = false;
-    int newId = -1;
-    for (int i = 0; i < 100; ++i) { // Use a better way to allocate the uniquely
-      // increasing docId. This can result in starvation and very rudimentary /
-      // decrease throughput for a given index.
-      Get get = new Get(ROW_SEQUENCE_ID);
-      get.addFamily(FAMILY_SEQUENCE);
-      Result result = this.table.get(get);
-      if (result == null) {
-        throw new IllegalStateException("result is not supposed to be null");
+    HTable table = new HTable(this.configuration, this.indexName);
+    long newId = -1;
+    try {
+      // TODO: What is the impact of a 'fail scenario' with writeToWAL set to
+      // false.
+      // High-performant, of course, but at what cost ?
+      newId = table.incrementColumnValue(ROW_SEQUENCE_ID, FAMILY_SEQUENCE,
+          QUALIFIER_SEQUENCE, 1, false);
+      if (newId >= Integer.MAX_VALUE) {
+        throw new IllegalStateException(
+            "Lucene cannot store more than the integer count. Hold on until the limitation of the same is fixed in the Lucene API-s");
       }
-      byte[] oldValue = result.getValue(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE);
-      int oldCount = Bytes.toInt(oldValue);
-      Put put = new Put(ROW_SEQUENCE_ID);
-      put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(oldCount + 1));
-      if (this.table.checkAndPut(ROW_SEQUENCE_ID, FAMILY_SEQUENCE, QUALIFIER_SEQUENCE,
-          oldValue, put)) {
-        this.table.flushCommits();
-        assigned = true;
-        newId = oldCount + 1;
-        break;
-      }
-    }
-    if (assigned) {
       insertBiMap(primaryKey, Bytes.toBytes(newId));
+    } finally {
+      table.close();
     }
-    return newId;
+
+    return (int) newId;
   }
 
   void insertBiMap(final byte[] primaryKey, final byte[] docId)
