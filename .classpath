@@ -21,14 +21,14 @@
 	<classpathentry kind="lib" path="target/dependency/hadoop-core-0.20.2-with-200-826.jar"/>
 	<classpathentry kind="lib" path="target/dependency/hadoop-test-0.20.2-with-200-826.jar"/>
 	<classpathentry kind="lib" path="target/dependency/hbase-core-0.21.0-SNAPSHOT-tests.jar"/>
-	<classpathentry kind="lib" path="target/dependency/hbase-core-0.21.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="target/dependency/hbase-core-0.21.0-SNAPSHOT.jar" sourcepath="/hbase-core"/>
 	<classpathentry kind="lib" path="target/dependency/jets3t-0.6.1.jar"/>
 	<classpathentry kind="lib" path="target/dependency/jetty-6.1.14.jar"/>
 	<classpathentry kind="lib" path="target/dependency/jetty-util-6.1.14.jar"/>
 	<classpathentry kind="lib" path="target/dependency/jline-0.9.94.jar"/>
 	<classpathentry kind="lib" path="target/dependency/jsp-2.1-6.1.14.jar"/>
 	<classpathentry kind="lib" path="target/dependency/jsp-api-2.1-6.1.14.jar"/>
-	<classpathentry kind="lib" path="target/dependency/junit-4.5.jar"/>
+	<classpathentry kind="lib" path="target/dependency/junit-4.5.jar" sourcepath="/home/akkumar/.m2/repository/junit/junit/4.5/junit-4.5-sources.jar"/>
 	<classpathentry kind="lib" path="target/dependency/log4j-1.2.15.jar"/>
 	<classpathentry kind="lib" path="target/dependency/lucene-core-3.0.1.jar" sourcepath="/home/akkumar/.m2/repository/org/apache/lucene/lucene-core/3.0.1/lucene-core-3.0.1-sources.jar"/>
 	<classpathentry kind="lib" path="target/dependency/lucene-queryparser-3.0.1.jar"/>
