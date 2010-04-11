@@ -68,6 +68,11 @@ public class HBaseIndexReader extends IndexReader {
   private final HTablePool tablePool;
 
   /**
+   * Maximum size of the table pool
+   */
+  private final int talePoolSize;
+
+  /**
    * The default norm as per the given field.
    */
   static final byte DEFAULT_NORM = DefaultSimilarity.encodeNorm(1.0f);
@@ -91,6 +96,7 @@ public class HBaseIndexReader extends IndexReader {
       int tablePoolSize) {
     this.indexName = indexName;
     this.tablePool = new HTablePool(conf, tablePoolSize);
+    this.talePoolSize = tablePoolSize;
   }
 
   /**
@@ -107,8 +113,11 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   protected void doClose() throws IOException {
-    //HBASE-2435 in place.
-    //this.tablePool.closeTablePool(this.indexName);
+    // HBASE-2435 in place.
+    // this.tablePool.closeTablePool(this.indexName);
+    for (int i = 0; i < this.talePoolSize; ++i) {
+      this.tablePool.getTable(this.indexName).close();
+    }
   }
 
   @Override
