@@ -27,6 +27,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NavigableMap;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
@@ -49,6 +51,8 @@ import org.apache.lucene.search.DefaultSimilarity;
  * 
  */
 public class HBaseIndexReader extends IndexReader {
+
+  private static final Log LOG = LogFactory.getLog(HBaseIndexReader.class);
 
   private final Configuration conf;
 
@@ -214,8 +218,32 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   public int numDocs() {
-    // TODO: Retrieve the number of documents in the given index from the table.
-    return 1000;
+    HTable table = null;
+    int numDocs = 0;
+    try {
+      table = this.createHTable();
+      Get get = new Get(HBaseIndexTransactionLog.ROW_SEQUENCE_ID);
+      get.addColumn(HBaseIndexTransactionLog.FAMILY_SEQUENCE,
+          HBaseIndexTransactionLog.QUALIFIER_SEQUENCE);
+      Result result = table.get(get);
+      numDocs = (int) Bytes.toLong(result.getValue(
+          HBaseIndexTransactionLog.FAMILY_SEQUENCE,
+          HBaseIndexTransactionLog.QUALIFIER_SEQUENCE));
+    } catch (IOException e) {
+      LOG.warn("Error in numDocs() ", e);
+    } finally {
+      if (table != null) {
+        try {
+          table.close();
+        } catch (Exception ex) {
+
+        }
+      }
+    }
+    // TODO: Off-by-one error due to ArrayIndexOutOfBoundsException occurring in
+    // TermScorer. Revisit above ..
+    numDocs = 1000;
+    return numDocs;
   }
 
   @Override
