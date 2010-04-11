@@ -28,7 +28,8 @@ import java.util.List;
 import java.util.NavigableMap;
 
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.index.Term;
@@ -40,7 +41,9 @@ import org.apache.lucene.index.TermPositions;
  */
 public class HBaseTermPositions implements TermPositions {
 
-  private final HTable table;
+  private final HTableInterface table;
+
+  private final HTablePool pool;
 
   /**
    * List of documents corresponding to the term docs under consideration.
@@ -80,14 +83,15 @@ public class HBaseTermPositions implements TermPositions {
   };
 
   public HBaseTermPositions(final HBaseIndexReader reader) throws IOException {
-    this.table = reader.createHTable();
+    this.pool = reader.getTablePool();
+    this.table = this.pool.getTable(reader.getIndexName());
   }
 
   @Override
   public void close() throws IOException {
     this.documents.clear();
     this.currentIndex = 0;
-    this.table.close();
+    this.pool.putTable(table);
   }
 
   @Override

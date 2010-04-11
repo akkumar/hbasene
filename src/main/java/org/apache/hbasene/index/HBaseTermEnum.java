@@ -23,7 +23,8 @@ import java.io.IOException;
 import java.util.NavigableMap;
 
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
@@ -37,15 +38,17 @@ import org.apache.lucene.index.TermEnum;
  */
 public class HBaseTermEnum extends TermEnum {
 
-  private final HTable table;
+  private final HTableInterface table;
 
   private ResultScanner resultScanner;
 
   private Term currentTerm;
 
-  public HBaseTermEnum(final HBaseIndexReader hbaseIndexReader)
-      throws IOException {
-    table = hbaseIndexReader.createHTable();
+  private final HTablePool pool;
+
+  public HBaseTermEnum(final HBaseIndexReader reader) throws IOException {
+    this.pool = reader.getTablePool();
+    table = pool.getTable(reader.getIndexName());
     this.resultScanner = table
         .getScanner(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
   }
@@ -53,7 +56,7 @@ public class HBaseTermEnum extends TermEnum {
   @Override
   public void close() throws IOException {
     this.resultScanner.close();
-    this.table.close();
+    this.pool.putTable(table);
   }
 
   @Override

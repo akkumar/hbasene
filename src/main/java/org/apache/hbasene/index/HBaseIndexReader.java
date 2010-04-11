@@ -31,7 +31,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.document.Document;
@@ -55,14 +56,42 @@ public class HBaseIndexReader extends IndexReader {
 
   private static final Log LOG = LogFactory.getLog(HBaseIndexReader.class);
 
-  private final Configuration conf;
-
+  /**
+   * The indexName represents the tableName as well.
+   */
   private final String indexName;
+
+  /**
+   * HTable is not thread-safe, but HTable caches the region locations within.
+   * Rudimentary implementation of a table pool used.
+   */
+  private final HTablePool tablePool;
 
   /**
    * The default norm as per the given field.
    */
   static final byte DEFAULT_NORM = DefaultSimilarity.encodeNorm(1.0f);
+
+  /**
+   * Number of HTable instances in the tablepool.
+   */
+  static final int MAX_POOL_SIZE = 10;
+
+  /**
+   * 
+   * @param conf
+   *          HBase Configuration needed for the client to establish the
+   *          connection with the HBase Pool.
+   * @param indexName
+   *          Name of the index.
+   * @param tablePoolSize
+   *          Maximum limit of the table pools
+   */
+  public HBaseIndexReader(final Configuration conf, final String indexName,
+      int tablePoolSize) {
+    this.indexName = indexName;
+    this.tablePool = new HTablePool(conf, tablePoolSize);
+  }
 
   /**
    * 
@@ -73,14 +102,12 @@ public class HBaseIndexReader extends IndexReader {
    *          Name of the index.
    */
   public HBaseIndexReader(final Configuration conf, final String indexName) {
-    this.conf = conf;
-    this.indexName = indexName;
+    this(conf, indexName, MAX_POOL_SIZE);
   }
 
   @Override
   protected void doClose() throws IOException {
-    // TODO Auto-generated method stub
-
+    // this.tablePool.releaseAll(this.indexName);
   }
 
   @Override
@@ -115,7 +142,7 @@ public class HBaseIndexReader extends IndexReader {
     final String rowKey = t.field() + "/" + t.text();
     Get get = new Get(Bytes.toBytes(rowKey));
     get.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
-    HTable table = this.createHTable();
+    HTableInterface table = this.getTablePool().getTable(this.indexName);
     try {
       Result result = table.get(get);
       if (result == null) {
@@ -128,7 +155,7 @@ public class HBaseIndexReader extends IndexReader {
       }
       return map.size();
     } finally {
-      table.close();
+      this.getTablePool().putTable(table);
     }
   }
 
@@ -137,11 +164,11 @@ public class HBaseIndexReader extends IndexReader {
       throws CorruptIndexException, IOException {
     final long index = (long) n; // internally, all row keys are long.
     Document doc = null;
-    HTable table = this.createHTable();
-    Get get = new Get(Bytes.toBytes(index));
-    get.addColumn(HBaseIndexTransactionLog.FAMILY_INT_TO_DOC,
-        HBaseIndexTransactionLog.QUALIFIER_DOC);
+    HTableInterface table = this.getTablePool().getTable(this.indexName);
     try {
+      Get get = new Get(Bytes.toBytes(index));
+      get.addColumn(HBaseIndexTransactionLog.FAMILY_INT_TO_DOC,
+          HBaseIndexTransactionLog.QUALIFIER_DOC);
       doc = new Document();
 
       Result result = table.get(get);
@@ -157,7 +184,7 @@ public class HBaseIndexReader extends IndexReader {
           Field.Index.NO));
 
     } finally {
-      table.close();
+      this.getTablePool().putTable(table);
     }
     return doc;
   }
@@ -226,10 +253,9 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   public int numDocs() {
-    HTable table = null;
+    HTableInterface table = this.getTablePool().getTable(this.indexName);
     int numDocs = 0;
     try {
-      table = this.createHTable();
       Get get = new Get(HBaseIndexTransactionLog.ROW_SEQUENCE_ID);
       get.addColumn(HBaseIndexTransactionLog.FAMILY_SEQUENCE,
           HBaseIndexTransactionLog.QUALIFIER_SEQUENCE);
@@ -240,13 +266,7 @@ public class HBaseIndexReader extends IndexReader {
     } catch (IOException e) {
       LOG.warn("Error in numDocs() ", e);
     } finally {
-      if (table != null) {
-        try {
-          table.close();
-        } catch (Exception ex) {
-
-        }
-      }
+      this.getTablePool().putTable(table);
     }
     return numDocs;
   }
@@ -280,7 +300,16 @@ public class HBaseIndexReader extends IndexReader {
    * @return
    * @throws IOException
    */
-  HTable createHTable() throws IOException {
-    return new HTable(this.conf, this.indexName);
+  HTablePool getTablePool() {
+    return this.tablePool;
+  }
+
+  /**
+   * Return the index Name of the given table.
+   * 
+   * @return
+   */
+  String getIndexName() {
+    return this.indexName;
   }
 }
