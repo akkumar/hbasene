@@ -113,41 +113,6 @@ public class AbstractHBaseneTest {
     }
   }
 
-  /**
-   * Asserts if a mapping exists between the given term and the doc Id.
-   * 
-   * @param term
-   * @param docId
-   * @throws IOException
-   */
-  static void assertTermVectorDocumentMapping(final String term,
-      final byte[] docId) throws IOException {
-    Get get = new Get(Bytes.toBytes(term));
-    get.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
-    HTable table = new HTable(conf, TEST_INDEX);
-    try {
-      Result result = table.get(get);
-      NavigableMap<byte[], byte[]> map = result
-          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
-      Assert.assertTrue(map.size() > 0);
-      Assert.assertNotNull(map.get(docId));
-    } finally {
-      table.close();
-    }
-  }
-
-  /**
-   * Asserts if a mapping exists between the given term and the doc Id.
-   * 
-   * @param term
-   * @param docId
-   * @throws IOException
-   */
-  static void assertTermVectorDocumentMapping(final String term, final int docId)
-      throws IOException {
-    assertTermVectorDocumentMapping(term, Bytes.toBytes(docId));
-  }
-
   static void listAll(final byte[] family) throws IOException {
     LOGGER.info("****** " + Bytes.toString(family) + "****");
     HTable table = new HTable(conf, TEST_INDEX);
@@ -204,4 +169,60 @@ public class AbstractHBaseneTest {
     table.close();
     LOGGER.info("****** Close " + Bytes.toString(family) + "****");
   }
+
+  static void listTermVectors() throws IOException {
+    final byte[] family = HBaseIndexTransactionLog.FAMILY_TERMVECTOR;
+    LOGGER.info("****** " + Bytes.toString(family) + "****");
+    HTable table = new HTable(conf, TEST_INDEX);
+    ResultScanner scanner = table.getScanner(family);
+    Result result = scanner.next();
+    while (result != null) {
+      NavigableMap<byte[], byte[]> map = result.getFamilyMap(family);
+      final StringBuilder sb = new StringBuilder();
+      for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
+        sb.append(" (" + Bytes.toLong(entry.getKey()) + ", "
+            + Bytes.toString(entry.getValue()) + ")");
+      }
+      LOGGER.info(Bytes.toString(result.getRow()) + sb.toString());
+      result = scanner.next();
+    }
+    table.close();
+    LOGGER.info("****** Close " + Bytes.toString(family) + "****");
+  }
+
+  /**
+   * Asserts if a mapping exists between the given term and the doc Id.
+   * 
+   * @param term
+   * @param docId
+   * @throws IOException
+   */
+  static void assertTermVectorDocumentMapping(final String term,
+      final byte[] docId) throws IOException {
+    Get get = new Get(Bytes.toBytes(term));
+    get.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
+    HTable table = new HTable(conf, TEST_INDEX);
+    try {
+      Result result = table.get(get);
+      NavigableMap<byte[], byte[]> map = result
+          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
+      Assert.assertTrue(map.size() > 0);
+      Assert.assertNotNull(map.get(docId));
+    } finally {
+      table.close();
+    }
+  }
+
+  /**
+   * Asserts if a mapping exists between the given term and the doc Id.
+   * 
+   * @param term
+   * @param docId
+   * @throws IOException
+   */
+  static void assertTermVectorDocumentMapping(final String term,
+      final long docId) throws IOException {
+    assertTermVectorDocumentMapping(term, Bytes.toBytes(docId));
+  }
+
 }
