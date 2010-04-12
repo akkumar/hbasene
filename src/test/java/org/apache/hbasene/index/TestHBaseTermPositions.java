@@ -40,12 +40,17 @@ public class TestHBaseTermPositions extends AbstractHBaseneTest {
   private HBaseTermPositions termPositions;
 
   /**
+   * Encoder of termPositions
+   */
+  private final AbstractTermPositionsEncoder termPositionEncoder = new AsciiTermPositionsEncoder();
+
+  /**
    * @throws java.lang.Exception
    */
   @BeforeMethod
   public void setUp() throws Exception {
     indexReader = new HBaseIndexReader(conf, TEST_INDEX);
-    termPositions = new HBaseTermPositions(indexReader);
+    termPositions = new HBaseTermPositions(indexReader, this.termPositionEncoder);
 
   }
 

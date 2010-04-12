@@ -65,6 +65,11 @@ public class HBaseTermPositions implements TermPositions {
 
   private int currentTermPositionIndex;
 
+  /**
+   * Encoder of the term positions in the underlying store.
+   */
+  private AbstractTermPositionsEncoder termPositionsEncoder;
+
   private Comparator<byte[]> INT_COMPARATOR = new Comparator<byte[]>() {
 
     @Override
@@ -82,9 +87,12 @@ public class HBaseTermPositions implements TermPositions {
 
   };
 
-  public HBaseTermPositions(final HBaseIndexReader reader) throws IOException {
+  public HBaseTermPositions(final HBaseIndexReader reader,
+      final AbstractTermPositionsEncoder termPositionsEncoder)
+      throws IOException {
     this.pool = reader.getTablePool();
     this.table = this.pool.getTable(reader.getIndexName());
+    this.termPositionsEncoder = termPositionsEncoder;
   }
 
   @Override
@@ -123,17 +131,8 @@ public class HBaseTermPositions implements TermPositions {
     byte[] tfArray = result.getValue(
         HBaseIndexTransactionLog.FAMILY_TERMVECTOR, this.documents
             .get(this.currentIndex));
-    String tf = Bytes.toString(tfArray);
-    currentTermPositionIndex = 0;
-    if (tf == null) {
-      currentTermPositions = new int[0];
-    } else {
-      String[] tfs = tf.split(",");
-      this.currentTermPositions = new int[tfs.length];
-      for (int i = 0; i < tfs.length; ++i) {
-        this.currentTermPositions[i] = Integer.valueOf(tfs[i]);
-      }
-    }
+    this.currentTermPositionIndex = 0;
+    this.currentTermPositions = this.termPositionsEncoder.decode(tfArray);
 
   }
 

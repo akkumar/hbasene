@@ -33,8 +33,6 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import com.google.common.base.Joiner;
-
 /**
  * An index formed on-top of HBase. This requires a table with the following
  * column families, at the minimum.
@@ -101,11 +99,6 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
   static final byte[] ROW_SEQUENCE_ID = Bytes.toBytes("sequenceId");
 
   /**
-   * Character used to join the elements of a term document array.
-   */
-  private static final char JOIN_CHAR = ',';
-
-  /**
    * List of puts to go in.
    */
   private List<Put> puts;
@@ -121,6 +114,11 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
    * Table instance under consideration.
    */
   private HTable table;
+
+  /**
+   * Encoder of termPositions
+   */
+  private final AbstractTermPositionsEncoder termPositionEncoder = new AsciiTermPositionsEncoder();
 
   public HBaseIndexTransactionLog(final Configuration configuration,
       final String indexName) {
@@ -158,9 +156,10 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
 
   @Override
   public void addTermVectors(String fieldTerm, byte[] docId,
-      List<Integer> termVectors) {
+      final List<Integer> termPositionVector) {
     Put put = new Put(Bytes.toBytes(fieldTerm));
-    put.add(FAMILY_TERMVECTOR, docId, toBytes(termVectors));
+    put.add(FAMILY_TERMVECTOR, docId, this.termPositionEncoder
+        .encode(termPositionVector));
     this.puts.add(put);
   }
 
@@ -204,33 +203,6 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
     this.table.put(put2);
 
     this.table.flushCommits();
-  }
-
-  static byte[] toBytes(final Integer[] array) {
-    String tf = Joiner.on(JOIN_CHAR).join(array);
-    return Bytes.toBytes(tf);
-    // TODO: Rudimentary implementation of a comma-separated join for the
-    // representation of integer array in place.
-    // A better encoding algorithm for encoding the document Ids might be
-    // useful and space efficient.
-  }
-
-  static int getTermFrequency(final byte[] termFreqRepresentation) {
-    if (termFreqRepresentation == null) {
-      return 0;
-    }
-    String tf = Bytes.toString(termFreqRepresentation);
-    int count = 1;
-    for (int i = 0; i < tf.length(); ++i) {
-      if (tf.charAt(i) == JOIN_CHAR) {
-        count++;
-      }
-    }
-    return count;
-  }
-
-  static byte[] toBytes(final List<Integer> array) {
-    return toBytes(array.toArray(new Integer[0]));
   }
 
   /**

@@ -1,5 +1,5 @@
 /**
- * Copyright 2010 Karthik Kumar
+b * Copyright 2010 Karthik Kumar
  * 
  * 
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -22,6 +22,8 @@ package org.apache.hbasene.index;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -38,8 +40,11 @@ public class TestHBaseIndexReader extends AbstractHBaseneTest {
 
   private IndexReader reader;
 
+  private Configuration myconf = HBaseConfiguration.create();
+  
   @BeforeMethod
   public void setUp() {
+    //myconf
     reader = new HBaseIndexReader(conf, TEST_INDEX);
   }
 

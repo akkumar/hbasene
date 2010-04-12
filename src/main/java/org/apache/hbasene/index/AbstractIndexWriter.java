@@ -67,6 +67,7 @@ public class AbstractIndexWriter { // TODO: extends IndexWriter {
   private static final List<Integer> EMPTY_TERM_VECTOR = Arrays
       .asList(new Integer[] { 0 });
 
+
   /**
    * 
    * @param indexTransactionLog

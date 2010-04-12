@@ -57,10 +57,12 @@ public abstract class AbstractIndexTransactionLog {
    * @param docId
    * @param fieldTerm
    *          Field/Term combination
-   * @param termVectors
+   * @param termPositionVectors
+   *          Term Position Vectors for the given fieldTerm , present in the
+   *          given docId.
    */
   public abstract void addTermVectors(final String fieldTerm, byte[] docId,
-      List<Integer> termVectors);
+      final List<Integer> termPositionVectors);
 
   /**
    * Store the given field in the lucene hbase index.

@@ -83,6 +83,12 @@ public class HBaseIndexReader extends IndexReader {
   static final int MAX_POOL_SIZE = 10;
 
   /**
+   * Encoder of termPositions
+   */
+  private final AbstractTermPositionsEncoder termPositionEncoder = new AsciiTermPositionsEncoder();
+
+  
+  /**
    * 
    * @param conf
    *          HBase Configuration needed for the client to establish the
@@ -283,12 +289,12 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   public TermDocs termDocs() throws IOException {
-    return new HBaseTermPositions(this);
+    return new HBaseTermPositions(this, this.termPositionEncoder);
   }
 
   @Override
   public TermPositions termPositions() throws IOException {
-    return new HBaseTermPositions(this);
+    return new HBaseTermPositions(this, this.termPositionEncoder);
 
   }
 
