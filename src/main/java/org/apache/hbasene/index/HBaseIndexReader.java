@@ -70,7 +70,7 @@ public class HBaseIndexReader extends IndexReader {
   /**
    * Maximum size of the table pool
    */
-  private final int talePoolSize;
+  private final int tablePoolSize;
 
   /**
    * The default norm as per the given field.
@@ -96,7 +96,7 @@ public class HBaseIndexReader extends IndexReader {
       int tablePoolSize) {
     this.indexName = indexName;
     this.tablePool = new HTablePool(conf, tablePoolSize);
-    this.talePoolSize = tablePoolSize;
+    this.tablePoolSize = tablePoolSize;
   }
 
   /**
@@ -115,7 +115,7 @@ public class HBaseIndexReader extends IndexReader {
   protected void doClose() throws IOException {
     // TODO: HBASE-2435 in place.
     // this.tablePool.closeTablePool(this.indexName);
-    for (int i = 0; i < this.talePoolSize; ++i) {
+    for (int i = 0; i < this.tablePoolSize; ++i) {
       this.tablePool.getTable(this.indexName).close();
     }
   }
