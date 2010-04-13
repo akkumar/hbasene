@@ -4,13 +4,13 @@
 
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.github.lucene.hbase</groupId>
-  <artifactId>lucene-hbase</artifactId>
+  <groupId>com.hbasene</groupId>
+  <artifactId>hbasene-core</artifactId>
   <packaging>jar</packaging>
   <version>0.20.0-SNAPSHOT</version>
   <name>Lucene interaction with HBase </name>
   <description>Lucene Libraries with HBase</description>
-  <url>http://github.com/akkumar/lucene-hbase/tree/master</url>
+  <url>http://github.com/akkumar/hbasene/tree/master</url>
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -25,16 +25,16 @@
     <zookeeper.version>3.3.0</zookeeper.version>
   </properties>
   <scm>
-    <connection>scm:git:git://github.com/akkumar/lucene-hbase.git</connection>
-    <developerConnection>scm:git:git@github.com:akkumar/lucene-hbase.git</developerConnection>
-    <url>http://github.com/akkumar/lucene-hbase/tree/master</url>
+    <connection>scm:git:git://github.com/akkumar/hbasene.git</connection>
+    <developerConnection>scm:git:git@github.com:akkumar/hbasene.git</developerConnection>
+    <url>http://github.com/akkumar/hbasene/tree/master</url>
   </scm>
   <inceptionYear>2010</inceptionYear>
   <prerequisites>
     <maven>2.0.9</maven>
   </prerequisites>
   <issueManagement>
-    <url>http://github.com/akkumar/lucene-hbase/issues</url>
+    <url>http://github.com/akkumar/hbasene/issues</url>
   </issueManagement>
   <developers>
     <developer>
@@ -46,8 +46,8 @@
     <mailingList />
   </mailingLists>
   <organization>
-    <name>Lucene for HBase</name>
-    <url>http://github.com/akkumar/lucene-hbase</url>
+    <name>HBase as backing store for Lucene</name>
+    <url>http://github.com/akkumar/hbasene</url>
   </organization>
   <build>
     <plugins>
