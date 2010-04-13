@@ -45,7 +45,7 @@ public class TestHBaseIndexTransactionLog extends AbstractHBaseneTest {
     listLongRows(HBaseIndexTransactionLog.FAMILY_INT_TO_DOC);
     listLongQualifiers(HBaseIndexTransactionLog.FAMILY_DOC_TO_INT);
     listTermVectors();
-    listAll(HBaseIndexTransactionLog.FAMILY_DOCUMENTS);
+    listAll(HBaseIndexTransactionLog.FAMILY_FIELDS);
     listAll(HBaseIndexTransactionLog.FAMILY_SEQUENCE);
     /**
      * TODO: For some reason the documentId does not appear in the term vector. Need to examine..

@@ -56,10 +56,11 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
   static final byte[] FAMILY_TERMVECTOR = Bytes.toBytes("fm.termVector");
 
   /**
-   * Column family that contains the document's stored content. The columns are
-   * usually the field names with the values being the contents of the same.
+   * Column family that contains the stored fields of Lucene Documents.
+   * The columns are usually the field names with the values being the 
+   * contents of the same ( in a byte array, hence compatible with both ASCII / binary formats).
    */
-  static final byte[] FAMILY_DOCUMENTS = Bytes.toBytes("fm.documents");
+  static final byte[] FAMILY_FIELDS = Bytes.toBytes("fm.fields");
 
   /**
    * Column family that contains the mapping from the docId to an integer
@@ -166,7 +167,7 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
   @Override
   public void storeField(byte[] docId, String fieldName, byte[] value) {
     Put put = new Put(docId);
-    put.add(FAMILY_DOCUMENTS, Bytes.toBytes(fieldName), value);
+    put.add(FAMILY_FIELDS, Bytes.toBytes(fieldName), value);
     this.puts.add(put);
   }
 
@@ -264,7 +265,7 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
     HTableDescriptor tableDescriptor = new HTableDescriptor(Bytes
         .toBytes(tableName));
     tableDescriptor.addFamily(createUniversionLZO(admin,
-        HBaseIndexTransactionLog.FAMILY_DOCUMENTS));
+        HBaseIndexTransactionLog.FAMILY_FIELDS));
     tableDescriptor.addFamily(createUniversionLZO(admin,
         HBaseIndexTransactionLog.FAMILY_TERMVECTOR));
     tableDescriptor.addFamily(createUniversionLZO(admin,

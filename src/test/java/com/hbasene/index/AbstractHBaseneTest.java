@@ -106,12 +106,12 @@ public class AbstractHBaseneTest {
 
   protected void assertDocumentPresent(final String docId) throws IOException {
     Get get = new Get(Bytes.toBytes(docId));
-    get.addFamily(HBaseIndexTransactionLog.FAMILY_DOCUMENTS);
+    get.addFamily(HBaseIndexTransactionLog.FAMILY_FIELDS);
     HTable table = new HTable(conf, TEST_INDEX);
     try {
       Result result = table.get(get);
       NavigableMap<byte[], byte[]> map = result
-          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_DOCUMENTS);
+          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_FIELDS);
       Assert.assertTrue(map.size() > 0);
     } finally {
       table.close();
