@@ -53,45 +53,45 @@ public class HBaseIndexTransactionLog extends AbstractIndexTransactionLog {
    * values containing the actual term positions in them, if they were
    * available.
    */
-  static final byte[] FAMILY_TERMVECTOR = Bytes.toBytes("termVector");
+  static final byte[] FAMILY_TERMVECTOR = Bytes.toBytes("fm.termVector");
 
   /**
    * Column family that contains the document's stored content. The columns are
    * usually the field names with the values being the contents of the same.
    */
-  static final byte[] FAMILY_DOCUMENTS = Bytes.toBytes("documents");
+  static final byte[] FAMILY_DOCUMENTS = Bytes.toBytes("fm.documents");
 
   /**
    * Column family that contains the mapping from the docId to an integer
    */
-  static final byte[] FAMILY_DOC_TO_INT = Bytes.toBytes("doc2int");
+  static final byte[] FAMILY_DOC_TO_INT = Bytes.toBytes("fm.doc2int");
 
   /**
    * Qualifier belonging to family, {@link #FAMILY_DOC_TO_INT} , representing an
    * uniquely increasing integer used by Lucene for internal purposes.
    */
-  static final byte[] QUALIFIER_INT = Bytes.toBytes("qualifierInt");
+  static final byte[] QUALIFIER_INT = Bytes.toBytes("qual.Int");
 
   /**
    * Column family that contains the mapping from an integer to a docId.
    */
-  static final byte[] FAMILY_INT_TO_DOC = Bytes.toBytes("int2doc");
+  static final byte[] FAMILY_INT_TO_DOC = Bytes.toBytes("fm.int2doc");
 
   /**
    * Qualifier belonging to family {@link #FAMILY_INT_TO_DOC}, representing the
    * document Id as defined by the application.
    */
-  static final byte[] QUALIFIER_DOC = Bytes.toBytes("document");
+  static final byte[] QUALIFIER_DOC = Bytes.toBytes("qual.document");
 
   /**
    * Column family to store the sequence of the counter used by lucene.
    */
-  static final byte[] FAMILY_SEQUENCE = Bytes.toBytes("sequence");
+  static final byte[] FAMILY_SEQUENCE = Bytes.toBytes("fm.sequence");
 
   /**
    * Qualifier that represents a sequence.
    */
-  static final byte[] QUALIFIER_SEQUENCE = Bytes.toBytes("sequence");
+  static final byte[] QUALIFIER_SEQUENCE = Bytes.toBytes("qual.sequence");
 
   /**
    * Row Key for a special entry
