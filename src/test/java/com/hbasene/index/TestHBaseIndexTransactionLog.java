@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hbasene.index;
+package com.hbasene.index;
 
 import java.io.IOException;
 
@@ -26,6 +26,8 @@ import org.apache.log4j.Logger;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.testng.annotations.Test;
+
+import com.hbasene.index.HBaseIndexTransactionLog;
 
 public class TestHBaseIndexTransactionLog extends AbstractHBaseneTest {
 

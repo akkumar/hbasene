@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hbasene.index;
+package com.hbasene.index;
 
 import java.io.IOException;
 
@@ -28,6 +28,11 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import com.hbasene.index.AbstractTermPositionsEncoder;
+import com.hbasene.index.AsciiTermPositionsEncoder;
+import com.hbasene.index.HBaseIndexReader;
+import com.hbasene.index.HBaseTermPositions;
 
 public class TestHBaseTermPositions extends AbstractHBaseneTest {
 

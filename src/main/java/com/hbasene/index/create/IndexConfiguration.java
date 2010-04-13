@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hbasene.index.create;
+package com.hbasene.index.create;
 
 import java.io.ByteArrayInputStream;
 import java.io.OutputStream;

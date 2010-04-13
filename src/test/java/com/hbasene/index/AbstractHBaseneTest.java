@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hbasene.index;
+package com.hbasene.index;
 
 import java.io.IOException;
 import java.util.Map;
@@ -42,6 +42,12 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import com.hbasene.index.AbstractIndexWriter;
+import com.hbasene.index.HBaseIndexTransactionLog;
+
+/**
+ * Abstract HBasene Test
+ */
 public class AbstractHBaseneTest {
 
   private static final Logger LOGGER = Logger
