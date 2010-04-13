@@ -1,5 +1,5 @@
 /**
-b * Copyright 2010 Karthik Kumar
+ * Copyright 2010 Karthik Kumar
  * 
  * 
  * Licensed to the Apache Software Foundation (ASF) under one
