@@ -136,7 +136,7 @@
 
 
   <dependencies>
-    <dependency>
+     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
       <version>${hadoop-core.version}</version>
@@ -168,6 +168,15 @@
     </dependency>
 
     <!--  TEST  -->
+
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>5.11</version>
+      <classifier>jdk15</classifier>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-test</artifactId>
@@ -177,11 +186,12 @@
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-core-test</artifactId>
+      <artifactId>hbase-core</artifactId>
       <version>0.21.0-SNAPSHOT</version>
-      <systemPath>${basedir}/lib/hbase-core-0.21.0-SNAPSHOT-tests.jar</systemPath>
-      <scope>system</scope>
+      <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
+
 
     <dependency>
       <groupId>org.apache.lucene</groupId>
@@ -190,13 +200,6 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.testng</groupId>
-      <artifactId>testng</artifactId>
-      <version>5.11</version>
-      <classifier>jdk15</classifier>
-      <scope>test</scope>
-    </dependency>
     
   </dependencies>
 
