@@ -79,8 +79,8 @@ public class AbstractIndexWriter { // TODO: extends IndexWriter {
    */
   public AbstractIndexWriter(
       final AbstractIndexTransactionLog indexTransactionLog,
-      final String primaryKeyField) throws CorruptIndexException,
-      LockObtainFailedException, IOException {
+      final String primaryKeyField) throws 
+      IOException {
     // super(d, a, create, deletionPolicy, mfl);
     // TODO: bring super ctor in when we inherit from IndexWriter.
 
