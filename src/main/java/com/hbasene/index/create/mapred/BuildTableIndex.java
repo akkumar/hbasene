@@ -160,7 +160,7 @@ public class BuildTableIndex {
     jobConf.setReducerClass(IndexTableReduce.class);
     FileOutputFormat.setOutputPath(jobConf, new Path(indexDir));
     jobConf.setOutputFormat(IndexOutputFormat.class);
-
+    jobConf.setJarByClass(BuildTableIndex.class);
     return jobConf;
   }
 
