@@ -44,12 +44,12 @@ import org.apache.lucene.store.LockObtainFailedException;
  * Index Writer in the noSQL world.
  * 
  */
-public class AbstractIndexWriter { // TODO: extends IndexWriter {
+public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
   /**
    * Commit Log from the given index.
    */
-  private final AbstractIndexTransactionLog indexTransactionLog;
+  private final AbstractIndexStore indexTransactionLog;
 
   /**
    * Field representing the primary key in the given search index.
@@ -77,8 +77,8 @@ public class AbstractIndexWriter { // TODO: extends IndexWriter {
    * @throws LockObtainFailedException
    * @throws IOException
    */
-  public AbstractIndexWriter(
-      final AbstractIndexTransactionLog indexTransactionLog,
+  public HBaseIndexWriter(
+      final AbstractIndexStore indexTransactionLog,
       final String primaryKeyField) throws 
       IOException {
     // super(d, a, create, deletionPolicy, mfl);

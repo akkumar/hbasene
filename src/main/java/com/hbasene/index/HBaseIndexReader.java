@@ -157,7 +157,7 @@ public class HBaseIndexReader extends IndexReader {
     // same as in TermEnum. Avoid duplication.
     final String rowKey = t.field() + "/" + t.text();
     Get get = new Get(Bytes.toBytes(rowKey));
-    get.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
+    get.addFamily(HBaseneConstants.FAMILY_TERMVECTOR);
     HTableInterface table = this.getTablePool().getTable(this.indexName);
     try {
       Result result = table.get(get);
@@ -165,7 +165,7 @@ public class HBaseIndexReader extends IndexReader {
         return 0;
       }
       NavigableMap<byte[], byte[]> map = result
-          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
+          .getFamilyMap(HBaseneConstants.FAMILY_TERMVECTOR);
       if (map == null) {
         return 0;
       }
@@ -183,14 +183,14 @@ public class HBaseIndexReader extends IndexReader {
     HTableInterface table = this.getTablePool().getTable(this.indexName);
     try {
       Get get = new Get(Bytes.toBytes(index));
-      get.addColumn(HBaseIndexTransactionLog.FAMILY_INT_TO_DOC,
-          HBaseIndexTransactionLog.QUALIFIER_DOC);
+      get.addColumn(HBaseneConstants.FAMILY_INT_TO_DOC,
+          HBaseneConstants.QUALIFIER_DOC);
       doc = new Document();
 
       Result result = table.get(get);
       byte[] docId = result.getValue(
-          HBaseIndexTransactionLog.FAMILY_INT_TO_DOC,
-          HBaseIndexTransactionLog.QUALIFIER_DOC);
+          HBaseneConstants.FAMILY_INT_TO_DOC,
+          HBaseneConstants.QUALIFIER_DOC);
       // TODO: Get the document schema, for the given document.
       // Change the HBaseIndexWriter appropriately to enable easy
       // reconstruction.
@@ -272,13 +272,13 @@ public class HBaseIndexReader extends IndexReader {
     HTableInterface table = this.getTablePool().getTable(this.indexName);
     int numDocs = 0;
     try {
-      Get get = new Get(HBaseIndexTransactionLog.ROW_SEQUENCE_ID);
-      get.addColumn(HBaseIndexTransactionLog.FAMILY_SEQUENCE,
-          HBaseIndexTransactionLog.QUALIFIER_SEQUENCE);
+      Get get = new Get(HBaseneConstants.ROW_SEQUENCE_ID);
+      get.addColumn(HBaseneConstants.FAMILY_SEQUENCE,
+          HBaseneConstants.QUALIFIER_SEQUENCE);
       Result result = table.get(get);
       numDocs = (int) Bytes.toLong(result.getValue(
-          HBaseIndexTransactionLog.FAMILY_SEQUENCE,
-          HBaseIndexTransactionLog.QUALIFIER_SEQUENCE));
+          HBaseneConstants.FAMILY_SEQUENCE,
+          HBaseneConstants.QUALIFIER_SEQUENCE));
     } catch (IOException e) {
       LOG.warn("Error in numDocs() ", e);
     } finally {

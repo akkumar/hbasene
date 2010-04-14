@@ -27,13 +27,12 @@ import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.testng.annotations.Test;
 
-import com.hbasene.index.HBaseIndexTransactionLog;
 
-public class TestHBaseIndexTransactionLog extends AbstractHBaseneTest {
+public class TestHBaseIndexStore extends AbstractHBaseneTest {
 
   @SuppressWarnings("unused")
   private static final Logger LOGGER = Logger
-      .getLogger(TestHBaseIndexTransactionLog.class.getName());
+      .getLogger(TestHBaseIndexStore.class.getName());
 
   @Test
   public void testAddDocuments() throws CorruptIndexException,
@@ -42,11 +41,11 @@ public class TestHBaseIndexTransactionLog extends AbstractHBaseneTest {
     assertDocumentPresent("FactTimes");
     assertDocumentPresent("UtopiaTimes");
 
-    listLongRows(HBaseIndexTransactionLog.FAMILY_INT_TO_DOC);
-    listLongQualifiers(HBaseIndexTransactionLog.FAMILY_DOC_TO_INT);
+    listLongRows(HBaseneConstants.FAMILY_INT_TO_DOC);
+    listLongQualifiers(HBaseneConstants.FAMILY_DOC_TO_INT);
     listTermVectors();
-    listAll(HBaseIndexTransactionLog.FAMILY_FIELDS);
-    listAll(HBaseIndexTransactionLog.FAMILY_SEQUENCE);
+    listAll(HBaseneConstants.FAMILY_FIELDS);
+    listAll(HBaseneConstants.FAMILY_SEQUENCE);
     /**
      * TODO: For some reason the documentId does not appear in the term vector. Need to examine..
     assertTermVectorDocumentMapping("content/messi", Bytes.toBytes(1L));

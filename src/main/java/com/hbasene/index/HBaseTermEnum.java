@@ -50,7 +50,7 @@ public class HBaseTermEnum extends TermEnum {
     this.pool = reader.getTablePool();
     table = pool.getTable(reader.getIndexName());
     this.resultScanner = table
-        .getScanner(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
+        .getScanner(HBaseneConstants.FAMILY_TERMVECTOR);
   }
 
   @Override
@@ -64,13 +64,13 @@ public class HBaseTermEnum extends TermEnum {
     try {
       Get get = new Get(Bytes.toBytes(this.currentTerm.field() + "/"
           + this.currentTerm.text()));
-      get.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
+      get.addFamily(HBaseneConstants.FAMILY_TERMVECTOR);
       Result result = this.table.get(get);
       if (result == null) {
         return 0;
       }
       NavigableMap<byte[], byte[]> map = result
-          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
+          .getFamilyMap(HBaseneConstants.FAMILY_TERMVECTOR);
       return map.size();
     } catch (Exception ex) {
       return 0;
@@ -110,7 +110,7 @@ public class HBaseTermEnum extends TermEnum {
       this.resultScanner.close();
     }
     Scan scan = new Scan();
-    scan.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
+    scan.addFamily(HBaseneConstants.FAMILY_TERMVECTOR);
     scan.setStartRow(Bytes.toBytes(t.field() + "/" + t.text()));
     this.resultScanner = this.table.getScanner(scan);
   }

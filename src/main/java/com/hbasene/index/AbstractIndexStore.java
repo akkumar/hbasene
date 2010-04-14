@@ -28,7 +28,7 @@ import java.util.List;
  * 
  * 
  */
-public abstract class AbstractIndexTransactionLog {
+public abstract class AbstractIndexStore {
 
   /**
    * Initialize the log

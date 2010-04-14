@@ -42,8 +42,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
-import com.hbasene.index.AbstractIndexWriter;
-import com.hbasene.index.HBaseIndexTransactionLog;
 
 /**
  * Abstract HBasene Test
@@ -68,11 +66,11 @@ public class AbstractHBaseneTest {
   public void setUpBeforeClass() throws Exception {
     TEST_UTIL.startMiniCluster(1);
     conf = TEST_UTIL.getConfiguration();
-    HBaseIndexTransactionLog.dropLuceneIndexTable(TEST_INDEX, conf);
-    HBaseIndexTransactionLog hbaseIndex = new HBaseIndexTransactionLog(conf,
+    HBaseIndexStore.dropLuceneIndexTable(TEST_INDEX, conf);
+    HBaseIndexStore hbaseIndex = new HBaseIndexStore(conf,
         TEST_INDEX);
 
-    AbstractIndexWriter writer = new AbstractIndexWriter(hbaseIndex, PK_FIELD);
+    HBaseIndexWriter writer = new HBaseIndexWriter(hbaseIndex, PK_FIELD);
 
     addDocument(writer, "FactTimes", "Messi plays for Barcelona");
     addDocument(writer, "UtopiaTimes", "Lionel M plays for Manchester United");
@@ -91,11 +89,11 @@ public class AbstractHBaseneTest {
   @AfterClass
   public void tearDownAfterClass() throws Exception {
     LOGGER.info("***   Shut down the HBase Cluster  ****");
-    HBaseIndexTransactionLog.dropLuceneIndexTable(TEST_INDEX, conf);
+    HBaseIndexStore.dropLuceneIndexTable(TEST_INDEX, conf);
     TEST_UTIL.shutdownMiniCluster();
   }
 
-  protected void addDocument(final AbstractIndexWriter writer, final String id,
+  protected void addDocument(final HBaseIndexWriter writer, final String id,
       final String content) throws CorruptIndexException, IOException {
     Document doc = new Document();
     doc.add(new Field("content", content, Field.Store.NO,
@@ -106,12 +104,12 @@ public class AbstractHBaseneTest {
 
   protected void assertDocumentPresent(final String docId) throws IOException {
     Get get = new Get(Bytes.toBytes(docId));
-    get.addFamily(HBaseIndexTransactionLog.FAMILY_FIELDS);
+    get.addFamily(HBaseneConstants.FAMILY_FIELDS);
     HTable table = new HTable(conf, TEST_INDEX);
     try {
       Result result = table.get(get);
       NavigableMap<byte[], byte[]> map = result
-          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_FIELDS);
+          .getFamilyMap(HBaseneConstants.FAMILY_FIELDS);
       Assert.assertTrue(map.size() > 0);
     } finally {
       table.close();
@@ -176,7 +174,7 @@ public class AbstractHBaseneTest {
   }
 
   protected void listTermVectors() throws IOException {
-    final byte[] family = HBaseIndexTransactionLog.FAMILY_TERMVECTOR;
+    final byte[] family = HBaseneConstants.FAMILY_TERMVECTOR;
     LOGGER.info("****** " + Bytes.toString(family) + "****");
     HTable table = new HTable(conf, TEST_INDEX);
     ResultScanner scanner = table.getScanner(family);
@@ -205,12 +203,12 @@ public class AbstractHBaseneTest {
   protected void assertTermVectorDocumentMapping(final String term,
       final byte[] docId) throws IOException {
     Get get = new Get(Bytes.toBytes(term));
-    get.addFamily(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
+    get.addFamily(HBaseneConstants.FAMILY_TERMVECTOR);
     HTable table = new HTable(conf, TEST_INDEX);
     try {
       Result result = table.get(get);
       NavigableMap<byte[], byte[]> map = result
-          .getFamilyMap(HBaseIndexTransactionLog.FAMILY_TERMVECTOR);
+          .getFamilyMap(HBaseneConstants.FAMILY_TERMVECTOR);
       Assert.assertTrue(map.size() > 0);
       Assert.assertNotNull(map.get(docId));
     } finally {
