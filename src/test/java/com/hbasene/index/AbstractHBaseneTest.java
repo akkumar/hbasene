@@ -38,7 +38,6 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.CorruptIndexException;
-import org.apache.lucene.util.Version;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -105,20 +104,20 @@ public class AbstractHBaseneTest {
   protected void addDefaultDocuments() throws CorruptIndexException,
       IOException {
     indexWriter.addDocument(this.createDocument("FactTimes",
-        "Messi plays for Barcelona"), new StandardAnalyzer(Version.LUCENE_30));
+        "Messi plays for Barcelona"), new StandardAnalyzer());
     indexWriter.addDocument(this.createDocument("UtopiaTimes",
         "Lionel M plays for Manchester United"), new StandardAnalyzer(
-        Version.LUCENE_30));
+        ));
     indexWriter.addDocument(this.createDocument("ThirdTimes",
         "Rooney plays for Manchester United"), new StandardAnalyzer(
-        Version.LUCENE_30));
+        ));
     indexWriter
         .addDocument(
             this
                 .createDocument(
                     "FourthTimes",
                     "Messi plays for argentina as well. He plays as a mid-fielder and plays really well."),
-            new StandardAnalyzer(Version.LUCENE_30));
+            new StandardAnalyzer());
 
     Assert.assertTrue(new HBaseAdmin(conf).tableExists(TEST_INDEX));
   }
@@ -142,7 +141,6 @@ public class AbstractHBaseneTest {
         Field.Index.ANALYZED_NO_NORMS));
     doc.add(new Field("id", id, Field.Store.YES, Field.Index.NO));
     return doc;
-
   }
 
   protected void assertDocumentPresent(final String docId) throws IOException {

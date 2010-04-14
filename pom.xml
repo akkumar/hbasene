@@ -19,7 +19,7 @@
     </license>
   </licenses>
   <properties>
-    <lucene.version>3.0.1</lucene.version>
+    <lucene.version>2.4.1</lucene.version>
     <log4j.version>1.2.15</log4j.version>
     <hadoop-core.version>0.20.2-with-200-826</hadoop-core.version>
     <zookeeper.version>3.3.0</zookeeper.version>
@@ -200,14 +200,14 @@
       <scope>test</scope>
     </dependency>
 
-
+    <!-- 
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-queryparser</artifactId>
       <version>${lucene.version}</version>
       <scope>test</scope>
     </dependency>
-
+    -->
     
   </dependencies>
 

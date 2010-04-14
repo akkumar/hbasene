@@ -32,9 +32,8 @@ import java.util.Map;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.CorruptIndexException;
@@ -107,7 +106,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
     int position = 0;
 
-    for (Fieldable field : doc.getFields()) {
+    for (Fieldable field : (List<Fieldable>)doc.getFields()) {
 
       // Indexed field
       if (field.isIndexed() && field.isTokenized()) {
@@ -118,19 +117,16 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
           tokens = analyzer.tokenStream(field.name(), new StringReader(field
               .stringValue()));
         }
-        tokens.addAttribute(TermAttribute.class);
-        tokens.addAttribute(PositionIncrementAttribute.class);
 
         // collect term frequencies per doc
         Map<String, List<Integer>> termPositions = new HashMap<String, List<Integer>>();
         if (position > 0) {
           position += analyzer.getPositionIncrementGap(field.name());
         }
-
+        Token token = new Token();
         // Build the termPositions vector for all terms
-        while (tokens.incrementToken()) {
-          String term = createColumnName(field.name(), tokens.getAttribute(
-              TermAttribute.class).term());
+        while (tokens.next(token) != null) {
+          String term = createColumnName(field.name(), token.term());
           allIndexedTerms.add(term);
 
           List<Integer> pvec = termPositions.get(term);
@@ -140,8 +136,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
             termPositions.put(term, pvec);
           }
 
-          position += (tokens.getAttribute(PositionIncrementAttribute.class)
-              .getPositionIncrement() - 1);
+          position += (token.getPositionIncrement() - 1);
           pvec.add(++position);
 
         }

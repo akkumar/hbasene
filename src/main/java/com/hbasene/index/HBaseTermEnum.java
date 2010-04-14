@@ -105,7 +105,7 @@ public class HBaseTermEnum extends TermEnum {
    * @param t
    * @throws IOException
    */
-  public void skipTo(Term t) throws IOException {
+  public void skipDirectlyTo(Term t) throws IOException {
     if (this.resultScanner != null) {
       this.resultScanner.close();
     }

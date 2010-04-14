@@ -24,7 +24,6 @@ package com.hbasene.index;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Map;
 import java.util.NavigableMap;
 
 import org.apache.commons.logging.Log;
@@ -98,10 +97,9 @@ public class HBaseIndexReader extends IndexReader {
   }
 
   @Override
-  protected void doCommit(Map<String, String> commitUserData)
-      throws IOException {
+  protected void doCommit() throws IOException {
     // TODO Auto-generated method stub
-
+    
   }
 
   @Override
@@ -276,7 +274,7 @@ public class HBaseIndexReader extends IndexReader {
   @Override
   public TermEnum terms(Term t) throws IOException {
     HBaseTermEnum termEnum = (HBaseTermEnum) terms();
-    termEnum.skipTo(t);
+    termEnum.skipDirectlyTo(t);
     return termEnum;
   }
 
@@ -298,4 +296,5 @@ public class HBaseIndexReader extends IndexReader {
   public String getIndexName() {
     return this.indexName;
   }
+
 }

@@ -40,7 +40,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.Version;
 
 import com.hbasene.index.create.IndexConfiguration;
 import com.hbasene.index.create.LuceneDocumentWrapper;
@@ -82,16 +81,16 @@ public class IndexOutputFormat extends
       Class<? extends Analyzer> analyzerClass = Class.forName(analyzerName)
           .asSubclass(Analyzer.class);
       Constructor<? extends Analyzer> analyzerCtor = analyzerClass
-          .getConstructor(Version.class);
+          .getConstructor();
 
-      analyzer = analyzerCtor.newInstance(Version.LUCENE_30);
+      analyzer = analyzerCtor.newInstance();
     } catch (Exception e) {
       throw new IOException("Error in creating an analyzer object "
           + analyzerName);
     }
 
     // build locally first
-    final IndexWriter writer = new IndexWriter(FSDirectory.open(new File(fs
+    final IndexWriter writer = new IndexWriter(FSDirectory.getDirectory(new File(fs
         .startLocalOutput(perm, temp).toString())), analyzer, true,
         IndexWriter.MaxFieldLength.LIMITED);
 
@@ -106,8 +105,8 @@ public class IndexOutputFormat extends
         Class<? extends Similarity> similarityClass = Class.forName(
             similarityName).asSubclass(Similarity.class);
         Constructor<? extends Similarity> ctor = similarityClass
-            .getConstructor(Version.class);
-        Similarity similarity = ctor.newInstance(Version.LUCENE_30);
+            .getConstructor();
+        Similarity similarity = ctor.newInstance();
         writer.setSimilarity(similarity);
       } catch (Exception e) {
         throw new IOException("Error in creating a similarity object "

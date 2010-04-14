@@ -125,7 +125,7 @@ public class TestBuildIndex {
     build.run(args);
 
     // Do some search.
-    IndexSearcher searcher = new IndexSearcher(FSDirectory.open(new File(
+    IndexSearcher searcher = new IndexSearcher(FSDirectory.getDirectory(new File(
         INDEX_DIR + File.separator + "part-00000")));
 
     Assert.assertEquals(3, searcher.getIndexReader().numDocs(),
