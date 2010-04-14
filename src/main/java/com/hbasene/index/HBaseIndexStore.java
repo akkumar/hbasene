@@ -30,6 +30,8 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -47,49 +49,38 @@ import org.apache.hadoop.hbase.util.Bytes;
  */
 public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConstants {
 
-  
-
   /**
    * List of puts to go in.
    */
   private List<Put> puts;
 
-  private final Configuration configuration;
-
-  /**
-   * The name of the lucene index under consideration.
-   */
+  
+  private final HTablePool tablePool;
+  
+  
   private final String indexName;
-
-  /**
-   * Table instance under consideration.
-   */
-  private HTable table;
-
+  
   /**
    * Encoder of termPositions
    */
   private final AbstractTermPositionsEncoder termPositionEncoder = new AsciiTermPositionsEncoder();
 
-  public HBaseIndexStore(final Configuration configuration,
-      final String indexName) throws IOException {
+  public HBaseIndexStore(final HTablePool tablePool, final String indexName) throws IOException {
     this.puts = new ArrayList<Put>();
+    this.tablePool = tablePool;
     this.indexName = indexName;
-    this.configuration = configuration;
-    this.table = new HTable(configuration, indexName);
-    this.table.setAutoFlush(false);
-  }
-
-  public String getIndexName() {
-    return this.indexName;
   }
 
 
   @Override
   public void commit() throws IOException {
-    this.table.put(puts);
-    this.table.flushCommits();
-    puts.clear();
+    HTableInterface table = this.tablePool.getTable(this.indexName);
+    try {
+      table.put(this.puts);
+      this.puts.clear();
+    } finally { 
+      this.tablePool.putTable(table);
+    }
   }
 
   @Override
@@ -110,7 +101,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
 
   @Override
   public long assignDocId(final byte[] primaryKey) throws IOException {
-    HTable table = new HTable(this.configuration, this.indexName);
+    HTableInterface table = this.tablePool.getTable(this.indexName);
     long newId = -1;
     try {
       // TODO: What is the impact of a 'fail scenario' with writeToWAL set to
@@ -122,25 +113,25 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
         throw new IllegalStateException(
             "Lucene cannot store more than the integer count. Hold on until the limitation of the same is fixed in the Lucene API-s");
       }
-      insertBiMap(primaryKey, Bytes.toBytes(newId));
+      insertBiMap(table, primaryKey, Bytes.toBytes(newId));
     } finally {
-      table.close();
+      this.tablePool.putTable(table);
     }
 
     return (int) newId;
   }
 
-  void insertBiMap(final byte[] primaryKey, final byte[] docId)
+  void insertBiMap(final HTableInterface table, final byte[] primaryKey, final byte[] docId)
       throws IOException {
     Put put = new Put(primaryKey);
     put.add(FAMILY_DOC_TO_INT, QUALIFIER_INT, docId);
-    this.table.put(put);
+    table.put(put);
 
     Put put2 = new Put(docId);
     put2.add(FAMILY_INT_TO_DOC, QUALIFIER_DOC, primaryKey);
-    this.table.put(put2);
+    table.put(put2);
 
-    this.table.flushCommits();
+    table.flushCommits();
   }
 
   /**

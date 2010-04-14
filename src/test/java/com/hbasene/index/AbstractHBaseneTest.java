@@ -29,6 +29,7 @@ import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -59,6 +60,8 @@ public class AbstractHBaseneTest {
 
   protected static final String PK_FIELD = "id";
 
+  protected HTablePool  tablePool;
+  
   /**
    * @throws java.lang.Exception
    */
@@ -68,8 +71,8 @@ public class AbstractHBaseneTest {
     conf = TEST_UTIL.getConfiguration();
     HBaseIndexStore.dropLuceneIndexTable(TEST_INDEX, conf);
     HBaseIndexStore.createLuceneIndexTable(TEST_INDEX, conf, true);
-    HBaseIndexStore hbaseIndex = new HBaseIndexStore(conf,
-        TEST_INDEX);
+    this.tablePool = new HTablePool(conf, 10);
+    HBaseIndexStore hbaseIndex = new HBaseIndexStore(this.tablePool, TEST_INDEX);
 
     HBaseIndexWriter writer = new HBaseIndexWriter(hbaseIndex, PK_FIELD);
 
@@ -90,6 +93,8 @@ public class AbstractHBaseneTest {
   @AfterClass
   public void tearDownAfterClass() throws Exception {
     LOGGER.info("***   Shut down the HBase Cluster  ****");
+    //this.tablePool.close();
+    //TODO: HBASE-2435
     HBaseIndexStore.dropLuceneIndexTable(TEST_INDEX, conf);
     TEST_UTIL.shutdownMiniCluster();
   }
