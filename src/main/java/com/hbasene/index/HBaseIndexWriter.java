@@ -47,9 +47,9 @@ import org.apache.lucene.store.LockObtainFailedException;
 public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
   /**
-   * Commit Log from the given index.
+   * Abstraction of the index store
    */
-  private final AbstractIndexStore indexTransactionLog;
+  private final AbstractIndexStore indexStore;
 
   /**
    * Field representing the primary key in the given search index.
@@ -84,11 +84,11 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
     // super(d, a, create, deletionPolicy, mfl);
     // TODO: bring super ctor in when we inherit from IndexWriter.
 
-    this.indexTransactionLog = indexTransactionLog;
+    this.indexStore = indexTransactionLog;
     this.primaryKeyField = primaryKeyField;
 
     // Reset the transaction Log.
-    this.indexTransactionLog.init();
+    this.indexStore.init();
   }
 
   public void addDocument(Document doc, Analyzer analyzer)
@@ -101,7 +101,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
     }
 
-    long internalDocId = indexTransactionLog.assignDocId(Bytes.toBytes(docId));
+    long internalDocId = indexStore.assignDocId(Bytes.toBytes(docId));
 
     List<String> allIndexedTerms = new ArrayList<String>(DEFAULT_TERM_CAPACITY);
 
@@ -148,7 +148,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
         for (Map.Entry<String, List<Integer>> term : termPositions.entrySet()) {
           String key = term.getKey();
-          indexTransactionLog.addTermVectors(key, Bytes.toBytes(internalDocId),
+          indexStore.addTermVectors(key, Bytes.toBytes(internalDocId),
               term.getValue());
         }
       }
@@ -160,7 +160,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
         String key = term;
 
-        indexTransactionLog.addTermVectors(key, Bytes.toBytes(internalDocId),
+        indexStore.addTermVectors(key, Bytes.toBytes(internalDocId),
             EMPTY_TERM_VECTOR);
       }
 
@@ -178,12 +178,12 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
         String key = docId;
 
-        this.indexTransactionLog.storeField(Bytes.toBytes(key), field.name(),
+        this.indexStore.storeField(Bytes.toBytes(key), field.name(),
             value);
       }
     }
 
-    this.indexTransactionLog.commit();
+    this.indexStore.commit();
   }
 
   // TODO: This method needs to be refactored to the NoSqlIndexWriter
