@@ -7,6 +7,12 @@ April 2010
 
 Released under Apache License 2.0 .  See LICENSE.txt for more details.
 
+Contributors:
+------------
+
+Thomas Koch
+Karthik K
+
 What is it:
 ----------
 HBasene is a distributed system to use HBase (http://hadoop.apache.org/hbase/) as the backing store for 
