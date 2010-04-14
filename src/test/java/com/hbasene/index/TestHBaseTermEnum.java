@@ -46,7 +46,7 @@ public class TestHBaseTermEnum extends AbstractHBaseneTest {
    */
   @BeforeMethod
   public void setUp() throws Exception {
-    indexReader = new HBaseIndexReader(conf, TEST_INDEX);
+    indexReader = new HBaseIndexReader(this.tablePool, TEST_INDEX);
     termEnum = new HBaseTermEnum(indexReader);
 
   }

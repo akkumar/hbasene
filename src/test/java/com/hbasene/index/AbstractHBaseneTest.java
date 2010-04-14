@@ -62,6 +62,8 @@ public class AbstractHBaseneTest {
 
   protected HTablePool  tablePool;
   
+  protected static final int DEFAULT_POOL_SIZE = 20;
+  
   /**
    * @throws java.lang.Exception
    */
@@ -71,7 +73,7 @@ public class AbstractHBaseneTest {
     conf = TEST_UTIL.getConfiguration();
     HBaseIndexStore.dropLuceneIndexTable(TEST_INDEX, conf);
     HBaseIndexStore.createLuceneIndexTable(TEST_INDEX, conf, true);
-    this.tablePool = new HTablePool(conf, 10);
+    this.tablePool = new HTablePool(conf, DEFAULT_POOL_SIZE);
     HBaseIndexStore hbaseIndex = new HBaseIndexStore(this.tablePool, TEST_INDEX);
 
     HBaseIndexWriter writer = new HBaseIndexWriter(hbaseIndex, PK_FIELD);

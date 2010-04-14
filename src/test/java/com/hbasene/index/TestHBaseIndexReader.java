@@ -22,8 +22,6 @@ package com.hbasene.index;
 
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -41,12 +39,11 @@ public class TestHBaseIndexReader extends AbstractHBaseneTest {
 
   private IndexReader reader;
 
-  private Configuration myconf = HBaseConfiguration.create();
   
   @BeforeMethod
   public void setUp() {
     //myconf
-    reader = new HBaseIndexReader(conf, TEST_INDEX);
+    reader = new HBaseIndexReader(this.tablePool, TEST_INDEX);
   }
 
   @AfterMethod

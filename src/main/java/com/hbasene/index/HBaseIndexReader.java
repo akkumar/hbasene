@@ -29,7 +29,6 @@ import java.util.NavigableMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.HTablePool;
@@ -68,62 +67,34 @@ public class HBaseIndexReader extends IndexReader {
   private final HTablePool tablePool;
 
   /**
-   * Maximum size of the table pool
-   */
-  private final int tablePoolSize;
-
-  /**
    * The default norm as per the given field.
    */
   static final byte DEFAULT_NORM = DefaultSimilarity.encodeNorm(1.0f);
-
-  /**
-   * Number of HTable instances in the tablepool.
-   */
-  static final int MAX_POOL_SIZE = 10;
 
   /**
    * Encoder of termPositions
    */
   private final AbstractTermPositionsEncoder termPositionEncoder = new AsciiTermPositionsEncoder();
 
-  
   /**
    * 
-   * @param conf
-   *          HBase Configuration needed for the client to establish the
-   *          connection with the HBase Pool.
+   * @param tablePool
+   *    TablePool to be used by the index reader
    * @param indexName
-   *          Name of the index.
-   * @param tablePoolSize
-   *          Maximum limit of the table pools
+   *    Name of the index to be read from.  
    */
-  public HBaseIndexReader(final Configuration conf, final String indexName,
-      int tablePoolSize) {
+  public HBaseIndexReader(final HTablePool tablePool, final String indexName) {
+    this.tablePool = tablePool;
     this.indexName = indexName;
-    this.tablePool = new HTablePool(conf, tablePoolSize);
-    this.tablePoolSize = tablePoolSize;
-  }
-
-  /**
-   * 
-   * @param conf
-   *          HBase Configuration needed for the client to establish the
-   *          connection with the HBase Pool.
-   * @param indexName
-   *          Name of the index.
-   */
-  public HBaseIndexReader(final Configuration conf, final String indexName) {
-    this(conf, indexName, MAX_POOL_SIZE);
   }
 
   @Override
   protected void doClose() throws IOException {
     // TODO: HBASE-2435 in place.
     // this.tablePool.closeTablePool(this.indexName);
-    for (int i = 0; i < this.tablePoolSize; ++i) {
-      this.tablePool.getTable(this.indexName).close();
-    }
+    // for (int i = 0; i < this.tablePoolSize; ++i) {
+    // this.tablePool.getTable(this.indexName).close();
+    // }
   }
 
   @Override
@@ -188,8 +159,7 @@ public class HBaseIndexReader extends IndexReader {
       doc = new Document();
 
       Result result = table.get(get);
-      byte[] docId = result.getValue(
-          HBaseneConstants.FAMILY_INT_TO_DOC,
+      byte[] docId = result.getValue(HBaseneConstants.FAMILY_INT_TO_DOC,
           HBaseneConstants.QUALIFIER_DOC);
       // TODO: Get the document schema, for the given document.
       // Change the HBaseIndexWriter appropriately to enable easy
@@ -276,9 +246,9 @@ public class HBaseIndexReader extends IndexReader {
       get.addColumn(HBaseneConstants.FAMILY_SEQUENCE,
           HBaseneConstants.QUALIFIER_SEQUENCE);
       Result result = table.get(get);
-      numDocs = (int) Bytes.toLong(result.getValue(
-          HBaseneConstants.FAMILY_SEQUENCE,
-          HBaseneConstants.QUALIFIER_SEQUENCE));
+      numDocs = (int) Bytes.toLong(result
+          .getValue(HBaseneConstants.FAMILY_SEQUENCE,
+              HBaseneConstants.QUALIFIER_SEQUENCE));
     } catch (IOException e) {
       LOG.warn("Error in numDocs() ", e);
     } finally {
