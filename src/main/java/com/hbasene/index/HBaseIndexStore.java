@@ -87,10 +87,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
     this.table = createLuceneIndexTable(indexName, configuration, false);
     this.table.setAutoFlush(false);
 
-    Put put = new Put(ROW_SEQUENCE_ID);
-    put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(-1L));
-    this.table.put(put);
-    this.table.flushCommits();
   }
 
   @Override
@@ -228,7 +224,19 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
     admin.createTable(tableDescriptor);
     HTableDescriptor descriptor = admin.getTableDescriptor(Bytes
         .toBytes(tableName));
-    return (descriptor != null) ? new HTable(configuration, tableName) : null;
+    
+    if (descriptor != null) { 
+      HTable table = new HTable(configuration, tableName);
+    
+      Put put = new Put(ROW_SEQUENCE_ID);
+      put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(-1L));
+      table.put(put);
+      table.flushCommits();
+      
+      return table;
+    } else { 
+      return null;
+    }
   }
 
   static HColumnDescriptor createUniversionLZO(final HBaseAdmin admin,
