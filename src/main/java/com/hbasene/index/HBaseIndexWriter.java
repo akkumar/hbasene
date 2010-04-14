@@ -64,7 +64,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
   /**
    * List of empty term vectors
    */
-  private static final List<Integer> EMPTY_TERM_VECTOR = Arrays
+  private static final List<Integer> EMPTY_TERM_POSITIONS = Arrays
       .asList(new Integer[] { 0 });
 
 
@@ -148,7 +148,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
         for (Map.Entry<String, List<Integer>> term : termPositions.entrySet()) {
           String key = term.getKey();
-          indexStore.addTermVectors(key, Bytes.toBytes(internalDocId),
+          indexStore.addTermPositions(key, Bytes.toBytes(internalDocId),
               term.getValue());
         }
       }
@@ -160,8 +160,8 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
         String key = term;
 
-        indexStore.addTermVectors(key, Bytes.toBytes(internalDocId),
-            EMPTY_TERM_VECTOR);
+        indexStore.addTermPositions(key, Bytes.toBytes(internalDocId),
+            EMPTY_TERM_POSITIONS);
       }
 
       // Stores each field as a column under this doc key

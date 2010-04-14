@@ -48,7 +48,7 @@ public abstract class AbstractIndexStore {
    *          Term Position Vectors for the given fieldTerm , present in the
    *          given docId.
    */
-  public abstract void addTermVectors(final String fieldTerm, byte[] docId,
+  public abstract void addTermPositions(final String fieldTerm, byte[] docId,
       final List<Integer> termPositionVectors);
 
   /**

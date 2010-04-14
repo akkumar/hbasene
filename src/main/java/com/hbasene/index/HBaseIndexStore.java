@@ -84,7 +84,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
   }
 
   @Override
-  public void addTermVectors(String fieldTerm, byte[] docId,
+  public void addTermPositions(String fieldTerm, byte[] docId,
       final List<Integer> termPositionVector) {
     Put put = new Put(Bytes.toBytes(fieldTerm));
     put.add(FAMILY_TERMVECTOR, docId, this.termPositionEncoder
