@@ -72,27 +72,18 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
   private final AbstractTermPositionsEncoder termPositionEncoder = new AsciiTermPositionsEncoder();
 
   public HBaseIndexStore(final Configuration configuration,
-      final String indexName) {
+      final String indexName) throws IOException {
     this.puts = new ArrayList<Put>();
     this.indexName = indexName;
     this.configuration = configuration;
+    this.table = new HTable(configuration, indexName);
+    this.table.setAutoFlush(false);
   }
 
   public String getIndexName() {
     return this.indexName;
   }
 
-  @Override
-  public void init() throws IOException {
-    this.table = createLuceneIndexTable(indexName, configuration, false);
-    this.table.setAutoFlush(false);
-
-  }
-
-  @Override
-  public void close() throws IOException {
-    this.table.close();
-  }
 
   @Override
   public void commit() throws IOException {

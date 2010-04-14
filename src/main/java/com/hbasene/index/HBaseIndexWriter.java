@@ -88,7 +88,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
     this.primaryKeyField = primaryKeyField;
 
     // Reset the transaction Log.
-    this.indexStore.init();
+    //this.indexStore.init();
   }
 
   public void addDocument(Document doc, Analyzer analyzer)

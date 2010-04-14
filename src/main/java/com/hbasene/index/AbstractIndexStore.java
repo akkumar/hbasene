@@ -30,19 +30,6 @@ import java.util.List;
  */
 public abstract class AbstractIndexStore {
 
-  /**
-   * Initialize the log
-   * 
-   * @throws IOException
-   */
-  public abstract void init() throws IOException;
-
-  /**
-   * Close the log.
-   * 
-   * @throws IOException
-   */
-  public abstract void close() throws IOException;
 
   /**
    * Commit the transactions.

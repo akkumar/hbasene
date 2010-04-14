@@ -67,6 +67,7 @@ public class AbstractHBaseneTest {
     TEST_UTIL.startMiniCluster(1);
     conf = TEST_UTIL.getConfiguration();
     HBaseIndexStore.dropLuceneIndexTable(TEST_INDEX, conf);
+    HBaseIndexStore.createLuceneIndexTable(TEST_INDEX, conf, true);
     HBaseIndexStore hbaseIndex = new HBaseIndexStore(conf,
         TEST_INDEX);
 
