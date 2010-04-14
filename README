@@ -1,17 +1,29 @@
-Lucene interface with HBase:
----------------------------
+HBasene:
+---------
+http://github.com/akkumar/hbasene. 
+
+April 2010
+
+
 Released under Apache License 2.0 .  See LICENSE.txt for more details.
 
+What is it:
+----------
+HBasene is a distributed system to use HBase (http://hadoop.apache.org/hbase/) as the backing store for 
+the TF-IDF representation, as needed by Lucene.
+
+To see a sample "Hello World" example, refer to - http://wiki.github.com/akkumar/hbasene/hello-world . 
+
+To see the HBase column family - TF-IDF representation mapping, refer to - 
+http://wiki.github.com/akkumar/hbasene/hello-world . 
 
 
-Indexes columns / column families based on Lucene. 
+Other Info:
+-----------
+Also contains a map-reduce job that provides the hooks (Mappers/ Reducers) to index data present in a HBase schema.
 
 Originally present as part of Apache HBase project. 
 
-Refactored here, under Apache 2.0 License , as before, to be developed independently.
+Refactored here, under Apache 2.0 License , as before.
 
 
-IndexReaders/IndexWriters on top of HBase:
------------------------------------------
-
-Similar to the idea of Lucandra project by Jake L, with HBase being the sink for the TF-IDF representations.
