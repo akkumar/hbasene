@@ -40,8 +40,8 @@ import org.apache.hadoop.hbase.util.Bytes;
  * column families, at the minimum.
  * 
  * <ul>
- * <li>termVector</li>
- * <li>documents</li>
+ * <li>fm.termVector</li>
+ * <li>fm.fields</li>
  * </ul>
  * 
  * To create a HBase Table, specific to the index schema, refer to
