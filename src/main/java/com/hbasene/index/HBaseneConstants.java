@@ -34,6 +34,13 @@ public interface HBaseneConstants {
    * available.
    */
   static final byte[] FAMILY_TERMVECTOR = Bytes.toBytes("fm.termVector");
+  
+  
+  /**
+   * Column Family representing the payloads associated with a given term for a given document.
+   * 
+   */
+  static final byte[] FAMILY_PAYLOADS = Bytes.toBytes("fm.payloads");
 
   /**
    * Column family that contains the stored fields of Lucene Documents.
