@@ -101,7 +101,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
     }
 
-    long internalDocId = indexStore.assignDocId(Bytes.toBytes(docId));
+    long internalDocId = indexStore.docId(Bytes.toBytes(docId));
 
     List<String> allIndexedTerms = new ArrayList<String>(DEFAULT_TERM_CAPACITY);
 
