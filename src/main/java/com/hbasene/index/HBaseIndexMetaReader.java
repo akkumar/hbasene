@@ -23,13 +23,11 @@ package com.hbasene.index;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,7 +39,6 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.search.ScoreDoc;
 
-import com.google.common.collect.Lists;
 
 /**
  * Complementary to the HBase IndexReader, but provides additional facilities
@@ -121,11 +118,5 @@ public class HBaseIndexMetaReader implements HBaseneConstants {
     return scan;
   }
 
-  private List<Long> sortedDocIds(final Set<byte[]> documentIds) {
-    List<byte[]> input = new ArrayList<byte[]>(documentIds.size());
-    input.addAll(documentIds);
-    List<Long> result = Lists.transform(input,
-        HBaseTermPositions.BYTES_TO_DOCID);
-    return result;
-  }
+
 }
