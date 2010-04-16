@@ -36,8 +36,6 @@ public class TestHBaseTermPositions extends AbstractHBaseneTest {
   private static final Logger LOGGER = Logger
       .getLogger(TestHBaseTermPositions.class.getName());
 
-  private HBaseIndexReader indexReader;
-
   private HBaseTermPositions termPositions;
 
   /**
@@ -45,23 +43,22 @@ public class TestHBaseTermPositions extends AbstractHBaseneTest {
    */
   private final AbstractTermPositionsEncoder termPositionEncoder = new AsciiTermPositionsEncoder();
 
+
   /**
    * @throws java.lang.Exception
    */
   @BeforeMethod
   public void setUp() throws Exception {
-    indexReader = new HBaseIndexReader(this.tablePool, TEST_INDEX);
     termPositions = new HBaseTermPositions(indexReader, this.termPositionEncoder);
 
   }
-
+  
   /**
    * @throws java.lang.Exception
    */
   @AfterMethod
   public void tearDown() throws Exception {
     termPositions.close();
-    indexReader.close();
   }
   
   @Test

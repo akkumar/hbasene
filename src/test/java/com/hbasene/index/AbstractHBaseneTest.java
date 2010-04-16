@@ -60,8 +60,10 @@ public class AbstractHBaseneTest {
   protected static final String PK_FIELD = "id";
 
   protected HTablePool tablePool;
-  
+
   protected HBaseIndexWriter indexWriter;
+  
+  protected HBaseIndexReader  indexReader;
 
   protected static final int DEFAULT_POOL_SIZE = 20;
 
@@ -78,12 +80,29 @@ public class AbstractHBaseneTest {
     HBaseIndexStore hbaseIndex = new HBaseIndexStore(this.tablePool, TEST_INDEX);
 
     this.indexWriter = new HBaseIndexWriter(hbaseIndex, PK_FIELD);
+    this.indexReader = new HBaseIndexReader(this.tablePool, TEST_INDEX);
+
+    doInitDocs();
+  }
+
+  protected void doInitDocs() throws CorruptIndexException, IOException { 
+    this.addDefaultDocuments();
+
+  }
+  
+  @AfterClass
+  public void tearDownBase() throws IOException  {
+    this.indexReader.close();
+    //TODO: Release indexWriter resources.
+  }
+  
+  protected void addDefaultDocuments() throws CorruptIndexException, IOException {
     indexWriter.addDocument(this.createDocument("FactTimes",
         "Messi plays for Barcelona"), new StandardAnalyzer(Version.LUCENE_30));
-    indexWriter.addDocument(this.createDocument( "UtopiaTimes",
+    indexWriter.addDocument(this.createDocument("UtopiaTimes",
         "Lionel M plays for Manchester United"), new StandardAnalyzer(
         Version.LUCENE_30));
-    indexWriter.addDocument(this.createDocument( "ThirdTimes",
+    indexWriter.addDocument(this.createDocument("ThirdTimes",
         "Rooney plays for Manchester United"), new StandardAnalyzer(
         Version.LUCENE_30));
     indexWriter

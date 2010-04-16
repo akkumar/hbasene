@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.LockObtainFailedException;
+import org.junit.BeforeClass;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -39,14 +40,12 @@ public class TestHBaseTermEnum extends AbstractHBaseneTest {
 
   private HBaseTermEnum termEnum;
 
-  private HBaseIndexReader indexReader;
-
+ 
   /**
    * @throws java.lang.Exception
    */
   @BeforeMethod
   public void setUp() throws Exception {
-    indexReader = new HBaseIndexReader(this.tablePool, TEST_INDEX);
     termEnum = new HBaseTermEnum(indexReader);
 
   }
@@ -57,8 +56,6 @@ public class TestHBaseTermEnum extends AbstractHBaseneTest {
   @AfterMethod
   public void tearDown() throws Exception {
     termEnum.close();
-    indexReader.close();
-
   }
 
   @Test

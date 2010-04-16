@@ -25,6 +25,7 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.store.LockObtainFailedException;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 
@@ -34,6 +35,7 @@ public class TestHBaseIndexStore extends AbstractHBaseneTest {
   private static final Logger LOGGER = Logger
       .getLogger(TestHBaseIndexStore.class.getName());
 
+  
   @Test
   public void testAddDocuments() throws CorruptIndexException,
       LockObtainFailedException, IOException {

@@ -23,37 +23,20 @@ package com.hbasene.index;
 import java.io.IOException;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 
 public class TestHBaseIndexReader extends AbstractHBaseneTest {
 
-  private IndexReader reader;
-
-  
-  @BeforeMethod
-  public void setUp() {
-    //myconf
-    reader = new HBaseIndexReader(this.tablePool, TEST_INDEX);
-  }
-
-  @AfterMethod
-  public void tearDown() throws IOException {
-    reader.close();
-  }
-
   @Test
   public void testSearch() throws IOException {
-    IndexSearcher searcher = new IndexSearcher(reader);
+    IndexSearcher searcher = new IndexSearcher(this.indexReader);
     TopDocs docs = searcher.search(new TermQuery(new Term("content", "plays")),
         3);
     Assert.assertTrue(docs.totalHits > 3,
@@ -67,7 +50,7 @@ public class TestHBaseIndexReader extends AbstractHBaseneTest {
       // Score
 
       try {
-        Assert.assertNotNull(reader.document(scoreDoc.doc),
+        Assert.assertNotNull(this.indexReader.document(scoreDoc.doc),
             "Retrieving document for " + scoreDoc.doc);
       } catch (Exception ex) {
         Assert.assertTrue(false,
@@ -77,7 +60,7 @@ public class TestHBaseIndexReader extends AbstractHBaseneTest {
 
       // valid document
     }
-    Document doc = reader.document(docs.scoreDocs[0].doc);
+    Document doc = this.indexReader.document(docs.scoreDocs[0].doc);
     Assert.assertEquals("FourthTimes", doc.get(PK_FIELD));
     // maximum # of plays - hence expecting it to be top-most rank.
   }
