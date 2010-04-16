@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -79,13 +81,16 @@ public class HBaseIndexMetaReader implements HBaseneConstants {
         while (result != null) {
           String currentRow = Bytes.toString(result.getRow());
           if (currentRow.startsWith(sortFieldPrefix)) {
-            List<Long> sortedDocIds = this.sortedDocIds(result.getFamilyMap(
-                FAMILY_TERMVECTOR).keySet());
-            for (Iterator<ScoreDoc> it = input.iterator(); it.hasNext();) {
+            NavigableMap<byte[], byte[]> columnQualifiers = result.getFamilyMap(FAMILY_TERMVECTOR);
+            List<Long> docIds = new ArrayList<Long>();
+            for (Map.Entry<byte[], byte[]> columnQualifier : columnQualifiers.entrySet()) { 
+              docIds.add(HBaseTermPositions.BYTES_TO_DOCID.apply(columnQualifier.getKey()));
+            }
+            LOG.info(currentRow + " --> " + docIds);
+            Iterator<ScoreDoc> it = input.iterator();
+            while (it.hasNext()) {
               ScoreDoc next = it.next();
-              int returnIndex = Collections.binarySearch(sortedDocIds,
-                  (long) next.doc);
-              if (returnIndex >= 0) {
+              if (columnQualifiers.containsKey(Bytes.toBytes((long)next.doc))) {
                 output[outputIndex++] = next;
                 it.remove();
               }

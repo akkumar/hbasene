@@ -47,8 +47,8 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
   private static final Logger LOG = Logger
       .getLogger(TestHBaseMetaIndexReader.class.getName());
 
-  private static final String[] AIRPORTS = { "NYC", "JFK", "EWR", "SEA",
-      "SFO", "OAK", "SJC" };
+  private static final String[] AIRPORTS = { "NYC", "JFK", "EWR", "SEA", "SFO",
+      "OAK", "SJC" };
 
   private final Map<String, List<Integer>> airportMap = new HashMap<String, List<Integer>>();
 
@@ -75,7 +75,7 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
         Field.Index.ANALYZED_NO_NORMS));
     doc.add(new Field("searchterm", Math.random() > 0.5f ? "always" : "never",
         Field.Store.NO, Field.Index.ANALYZED_NO_NORMS));
-    recordRandomIndex(i, randomIndex);
+    recordRandomIndex(100 - i, randomIndex);
     return doc;
   }
 
@@ -122,10 +122,12 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
         reverseMap.put(docId, entry.getKey());
       }
     }
-    final String previousAirport = "000";
+    String previousAirport = "000";
     for (final ScoreDoc scoreDoc : result) {
-      Assert
-          .assertTrue(reverseMap.get(scoreDoc.doc).compareTo(previousAirport) >= 0);
+      String currentAirport = reverseMap.get(scoreDoc.doc);
+      Assert.assertTrue(currentAirport + " vs " + previousAirport,
+          currentAirport.compareTo(previousAirport) >= 0);
+      previousAirport = currentAirport;
     }
   }
 

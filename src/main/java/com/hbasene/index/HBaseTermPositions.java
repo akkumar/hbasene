@@ -158,7 +158,6 @@ public class HBaseTermPositions implements TermPositions {
         .getFamilyMap(HBaseneConstants.FAMILY_TERMVECTOR);
 
     this.documents = new ArrayList<byte[]>(map.keySet());
-    // Collections.sort(documents, DOCID_COMPARATOR);
     this.currentIndex = -1;
   }
 
