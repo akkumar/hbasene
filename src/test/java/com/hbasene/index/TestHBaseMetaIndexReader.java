@@ -47,10 +47,10 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
   private static final Logger LOG = Logger
       .getLogger(TestHBaseMetaIndexReader.class.getName());
 
-  private static final String[] LOCATIONS = { "NYC", "JFK", "EWR", "SEA",
+  private static final String[] AIRPORTS = { "NYC", "JFK", "EWR", "SEA",
       "SFO", "OAK", "SJC" };
 
-  private Map<String, List<Integer>> airportMap = new HashMap<String, List<Integer>>();
+  private final Map<String, List<Integer>> airportMap = new HashMap<String, List<Integer>>();
 
   private HBaseIndexMetaReader metaReader;
 
@@ -71,7 +71,7 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
     Document doc = new Document();
     doc.add(new Field("id", "doc" + i, Field.Store.YES, Field.Index.NO));
     int randomIndex = (int) (Math.random() * 7.0f);
-    doc.add(new Field("airport", LOCATIONS[randomIndex], Field.Store.NO,
+    doc.add(new Field("airport", AIRPORTS[randomIndex], Field.Store.NO,
         Field.Index.ANALYZED_NO_NORMS));
     doc.add(new Field("searchterm", Math.random() > 0.5f ? "always" : "never",
         Field.Store.NO, Field.Index.ANALYZED_NO_NORMS));
@@ -80,10 +80,10 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
   }
 
   private void recordRandomIndex(final int docIndex, final int airportIndex) {
-    List<Integer> docs = airportMap.get(LOCATIONS[airportIndex]);
+    List<Integer> docs = airportMap.get(AIRPORTS[airportIndex]);
     if (docs == null) {
       docs = new LinkedList<Integer>();
-      airportMap.put(LOCATIONS[airportIndex], docs);
+      airportMap.put(AIRPORTS[airportIndex], docs);
     }
     docs.add(docIndex);
   }
