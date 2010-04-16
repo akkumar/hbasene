@@ -62,8 +62,8 @@ public class AbstractHBaseneTest {
   protected HTablePool tablePool;
 
   protected HBaseIndexWriter indexWriter;
-  
-  protected HBaseIndexReader  indexReader;
+
+  protected HBaseIndexReader indexReader;
 
   protected static final int DEFAULT_POOL_SIZE = 20;
 
@@ -71,7 +71,7 @@ public class AbstractHBaseneTest {
    * @throws java.lang.Exception
    */
   @BeforeClass
-  public void setUpBeforeClass() throws Exception {
+  public final void setUpBeforeClass() throws Exception {
     TEST_UTIL.startMiniCluster(1);
     conf = TEST_UTIL.getConfiguration();
     HBaseIndexStore.dropLuceneIndexTable(TEST_INDEX, conf);
@@ -80,23 +80,30 @@ public class AbstractHBaseneTest {
     HBaseIndexStore hbaseIndex = new HBaseIndexStore(this.tablePool, TEST_INDEX);
 
     this.indexWriter = new HBaseIndexWriter(hbaseIndex, PK_FIELD);
-    this.indexReader = new HBaseIndexReader(this.tablePool, TEST_INDEX);
-
     doInitDocs();
+
+    this.indexReader = new HBaseIndexReader(this.tablePool, TEST_INDEX);
+    doSetupDerived();
+
   }
 
-  protected void doInitDocs() throws CorruptIndexException, IOException { 
+  protected void doSetupDerived() {
+
+  }
+
+  protected void doInitDocs() throws CorruptIndexException, IOException {
     this.addDefaultDocuments();
 
   }
-  
+
   @AfterClass
-  public void tearDownBase() throws IOException  {
+  public final void tearDownBase() throws IOException {
     this.indexReader.close();
-    //TODO: Release indexWriter resources.
+    // TODO: Release indexWriter resources.
   }
-  
-  protected void addDefaultDocuments() throws CorruptIndexException, IOException {
+
+  protected void addDefaultDocuments() throws CorruptIndexException,
+      IOException {
     indexWriter.addDocument(this.createDocument("FactTimes",
         "Messi plays for Barcelona"), new StandardAnalyzer(Version.LUCENE_30));
     indexWriter.addDocument(this.createDocument("UtopiaTimes",
