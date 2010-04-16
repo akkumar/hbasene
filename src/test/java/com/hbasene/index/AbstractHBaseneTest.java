@@ -43,7 +43,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
-
 /**
  * Abstract HBasene Test
  */
@@ -60,10 +59,10 @@ public class AbstractHBaseneTest {
 
   protected static final String PK_FIELD = "id";
 
-  protected HTablePool  tablePool;
-  
+  protected HTablePool tablePool;
+
   protected static final int DEFAULT_POOL_SIZE = 20;
-  
+
   /**
    * @throws java.lang.Exception
    */
@@ -77,14 +76,21 @@ public class AbstractHBaseneTest {
     HBaseIndexStore hbaseIndex = new HBaseIndexStore(this.tablePool, TEST_INDEX);
 
     HBaseIndexWriter writer = new HBaseIndexWriter(hbaseIndex, PK_FIELD);
-
-    addDocument(writer, "FactTimes", "Messi plays for Barcelona");
-    addDocument(writer, "UtopiaTimes", "Lionel M plays for Manchester United");
-    addDocument(writer, "ThirdTimes", "Rooney plays for Manchester United");
-    addDocument(
-        writer,
-        "FourthTimes",
-        "Messi plays for argentina as well. He plays as a mid-fielder and plays really well.");
+    writer.addDocument(this.createDocument("FactTimes",
+        "Messi plays for Barcelona"), new StandardAnalyzer(Version.LUCENE_30));
+    writer.addDocument(this.createDocument( "UtopiaTimes",
+        "Lionel M plays for Manchester United"), new StandardAnalyzer(
+        Version.LUCENE_30));
+    writer.addDocument(this.createDocument( "ThirdTimes",
+        "Rooney plays for Manchester United"), new StandardAnalyzer(
+        Version.LUCENE_30));
+    writer
+        .addDocument(
+            this
+                .createDocument(
+                    "FourthTimes",
+                    "Messi plays for argentina as well. He plays as a mid-fielder and plays really well."),
+            new StandardAnalyzer(Version.LUCENE_30));
 
     Assert.assertTrue(new HBaseAdmin(conf).tableExists(TEST_INDEX));
   }
@@ -95,19 +101,20 @@ public class AbstractHBaseneTest {
   @AfterClass
   public void tearDownAfterClass() throws Exception {
     LOGGER.info("***   Shut down the HBase Cluster  ****");
-    //this.tablePool.close();
-    //TODO: HBASE-2435
+    // this.tablePool.close();
+    // TODO: HBASE-2435
     HBaseIndexStore.dropLuceneIndexTable(TEST_INDEX, conf);
     TEST_UTIL.shutdownMiniCluster();
   }
 
-  protected void addDocument(final HBaseIndexWriter writer, final String id,
-      final String content) throws CorruptIndexException, IOException {
+  protected Document createDocument(final String id, final String content)
+      throws CorruptIndexException, IOException {
     Document doc = new Document();
     doc.add(new Field("content", content, Field.Store.NO,
         Field.Index.ANALYZED_NO_NORMS));
     doc.add(new Field("id", id, Field.Store.YES, Field.Index.NO));
-    writer.addDocument(doc, new StandardAnalyzer(Version.LUCENE_30));
+    return doc;
+
   }
 
   protected void assertDocumentPresent(final String docId) throws IOException {
