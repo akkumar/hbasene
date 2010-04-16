@@ -100,13 +100,10 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
   }
 
   @Override
-  public long assignDocId(final byte[] primaryKey) throws IOException {
+  public long docId(final byte[] primaryKey) throws IOException {
     HTableInterface table = this.tablePool.getTable(this.indexName);
     long newId = -1;
     try {
-      // TODO: What is the impact of a 'fail scenario' with writeToWAL set to
-      // false.
-      // High-performant, of course, but at what cost ?
       newId = table.incrementColumnValue(ROW_SEQUENCE_ID, FAMILY_SEQUENCE,
           QUALIFIER_SEQUENCE, 1, true);
       if (newId >= Integer.MAX_VALUE) {

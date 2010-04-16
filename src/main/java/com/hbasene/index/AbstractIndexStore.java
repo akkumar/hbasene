@@ -61,11 +61,11 @@ public abstract class AbstractIndexStore {
       byte[] value);
 
   /**
-   * Assign a docId to the given primary key in the Lucene schema.
+   * Retrieve a docId for the given primary key in the Lucene schema.
    * 
    * @param primaryKey
    * @return correct docId, if in place. -1, otherwise.
    * @throws IOException
    */
-  public abstract long assignDocId(byte[] primaryKey) throws IOException;
+  public abstract long docId(byte[] primaryKey) throws IOException;
 }
