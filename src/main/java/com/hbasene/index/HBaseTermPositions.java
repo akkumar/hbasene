@@ -38,6 +38,8 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermPositions;
 
+import com.google.common.base.Function;
+
 /**
  * Term Docs implementation for HBase.
  */
@@ -45,7 +47,7 @@ public class HBaseTermPositions implements TermPositions {
 
   private static final Log LOG = LogFactory.getLog(HBaseTermPositions.class);
 
-  public static Comparator<byte[]> DOCID_COMPARATOR = new Comparator<byte[]>() {
+  public static Comparator<byte[]> DOCID1_COMPARATOR = new Comparator<byte[]>() {
 
     @Override
     public int compare(byte[] o1, byte[] o2) {
@@ -58,6 +60,18 @@ public class HBaseTermPositions implements TermPositions {
       else
         return 0;
 
+    }
+
+  };
+
+  /**
+   * Functor to convert bytes to DocId
+   */
+  public static final Function<byte[], Long> BYTES_TO_DOCID = new Function<byte[], Long>() {
+
+    @Override
+    public Long apply(byte[] from) {
+      return Bytes.toLong(from);
     }
 
   };
@@ -163,7 +177,7 @@ public class HBaseTermPositions implements TermPositions {
         .getFamilyMap(HBaseneConstants.FAMILY_TERMVECTOR);
 
     this.documents = new ArrayList<byte[]>(map.keySet());
-    Collections.sort(documents, DOCID_COMPARATOR);
+    // Collections.sort(documents, DOCID_COMPARATOR);
     this.currentIndex = -1;
   }
 

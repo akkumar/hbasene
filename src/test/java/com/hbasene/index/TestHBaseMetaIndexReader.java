@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,7 +52,7 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
   private static final String[] LOCATIONS = { "NYC", "JFK", "EWR", "SEA",
       "SFO", "OAK", "SJC" };
 
-  private Map<String, Set<Integer>> airportMap = new HashMap<String, Set<Integer>>();
+  private Map<String, List<Integer>> airportMap = new HashMap<String, List<Integer>>();
 
   private HBaseIndexMetaReader metaReader;
 
@@ -62,7 +63,7 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
 
   @Override
   protected void doInitDocs() throws CorruptIndexException, IOException {
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 100; i >= 0; --i) {
       Document doc = this.getDocument(i);
       indexWriter.addDocument(doc, new StandardAnalyzer(Version.LUCENE_30));
     }
@@ -81,9 +82,9 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
   }
 
   private void recordRandomIndex(final int docIndex, final int airportIndex) {
-    Set<Integer> docs = airportMap.get(LOCATIONS[airportIndex]);
+    List<Integer> docs = airportMap.get(LOCATIONS[airportIndex]);
     if (docs == null) {
-      docs = new HashSet<Integer>();
+      docs = new LinkedList<Integer>();
       airportMap.put(LOCATIONS[airportIndex], docs);
     }
     docs.add(docIndex);
@@ -117,7 +118,7 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
 
   void assertSortOrder(final ScoreDoc[] result) {
     Map<Integer, String> reverseMap = new HashMap<Integer, String>();
-    for (final Map.Entry<String, Set<Integer>> entry : this.airportMap
+    for (final Map.Entry<String, List<Integer>> entry : this.airportMap
         .entrySet()) {
       for (final Integer docId : entry.getValue()) {
         reverseMap.put(docId, entry.getKey());

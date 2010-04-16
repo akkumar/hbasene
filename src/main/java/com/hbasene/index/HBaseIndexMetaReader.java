@@ -39,6 +39,9 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.search.ScoreDoc;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+
 /**
  * Complementary to the HBase IndexReader, but provides additional facilities
  * like sorting/ faceting etc.
@@ -115,11 +118,11 @@ public class HBaseIndexMetaReader implements HBaseneConstants {
   }
 
   private List<Long> sortedDocIds(final Set<byte[]> documentIds) {
-    List<Long> result = new ArrayList<Long>();
-    for (final byte[] docId : documentIds) {
-      result.add(Bytes.toLong(docId));
-    }
-    Collections.sort(result);
+    List<byte[]> input = new ArrayList<byte[]>(documentIds.size());
+    input.addAll(documentIds);
+    List<Long> result = Lists.transform(input,
+        HBaseTermPositions.BYTES_TO_DOCID);
+    // Collections.sort(result);
     return result;
   }
 }
