@@ -60,6 +60,8 @@ public class AbstractHBaseneTest {
   protected static final String PK_FIELD = "id";
 
   protected HTablePool tablePool;
+  
+  protected HBaseIndexWriter indexWriter;
 
   protected static final int DEFAULT_POOL_SIZE = 20;
 
@@ -75,16 +77,16 @@ public class AbstractHBaseneTest {
     this.tablePool = new HTablePool(conf, DEFAULT_POOL_SIZE);
     HBaseIndexStore hbaseIndex = new HBaseIndexStore(this.tablePool, TEST_INDEX);
 
-    HBaseIndexWriter writer = new HBaseIndexWriter(hbaseIndex, PK_FIELD);
-    writer.addDocument(this.createDocument("FactTimes",
+    this.indexWriter = new HBaseIndexWriter(hbaseIndex, PK_FIELD);
+    indexWriter.addDocument(this.createDocument("FactTimes",
         "Messi plays for Barcelona"), new StandardAnalyzer(Version.LUCENE_30));
-    writer.addDocument(this.createDocument( "UtopiaTimes",
+    indexWriter.addDocument(this.createDocument( "UtopiaTimes",
         "Lionel M plays for Manchester United"), new StandardAnalyzer(
         Version.LUCENE_30));
-    writer.addDocument(this.createDocument( "ThirdTimes",
+    indexWriter.addDocument(this.createDocument( "ThirdTimes",
         "Rooney plays for Manchester United"), new StandardAnalyzer(
         Version.LUCENE_30));
-    writer
+    indexWriter
         .addDocument(
             this
                 .createDocument(
