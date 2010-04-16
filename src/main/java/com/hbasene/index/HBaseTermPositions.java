@@ -27,6 +27,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.NavigableMap;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.HTablePool;
@@ -40,6 +42,25 @@ import org.apache.lucene.index.TermPositions;
  * Term Docs implementation for HBase.
  */
 public class HBaseTermPositions implements TermPositions {
+
+  private static final Log LOG = LogFactory.getLog(HBaseTermPositions.class);
+
+  public static Comparator<byte[]> DOCID_COMPARATOR = new Comparator<byte[]>() {
+
+    @Override
+    public int compare(byte[] o1, byte[] o2) {
+      long lhs = Bytes.toLong(o1);
+      long rhs = Bytes.toLong(o2);
+      if (lhs < rhs)
+        return -1;
+      else if (lhs > rhs)
+        return 1;
+      else
+        return 0;
+
+    }
+
+  };
 
   private final HTableInterface table;
 
@@ -69,23 +90,6 @@ public class HBaseTermPositions implements TermPositions {
    * Encoder of the term positions in the underlying store.
    */
   private AbstractTermPositionsEncoder termPositionsEncoder;
-
-  private Comparator<byte[]> INT_COMPARATOR = new Comparator<byte[]>() {
-
-    @Override
-    public int compare(byte[] o1, byte[] o2) {
-      long lhs = Bytes.toLong(o1);
-      long rhs = Bytes.toLong(o2);
-      if (lhs < rhs)
-        return -1;
-      else if (lhs > rhs)
-        return 1;
-      else
-        return 0;
-
-    }
-
-  };
 
   public HBaseTermPositions(final HBaseIndexReader reader,
       final AbstractTermPositionsEncoder termPositionsEncoder)
@@ -128,9 +132,8 @@ public class HBaseTermPositions implements TermPositions {
     get.addColumn(HBaseneConstants.FAMILY_TERMVECTOR, this.documents
         .get(this.currentIndex));
     Result result = table.get(get);
-    byte[] tfArray = result.getValue(
-        HBaseneConstants.FAMILY_TERMVECTOR, this.documents
-            .get(this.currentIndex));
+    byte[] tfArray = result.getValue(HBaseneConstants.FAMILY_TERMVECTOR,
+        this.documents.get(this.currentIndex));
     this.currentTermPositionIndex = 0;
     this.currentTermPositions = this.termPositionsEncoder.decode(tfArray);
 
@@ -158,8 +161,9 @@ public class HBaseTermPositions implements TermPositions {
     Result result = this.getRowWithTermVectors();
     NavigableMap<byte[], byte[]> map = result
         .getFamilyMap(HBaseneConstants.FAMILY_TERMVECTOR);
+
     this.documents = new ArrayList<byte[]>(map.keySet());
-    Collections.sort(documents, INT_COMPARATOR);
+    Collections.sort(documents, DOCID_COMPARATOR);
     this.currentIndex = -1;
   }
 
