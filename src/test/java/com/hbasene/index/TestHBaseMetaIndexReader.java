@@ -89,7 +89,7 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
   }
 
   @Test
-  public void testSearch() throws IOException {
+  public void testSortField() throws IOException {
     LOG.info(this.airportMap.toString());
     IndexSearcher searcher = new IndexSearcher(this.indexReader);
     try {
@@ -106,6 +106,24 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
     }
   }
 
+  @Test(enabled = false)
+  public void testNonExistentSortField() throws IOException {
+    LOG.info(this.airportMap.toString());
+    IndexSearcher searcher = new IndexSearcher(this.indexReader);
+    try {
+      TopDocs docs = searcher.search(new TermQuery(new Term("searchterm",
+          "always")), 90);
+      LOG.info("Total results are " + docs.scoreDocs.length);
+      this.printScoreDocs(docs.scoreDocs, "Original Order ");
+      ScoreDoc[] result = this.metaReader.sort(docs.scoreDocs, "airport1");
+      //TODO: This method should throw an exception for an invalid field to be sorted.
+
+    } finally {
+      searcher.close();
+    }
+  }
+
+  
   void printScoreDocs(final ScoreDoc[] scoreDocs, final String prefix) {
     List<Integer> originalOrder = new ArrayList<Integer>();
     for (ScoreDoc scoreDoc : scoreDocs) {
