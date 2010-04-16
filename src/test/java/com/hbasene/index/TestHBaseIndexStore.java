@@ -25,7 +25,6 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.store.LockObtainFailedException;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 
