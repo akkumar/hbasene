@@ -39,7 +39,6 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.search.ScoreDoc;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
 /**
