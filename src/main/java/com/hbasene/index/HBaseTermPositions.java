@@ -22,7 +22,6 @@ package com.hbasene.index;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NavigableMap;
@@ -46,23 +45,6 @@ import com.google.common.base.Function;
 public class HBaseTermPositions implements TermPositions {
 
   private static final Log LOG = LogFactory.getLog(HBaseTermPositions.class);
-
-  public static Comparator<byte[]> DOCID1_COMPARATOR = new Comparator<byte[]>() {
-
-    @Override
-    public int compare(byte[] o1, byte[] o2) {
-      long lhs = Bytes.toLong(o1);
-      long rhs = Bytes.toLong(o2);
-      if (lhs < rhs)
-        return -1;
-      else if (lhs > rhs)
-        return 1;
-      else
-        return 0;
-
-    }
-
-  };
 
   /**
    * Functor to convert bytes to DocId

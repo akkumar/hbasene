@@ -122,7 +122,6 @@ public class HBaseIndexMetaReader implements HBaseneConstants {
     input.addAll(documentIds);
     List<Long> result = Lists.transform(input,
         HBaseTermPositions.BYTES_TO_DOCID);
-    // Collections.sort(result);
     return result;
   }
 }
