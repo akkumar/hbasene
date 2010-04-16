@@ -37,24 +37,48 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
-
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.TopFieldDocs;
+import org.apache.lucene.search.Weight;
 
 /**
- * Complementary to the HBase IndexReader, but provides additional facilities
- * like sorting/ faceting etc.
+ * IndexSearcher
  */
-public class HBaseIndexMetaReader implements HBaseneConstants {
+public class HBaseIndexSearcher extends IndexSearcher implements
+    HBaseneConstants {
 
-  private static final Log LOG = LogFactory.getLog(HBaseIndexMetaReader.class);
+  private static final Log LOG = LogFactory.getLog(HBaseIndexSearcher.class);
 
   private final HTablePool tablePool;
 
   private final String indexName;
 
-  public HBaseIndexMetaReader(final HBaseIndexReader indexReader) {
+  public HBaseIndexSearcher(HBaseIndexReader indexReader)
+      throws CorruptIndexException, IOException {
+    super(indexReader);
     this.tablePool = indexReader.getTablePool();
     this.indexName = indexReader.getIndexName();
+  }
+
+  @Override
+  public TopFieldDocs search(Weight weight, Filter filter, final int nDocs,
+      Sort sort, boolean fillFields) throws IOException {
+    SortField[] fields = sort.getSort();
+    if (fields.length > 1) {
+      throw new IllegalArgumentException(
+          "Multiple Sort fields not supported at the moment");
+    }
+    if (fields[0] == SortField.FIELD_SCORE) {
+      return super.search(weight, filter, nDocs, sort, fillFields);
+    } else {
+      // TODO: Sort based on the custom sort field
+      return super.search(weight, filter, nDocs, sort, fillFields);
+    }
   }
 
   public ScoreDoc[] sort(final ScoreDoc[] scoreDocs, final String sortField)
@@ -78,16 +102,19 @@ public class HBaseIndexMetaReader implements HBaseneConstants {
         while (result != null) {
           String currentRow = Bytes.toString(result.getRow());
           if (currentRow.startsWith(sortFieldPrefix)) {
-            NavigableMap<byte[], byte[]> columnQualifiers = result.getFamilyMap(FAMILY_TERMVECTOR);
+            NavigableMap<byte[], byte[]> columnQualifiers = result
+                .getFamilyMap(FAMILY_TERMVECTOR);
             List<Long> docIds = new ArrayList<Long>();
-            for (Map.Entry<byte[], byte[]> columnQualifier : columnQualifiers.entrySet()) { 
-              docIds.add(HBaseTermPositions.BYTES_TO_DOCID.apply(columnQualifier.getKey()));
+            for (Map.Entry<byte[], byte[]> columnQualifier : columnQualifiers
+                .entrySet()) {
+              docIds.add(HBaseTermPositions.BYTES_TO_DOCID
+                  .apply(columnQualifier.getKey()));
             }
             LOG.info(currentRow + " --> " + docIds);
             Iterator<ScoreDoc> it = input.iterator();
             while (it.hasNext()) {
               ScoreDoc next = it.next();
-              if (columnQualifiers.containsKey(Bytes.toBytes((long)next.doc))) {
+              if (columnQualifiers.containsKey(Bytes.toBytes((long) next.doc))) {
                 output[outputIndex++] = next;
                 it.remove();
               }
@@ -117,6 +144,4 @@ public class HBaseIndexMetaReader implements HBaseneConstants {
     scan.setCaching(20);
     return scan;
   }
-
-
 }

@@ -42,21 +42,21 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.util.Version;
 import org.testng.annotations.Test;
 
-public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
+public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
 
   private static final Logger LOG = Logger
-      .getLogger(TestHBaseMetaIndexReader.class.getName());
+      .getLogger(TestHBaseIndexSearcher.class.getName());
 
   private static final String[] AIRPORTS = { "NYC", "JFK", "EWR", "SEA", "SFO",
       "OAK", "SJC" };
 
   private final Map<String, List<Integer>> airportMap = new HashMap<String, List<Integer>>();
 
-  private HBaseIndexMetaReader metaReader;
+  private HBaseIndexSearcher indexSearcher;
 
   @Override
-  protected void doSetupDerived() {
-    this.metaReader = new HBaseIndexMetaReader(this.indexReader);
+  protected void doSetupDerived() throws CorruptIndexException, IOException {
+    this.indexSearcher = new HBaseIndexSearcher(this.indexReader);
   }
 
   @Override
@@ -97,7 +97,10 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
           "always")), 90);
       LOG.info("Total results are " + docs.scoreDocs.length);
       this.printScoreDocs(docs.scoreDocs, "Original Order ");
-      ScoreDoc[] result = this.metaReader.sort(docs.scoreDocs, "airport");
+      //Important: This performs an in-place sorting on the 'Top N' documents for the given field, 
+      // as opposed to sorting on the given field across the 'Hit's
+      // TODO: Work currently going on to address the same.
+      ScoreDoc[] result = this.indexSearcher.sort(docs.scoreDocs, "airport");
       this.printScoreDocs(result, "Sorted Order");
 
       assertSortOrder(result);
@@ -115,7 +118,7 @@ public class TestHBaseMetaIndexReader extends AbstractHBaseneTest {
           "always")), 90);
       LOG.info("Total results are " + docs.scoreDocs.length);
       this.printScoreDocs(docs.scoreDocs, "Original Order ");
-      ScoreDoc[] result = this.metaReader.sort(docs.scoreDocs, "airport1");
+      //ScoreDoc[] result = this.metaReader.sort(docs.scoreDocs, "airport1");
       //TODO: This method should throw an exception for an invalid field to be sorted.
 
     } finally {

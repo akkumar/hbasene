@@ -87,7 +87,7 @@ public class AbstractHBaseneTest {
 
   }
 
-  protected void doSetupDerived() {
+  protected void doSetupDerived() throws CorruptIndexException, IOException {
 
   }
 
