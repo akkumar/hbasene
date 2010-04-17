@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hbasene.index;
+package com.hbasene.index.search;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,6 +44,7 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.util.Version;
 import org.testng.annotations.Test;
 
+import com.hbasene.index.AbstractHBaseneTest;
 import com.hbasene.index.search.HBaseIndexSearcher;
 
 public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
