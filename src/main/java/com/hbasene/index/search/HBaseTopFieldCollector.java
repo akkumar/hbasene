@@ -25,7 +25,6 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.PriorityQueue;
-import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;

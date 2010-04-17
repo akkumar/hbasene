@@ -43,6 +43,7 @@ import com.hbasene.index.HBaseneConstants;
 public class HBaseIndexSearcher extends IndexSearcher implements
     HBaseneConstants {
 
+  @SuppressWarnings("unused")
   private static final Log LOG = LogFactory.getLog(HBaseIndexSearcher.class);
 
   private final HTablePool tablePool;
