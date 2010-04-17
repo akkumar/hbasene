@@ -21,14 +21,14 @@
 package com.hbasene.index.search;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.PriorityQueue;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,7 +46,8 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TopFieldDocs;
 
-import com.hbasene.index.HBaseTermPositions;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.hbasene.index.HBaseneConstants;
 
 /**
@@ -66,7 +67,8 @@ public final class HBaseTopFieldCollector extends Collector implements
 
   private final int nDocs;
 
-  private final LinkedList<SortFieldDoc> docs = new LinkedList<SortFieldDoc>();
+
+  private final Map<byte[], SortFieldDoc> docMap = new TreeMap<byte[], SortFieldDoc>(new BytesAsLongComparator());
 
   private final PriorityQueue<SortFieldDoc> pq;
 
@@ -104,14 +106,13 @@ public final class HBaseTopFieldCollector extends Collector implements
     if (this.scorer != null) {
       currentScore = this.scorer.score();
     }
-    docs.add(new SortFieldDoc(doc, currentScore, 1));// only 1 sort field under
-    // consideration at the
-    // moment.
+    byte[] key = Bytes.toBytes((long) doc);
+    docMap.put(key, new SortFieldDoc(doc, currentScore, 1));
+    // TODO: only 1 sort field under consideration now
     ++pendingDocs;
     if (this.pendingDocs == DOCS_THRESHOLD) {
       this.appendToPQ();
       this.pendingDocs = 0;
-      docs.clear();
     }
     ++this.totalHits;
   }
@@ -147,12 +148,15 @@ public final class HBaseTopFieldCollector extends Collector implements
   }
 
   public void appendToPQ() throws IOException {
-    this.doAppendToPQ(this.docs, this.pq, this.fields[0].getField(), 0);
+    this.doAppendToPQ(this.docMap, this.pq, this.fields[0]
+        .getField(), 0);
   }
 
-  private void doAppendToPQ(final LinkedList<SortFieldDoc> docs,
-      final PriorityQueue<SortFieldDoc> outputPq, final String sortField, final int sortIndex)
-      throws IOException {
+  private void doAppendToPQ(
+      final Map<byte[], SortFieldDoc> docMap,
+      final PriorityQueue<SortFieldDoc> outputPq, final String sortField,
+      final int sortIndex) throws IOException {
+    final Set<byte[]> inputDocs = docMap.keySet();
     HTableInterface table = this.tablePool.getTable(this.indexName);
     final String sortFieldPrefix = sortField + "/"; // separator
     try {
@@ -170,24 +174,18 @@ public final class HBaseTopFieldCollector extends Collector implements
             ++index;
             NavigableMap<byte[], byte[]> columnQualifiers = result
                 .getFamilyMap(FAMILY_TERMVECTOR);
-            List<Long> docIds = new ArrayList<Long>();
-            for (Map.Entry<byte[], byte[]> columnQualifier : columnQualifiers
-                .entrySet()) {
-              docIds.add(HBaseTermPositions.BYTES_TO_DOCID
-                  .apply(columnQualifier.getKey()));
-            }
-            LOG.info(currentRow + " --> " + docIds);
-            Iterator<SortFieldDoc> it = docs.iterator();
-            while (it.hasNext()) {
-              SortFieldDoc next = it.next();
-              if (columnQualifiers.containsKey(Bytes.toBytes((long) next.doc))) {
+            SetView<byte[]> intersectionSet = Sets.intersection(
+                columnQualifiers.keySet(), inputDocs);
+            if (intersectionSet.size() > 0) {
+              for (final byte[] commonDocId : intersectionSet) {
+                SortFieldDoc next = docMap.get(commonDocId);
                 next.indices[sortIndex] = index;
                 outputPq.add(next);
-                it.remove();
+                inputDocs.remove(commonDocId);
               }
             }
-            LOG.info("Docs Size after  " + currentRow  + " is " + docs.size());
-            if (docs.isEmpty()) {
+            LOG.info("Docs Size after  " + currentRow + " is " + docMap.size());
+            if (docMap.isEmpty()) {
               break;
             }
           }
@@ -269,6 +267,24 @@ public final class HBaseTopFieldCollector extends Collector implements
         }
         // Score is implied as the last one.
         return Float.compare(lhs.score, rhs.score);
+      }
+    }
+
+  }
+
+  private static class BytesAsLongComparator implements
+      Comparator<byte[]> {
+
+    @Override
+    public int compare(byte[] o1, byte[] o2) {
+      long lhs = Bytes.toLong(o1);
+      long rhs = Bytes.toLong(o2);
+      if (lhs > rhs) {
+        return -1;
+      } else if (lhs < rhs) {
+        return 1;
+      } else {
+        return 0;
       }
     }
 
