@@ -73,7 +73,7 @@ public class HBaseIndexSearcher extends IndexSearcher implements
 
   TopFieldDocs doSearch(final Weight weight, Filter filter, int nDocs,
       Sort sort, boolean fillFields) throws IOException {
-    HBaseTopFieldCollector topFieldCollector = new HBaseTopFieldCollector(this.tablePool, this.indexName, nDocs, sort.getSort());
+    HBaseTopFieldCollector topFieldCollector = new HBaseTopFieldCollector(this.tablePool, this.indexName, nDocs, sort);
     search(weight, filter, topFieldCollector);
     return (TopFieldDocs) topFieldCollector.topDocs();
   }

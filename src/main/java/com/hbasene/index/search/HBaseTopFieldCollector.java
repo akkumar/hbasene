@@ -42,6 +42,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TopFieldDocs;
 
@@ -77,16 +78,20 @@ public final class HBaseTopFieldCollector extends Collector implements
 
   private int totalHits;
 
+  private static final Comparator<SortFieldDoc> ASCENDING_COMPARATOR = new SortFieldDocComparatorAsc();
+
+  private static final Comparator<SortFieldDoc> DESCENDING_COMPARATOR = new SortFieldDocComparatorDesc();
+
   public HBaseTopFieldCollector(final HTablePool tablePool,
-      final String indexName, final int nDocs, final SortField[] fields) {
+      final String indexName, final int nDocs, final Sort sort) {
     this.tablePool = tablePool;
     this.indexName = indexName;
     this.nDocs = nDocs;
-    this.fields = fields;
+    this.fields = sort.getSort();
     this.pendingDocs = 0;
     this.totalHits = 0;
-    this.pq = new PriorityQueue<SortFieldDoc>(nDocs,
-        new SortFieldDocComparator());
+    this.pq = new PriorityQueue<SortFieldDoc>(nDocs, this.fields[0]
+        .getReverse() ? DESCENDING_COMPARATOR : ASCENDING_COMPARATOR);
 
     if (fields.length > 1) {
       throw new IllegalArgumentException("Multiple fields not supported yet ");
@@ -219,7 +224,7 @@ public final class HBaseTopFieldCollector extends Collector implements
     }
   }
 
-  private static class SortFieldDocComparator implements
+  private static class SortFieldDocComparatorAsc implements
       Comparator<SortFieldDoc> {
 
     @Override
@@ -243,4 +248,30 @@ public final class HBaseTopFieldCollector extends Collector implements
     }
 
   }
+
+  private static class SortFieldDocComparatorDesc implements
+      Comparator<SortFieldDoc> {
+
+    @Override
+    public int compare(SortFieldDoc lhs, SortFieldDoc rhs) {
+
+      if (lhs.indices.length > rhs.indices.length) {
+        return 1;
+      } else if (lhs.indices.length < rhs.indices.length) {
+        return -1;
+      } else {
+        for (int i = 0; i < lhs.indices.length; ++i) {
+          if (lhs.indices[i] < rhs.indices[i]) {
+            return 1;
+          } else if (lhs.indices[i] > rhs.indices[i]) {
+            return -1;
+          }
+        }
+        // Score is implied as the last one.
+        return Float.compare(lhs.score, rhs.score);
+      }
+    }
+
+  }
+
 }
