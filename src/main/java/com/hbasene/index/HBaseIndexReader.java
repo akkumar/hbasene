@@ -183,7 +183,7 @@ public class HBaseIndexReader extends IndexReader {
   @Override
   public TermFreqVector getTermFreqVector(int docNumber, String field)
       throws IOException {
-    // TODO Auto-generated method stub
+
     return null;
   }
 
