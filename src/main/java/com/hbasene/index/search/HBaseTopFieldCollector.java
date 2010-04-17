@@ -176,6 +176,9 @@ public final class HBaseTopFieldCollector extends Collector implements
               next.indices[sortIndex] = index;
               outputPq.add(next);
             }
+            //Method works best if the ratio between the unique number of elements 
+            // in the field to be sorted is small compared to the total 
+            // number of documents in the list
             docMap.keySet().removeAll(intersectionSet);
             LOG.info("Docs Size after  " + currentRow + " is " + docMap.size());
             if (docMap.isEmpty()) {
