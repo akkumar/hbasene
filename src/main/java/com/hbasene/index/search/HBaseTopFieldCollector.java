@@ -148,11 +148,11 @@ public final class HBaseTopFieldCollector extends Collector implements
   }
 
   public void appendToPQ() throws IOException {
-    this.doAppendToPQ(this.docs, this.pq, this.fields[0].getField());
+    this.doAppendToPQ(this.docs, this.pq, this.fields[0].getField(), 0);
   }
 
   private void doAppendToPQ(final LinkedList<SortFieldDoc> docs,
-      final PriorityQueue<SortFieldDoc> outputPq, final String sortField)
+      final PriorityQueue<SortFieldDoc> outputPq, final String sortField, final int sortIndex)
       throws IOException {
     HTableInterface table = this.tablePool.getTable(this.indexName);
     final String sortFieldPrefix = sortField + "/"; // separator
@@ -182,7 +182,7 @@ public final class HBaseTopFieldCollector extends Collector implements
             while (it.hasNext()) {
               SortFieldDoc next = it.next();
               if (columnQualifiers.containsKey(Bytes.toBytes((long) next.doc))) {
-                next.indices[0] = index;
+                next.indices[sortIndex] = index;
                 outputPq.add(next);
                 it.remove();
               }
