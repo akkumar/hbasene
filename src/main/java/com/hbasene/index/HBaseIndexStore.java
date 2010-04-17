@@ -199,6 +199,9 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
         FAMILY_INT_TO_DOC));
     tableDescriptor.addFamily(createUniversionLZO(admin,
         FAMILY_SEQUENCE));
+    tableDescriptor.addFamily(createUniversionLZO(admin,
+        FAMILY_PAYLOADS));
+    
 
     admin.createTable(tableDescriptor);
     HTableDescriptor descriptor = admin.getTableDescriptor(Bytes
