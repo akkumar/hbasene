@@ -104,6 +104,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
     HTableInterface table = this.tablePool.getTable(this.indexName);
     long newId = -1;
     try {
+      //FIXIT: What is primaryKey exists already in the table.
       newId = table.incrementColumnValue(ROW_SEQUENCE_ID, FAMILY_SEQUENCE,
           QUALIFIER_SEQUENCE, 1, true);
       if (newId >= Integer.MAX_VALUE) {
