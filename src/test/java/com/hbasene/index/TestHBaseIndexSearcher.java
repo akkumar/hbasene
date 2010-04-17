@@ -37,10 +37,14 @@ import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.util.Version;
 import org.testng.annotations.Test;
+
+import com.hbasene.index.search.HBaseIndexSearcher;
 
 public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
 
@@ -91,22 +95,14 @@ public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
   @Test
   public void testSortField() throws IOException {
     LOG.info(this.airportMap.toString());
-    IndexSearcher searcher = new IndexSearcher(this.indexReader);
-    try {
-      TopDocs docs = searcher.search(new TermQuery(new Term("searchterm",
-          "always")), 90);
-      LOG.info("Total results are " + docs.scoreDocs.length);
-      this.printScoreDocs(docs.scoreDocs, "Original Order ");
-      //Important: This performs an in-place sorting on the 'Top N' documents for the given field, 
-      // as opposed to sorting on the given field across the 'Hit's
-      // TODO: Work currently going on to address the same.
-      ScoreDoc[] result = this.indexSearcher.sort(docs.scoreDocs, "airport");
-      this.printScoreDocs(result, "Sorted Order");
+    TermQuery termQuery = new TermQuery(new Term("searchterm", "always"));
+    Sort sort = new Sort(new SortField("airport", SortField.STRING));
+    TopDocs docs = this.indexSearcher.search(termQuery
+        .createWeight(indexSearcher), null, 25, sort, false);
+    LOG.info("Total results are " + docs.scoreDocs.length);
+    this.printScoreDocs(docs.scoreDocs, "Sorted ");
+    assertSortOrder(docs.scoreDocs);
 
-      assertSortOrder(result);
-    } finally {
-      searcher.close();
-    }
   }
 
   @Test(enabled = false)
@@ -118,15 +114,15 @@ public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
           "always")), 90);
       LOG.info("Total results are " + docs.scoreDocs.length);
       this.printScoreDocs(docs.scoreDocs, "Original Order ");
-      //ScoreDoc[] result = this.metaReader.sort(docs.scoreDocs, "airport1");
-      //TODO: This method should throw an exception for an invalid field to be sorted.
+      // ScoreDoc[] result = this.metaReader.sort(docs.scoreDocs, "airport1");
+      // TODO: This method should throw an exception for an invalid field to be
+      // sorted.
 
     } finally {
       searcher.close();
     }
   }
 
-  
   void printScoreDocs(final ScoreDoc[] scoreDocs, final String prefix) {
     List<Integer> originalOrder = new ArrayList<Integer>();
     for (ScoreDoc scoreDoc : scoreDocs) {

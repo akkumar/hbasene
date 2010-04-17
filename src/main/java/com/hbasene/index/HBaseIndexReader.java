@@ -286,7 +286,7 @@ public class HBaseIndexReader extends IndexReader {
    * @return
    * @throws IOException
    */
-  HTablePool getTablePool() {
+  public HTablePool getTablePool() {
     return this.tablePool;
   }
 
@@ -295,7 +295,7 @@ public class HBaseIndexReader extends IndexReader {
    * 
    * @return
    */
-  String getIndexName() {
+  public String getIndexName() {
     return this.indexName;
   }
 }
