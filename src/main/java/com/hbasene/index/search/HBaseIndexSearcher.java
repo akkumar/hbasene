@@ -58,16 +58,16 @@ public class HBaseIndexSearcher extends IndexSearcher implements
 
   @Override
   public TopFieldDocs search(Weight weight, Filter filter, final int nDocs,
-      Sort sort, boolean fillFields) throws IOException {
+      Sort sort) throws IOException {
     SortField[] fields = sort.getSort();
     return (fields.length == 1 && fields[0] == SortField.FIELD_SCORE) ? super
-        .search(weight, filter, nDocs, sort, fillFields) : doSearch(weight,
-        filter, nDocs, sort, fillFields);
+        .search(weight, filter, nDocs, sort) : doSearch(weight,
+        filter, nDocs, sort);
 
   }
 
   TopFieldDocs doSearch(final Weight weight, Filter filter, int nDocs,
-      Sort sort, boolean fillFields) throws IOException {
+      Sort sort) throws IOException {
     HBaseTopFieldCollector topFieldCollector = new HBaseTopFieldCollector(
         this.tablePool, this.indexName, nDocs, sort);
     search(weight, filter, topFieldCollector);

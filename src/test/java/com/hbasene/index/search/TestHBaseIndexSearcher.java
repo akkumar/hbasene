@@ -41,7 +41,6 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.util.Version;
 import org.testng.annotations.Test;
 
 import com.hbasene.index.AbstractHBaseneTest;
@@ -68,7 +67,7 @@ public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
   protected void doInitDocs() throws CorruptIndexException, IOException {
     for (int i = 100; i >= 0; --i) {
       Document doc = this.getDocument(i);
-      indexWriter.addDocument(doc, new StandardAnalyzer(Version.LUCENE_30));
+      indexWriter.addDocument(doc, new StandardAnalyzer());
     }
   }
 
@@ -99,7 +98,7 @@ public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
     TermQuery termQuery = new TermQuery(new Term("searchterm", "always"));
     Sort sort = new Sort(new SortField("airport", SortField.STRING));
     TopDocs docs = this.indexSearcher.search(termQuery
-        .createWeight(indexSearcher), null, 25, sort, false);
+        .weight(indexSearcher), null, 25, sort);
     LOG.info("Total results are " + docs.scoreDocs.length);
     this.printScoreDocs(docs.scoreDocs, "Sorted ");
     assertSortOrderAsc(docs.scoreDocs);
@@ -113,7 +112,7 @@ public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
     Sort sort = new Sort(new SortField("airport", SortField.STRING, true));
     //sort by reverse
     TopDocs docs = this.indexSearcher.search(termQuery
-        .createWeight(indexSearcher), null, 25, sort, false);
+        .weight(indexSearcher), null, 25, sort);
     LOG.info("Total results are " + docs.scoreDocs.length);
     this.printScoreDocs(docs.scoreDocs, "Sorted ");
     assertSortOrderDesc(docs.scoreDocs);

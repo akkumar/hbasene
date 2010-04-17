@@ -39,7 +39,7 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Sort;
@@ -52,7 +52,7 @@ import com.hbasene.index.HBaseneConstants;
 /**
  * Sorting implementation
  */
-public final class HBaseTopFieldCollector extends Collector implements
+public final class HBaseTopFieldCollector extends HitCollector implements
     HBaseneConstants {
 
   private static final Log LOG = LogFactory
@@ -71,8 +71,6 @@ public final class HBaseTopFieldCollector extends Collector implements
   private final PriorityQueue<SortFieldDoc> pq;
 
   private final SortField[] fields;
-
-  private Scorer scorer;
 
   private int pendingDocs;
 
@@ -99,12 +97,8 @@ public final class HBaseTopFieldCollector extends Collector implements
   }
 
   @Override
-  public void collect(int doc) throws IOException {
-    float currentScore = 1.0f;
-    if (this.scorer != null) {
-      currentScore = this.scorer.score();
-    }
-    docs.add(new SortFieldDoc(doc, currentScore, 1));// only 1 sort field under
+  public void collect(int doc, float score) {
+    docs.add(new SortFieldDoc(doc, score, 1));// only 1 sort field under
     // consideration at the
     // moment.
     ++pendingDocs;
@@ -114,22 +108,6 @@ public final class HBaseTopFieldCollector extends Collector implements
       docs.clear();
     }
     ++this.totalHits;
-  }
-
-  @Override
-  public void setNextReader(IndexReader reader, int docBase) throws IOException {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void setScorer(Scorer scorer) throws IOException {
-    this.scorer = scorer;
-  }
-
-  @Override
-  public boolean acceptsDocsOutOfOrder() {
-    return true;
   }
 
   TopFieldDocs topDocs() throws IOException {
@@ -147,13 +125,17 @@ public final class HBaseTopFieldCollector extends Collector implements
     return new TopFieldDocs(this.totalHits, scoreDocs, this.fields, 0.0f);
   }
 
-  public void appendToPQ() throws IOException {
-    this.doAppendToPQ(this.docs, this.pq, this.fields[0].getField(), 0);
+  public void appendToPQ() {
+    try {
+      this.doAppendToPQ(this.docs, this.pq, this.fields[0].getField(), 0);
+    } catch (IOException ex) {
+      LOG.warn("Exception occurred while appending to priority queue", ex);
+    }
   }
 
   private void doAppendToPQ(final LinkedList<SortFieldDoc> docs,
-      final PriorityQueue<SortFieldDoc> outputPq, final String sortField, final int sortIndex)
-      throws IOException {
+      final PriorityQueue<SortFieldDoc> outputPq, final String sortField,
+      final int sortIndex) throws IOException {
     HTableInterface table = this.tablePool.getTable(this.indexName);
     final String sortFieldPrefix = sortField + "/"; // separator
     try {
