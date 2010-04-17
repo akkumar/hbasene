@@ -94,7 +94,7 @@ public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
   }
 
   @Test
-  public void testSortField() throws IOException {
+  public void testSortFieldAsc() throws IOException {
     LOG.info(this.airportMap.toString());
     TermQuery termQuery = new TermQuery(new Term("searchterm", "always"));
     Sort sort = new Sort(new SortField("airport", SortField.STRING));
@@ -102,10 +102,24 @@ public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
         .createWeight(indexSearcher), null, 25, sort, false);
     LOG.info("Total results are " + docs.scoreDocs.length);
     this.printScoreDocs(docs.scoreDocs, "Sorted ");
-    assertSortOrder(docs.scoreDocs);
+    assertSortOrderAsc(docs.scoreDocs);
 
   }
 
+  @Test
+  public void testSortFieldDesc() throws IOException {
+    LOG.info(this.airportMap.toString());
+    TermQuery termQuery = new TermQuery(new Term("searchterm", "always"));
+    Sort sort = new Sort(new SortField("airport", SortField.STRING, true));
+    //sort by reverse
+    TopDocs docs = this.indexSearcher.search(termQuery
+        .createWeight(indexSearcher), null, 25, sort, false);
+    LOG.info("Total results are " + docs.scoreDocs.length);
+    this.printScoreDocs(docs.scoreDocs, "Sorted ");
+    assertSortOrderDesc(docs.scoreDocs);
+  }
+
+  
   @Test(enabled = false)
   public void testNonExistentSortField() throws IOException {
     LOG.info(this.airportMap.toString());
@@ -132,7 +146,7 @@ public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
     LOG.info(prefix + " is " + originalOrder);
   }
 
-  void assertSortOrder(final ScoreDoc[] result) {
+  void assertSortOrderAsc(final ScoreDoc[] result) {
     Map<Integer, String> reverseMap = new HashMap<Integer, String>();
     for (final Map.Entry<String, List<Integer>> entry : this.airportMap
         .entrySet()) {
@@ -149,4 +163,20 @@ public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
     }
   }
 
+  void assertSortOrderDesc(final ScoreDoc[] result) {
+    Map<Integer, String> reverseMap = new HashMap<Integer, String>();
+    for (final Map.Entry<String, List<Integer>> entry : this.airportMap
+        .entrySet()) {
+      for (final Integer docId : entry.getValue()) {
+        reverseMap.put(docId, entry.getKey());
+      }
+    }
+    String previousAirport = "zzz";
+    for (final ScoreDoc scoreDoc : result) {
+      String currentAirport = reverseMap.get(scoreDoc.doc);
+      Assert.assertTrue(currentAirport + " vs " + previousAirport,
+          currentAirport.compareTo(previousAirport) <= 0);
+      previousAirport = currentAirport;
+    }
+  }
 }
