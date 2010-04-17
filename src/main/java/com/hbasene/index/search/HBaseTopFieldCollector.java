@@ -181,8 +181,8 @@ public final class HBaseTopFieldCollector extends Collector implements
                 SortFieldDoc next = docMap.get(commonDocId);
                 next.indices[sortIndex] = index;
                 outputPq.add(next);
-                inputDocs.remove(commonDocId);
               }
+              inputDocs.removeAll(intersectionSet);
             }
             LOG.info("Docs Size after  " + currentRow + " is " + docMap.size());
             if (docMap.isEmpty()) {
