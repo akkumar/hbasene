@@ -152,7 +152,6 @@ public final class HBaseTopFieldCollector extends Collector implements
   private void doAppendToPQ(final Map<byte[], SortFieldDoc> docMap,
       final PriorityQueue<SortFieldDoc> outputPq, final String sortField,
       final int sortIndex) throws IOException {
-    final Set<byte[]> inputDocs = docMap.keySet();
     HTableInterface table = this.tablePool.getTable(this.indexName);
     final String sortFieldPrefix = sortField + "/"; // separator
     try {
@@ -171,13 +170,13 @@ public final class HBaseTopFieldCollector extends Collector implements
             NavigableMap<byte[], byte[]> columnQualifiers = result
                 .getFamilyMap(FAMILY_TERMVECTOR);
             SetView<byte[]> intersectionSet = Sets.intersection(
-                columnQualifiers.keySet(), inputDocs);
+                columnQualifiers.keySet(), docMap.keySet());
             for (final byte[] commonDocId : intersectionSet) {
               SortFieldDoc next = docMap.get(commonDocId);
               next.indices[sortIndex] = index;
               outputPq.add(next);
             }
-            inputDocs.removeAll(intersectionSet);
+            docMap.keySet().removeAll(intersectionSet);
             LOG.info("Docs Size after  " + currentRow + " is " + docMap.size());
             if (docMap.isEmpty()) {
               break;
