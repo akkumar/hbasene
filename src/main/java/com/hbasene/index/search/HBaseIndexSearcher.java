@@ -60,24 +60,18 @@ public class HBaseIndexSearcher extends IndexSearcher implements
   public TopFieldDocs search(Weight weight, Filter filter, final int nDocs,
       Sort sort, boolean fillFields) throws IOException {
     SortField[] fields = sort.getSort();
-    if (fields.length > 1) {
-      throw new IllegalArgumentException(
-          "Multiple Sort fields not supported at the moment");
-    }
-    if (fields[0] == SortField.FIELD_SCORE) {
-      return super.search(weight, filter, nDocs, sort, fillFields);
-    } else {
-      return doSearch(weight, filter, nDocs, sort, fillFields);
-    }
+    return (fields.length == 1 && fields[0] == SortField.FIELD_SCORE) ? super
+        .search(weight, filter, nDocs, sort, fillFields) : doSearch(weight,
+        filter, nDocs, sort, fillFields);
+
   }
 
   TopFieldDocs doSearch(final Weight weight, Filter filter, int nDocs,
       Sort sort, boolean fillFields) throws IOException {
-    HBaseTopFieldCollector topFieldCollector = new HBaseTopFieldCollector(this.tablePool, this.indexName, nDocs, sort);
+    HBaseTopFieldCollector topFieldCollector = new HBaseTopFieldCollector(
+        this.tablePool, this.indexName, nDocs, sort);
     search(weight, filter, topFieldCollector);
     return (TopFieldDocs) topFieldCollector.topDocs();
   }
-
-
 
 }

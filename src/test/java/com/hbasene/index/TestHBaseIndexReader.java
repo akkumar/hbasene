@@ -31,12 +31,14 @@ import org.apache.lucene.search.TopDocs;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.hbasene.index.search.HBaseIndexSearcher;
+
 
 public class TestHBaseIndexReader extends AbstractHBaseneTest {
 
   @Test
   public void testSearch() throws IOException {
-    IndexSearcher searcher = new IndexSearcher(this.indexReader);
+    IndexSearcher searcher = new HBaseIndexSearcher(this.indexReader);
     TopDocs docs = searcher.search(new TermQuery(new Term("content", "plays")),
         3);
     Assert.assertTrue(docs.totalHits > 3,
