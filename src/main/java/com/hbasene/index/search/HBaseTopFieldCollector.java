@@ -65,8 +65,8 @@ public final class HBaseTopFieldCollector extends Collector implements
 
   private final int nDocs;
 
-
-  private final Map<byte[], SortFieldDoc> docMap = new TreeMap<byte[], SortFieldDoc>(new BytesAsLongComparator());
+  private final NavigableMap<byte[], SortFieldDoc> docMap = new TreeMap<byte[], SortFieldDoc>(
+      new BytesAsLongComparator());
 
   private final PriorityQueue<SortFieldDoc> pq;
 
@@ -146,12 +146,10 @@ public final class HBaseTopFieldCollector extends Collector implements
   }
 
   public void appendToPQ() throws IOException {
-    this.doAppendToPQ(this.docMap, this.pq, this.fields[0]
-        .getField(), 0);
+    this.doAppendToPQ(this.docMap, this.pq, this.fields[0].getField(), 0);
   }
 
-  private void doAppendToPQ(
-      final Map<byte[], SortFieldDoc> docMap,
+  private void doAppendToPQ(final Map<byte[], SortFieldDoc> docMap,
       final PriorityQueue<SortFieldDoc> outputPq, final String sortField,
       final int sortIndex) throws IOException {
     final Set<byte[]> inputDocs = docMap.keySet();
@@ -174,14 +172,12 @@ public final class HBaseTopFieldCollector extends Collector implements
                 .getFamilyMap(FAMILY_TERMVECTOR);
             SetView<byte[]> intersectionSet = Sets.intersection(
                 columnQualifiers.keySet(), inputDocs);
-            if (intersectionSet.size() > 0) {
-              for (final byte[] commonDocId : intersectionSet) {
-                SortFieldDoc next = docMap.get(commonDocId);
-                next.indices[sortIndex] = index;
-                outputPq.add(next);
-              }
-              inputDocs.removeAll(intersectionSet);
+            for (final byte[] commonDocId : intersectionSet) {
+              SortFieldDoc next = docMap.get(commonDocId);
+              next.indices[sortIndex] = index;
+              outputPq.add(next);
             }
+            inputDocs.removeAll(intersectionSet);
             LOG.info("Docs Size after  " + currentRow + " is " + docMap.size());
             if (docMap.isEmpty()) {
               break;
@@ -270,8 +266,7 @@ public final class HBaseTopFieldCollector extends Collector implements
 
   }
 
-  private static class BytesAsLongComparator implements
-      Comparator<byte[]> {
+  private static class BytesAsLongComparator implements Comparator<byte[]> {
 
     @Override
     public int compare(byte[] o1, byte[] o2) {
