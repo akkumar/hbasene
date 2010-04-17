@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import junit.framework.Assert;
 
@@ -55,7 +56,7 @@ public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
   private static final String[] AIRPORTS = { "NYC", "JFK", "EWR", "SEA", "SFO",
       "OAK", "SJC" };
 
-  private final Map<String, List<Integer>> airportMap = new HashMap<String, List<Integer>>();
+  private final Map<String, List<Integer>> airportMap = new TreeMap<String, List<Integer>>();
 
   private HBaseIndexSearcher indexSearcher;
 
