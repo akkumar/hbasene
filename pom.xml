@@ -8,8 +8,8 @@
   <artifactId>hbasene-core</artifactId>
   <packaging>jar</packaging>
   <version>0.20.0-SNAPSHOT</version>
-  <name>Lucene interaction with HBase </name>
-  <description>Lucene Libraries with HBase</description>
+  <name>HBasene</name>
+  <description>HBase as the TF-IDF store for Lucene, providing scalable storage</description>
   <url>http://github.com/akkumar/hbasene/tree/master</url>
   <licenses>
     <license>
@@ -39,11 +39,16 @@
   <developers>
     <developer>
       <id>kaykay</id>
-      <name>Karthik Kumar</name>
+      <name>Karthik K</name>
     </developer>
   </developers>
   <mailingLists>
-    <mailingList />
+    <mailingList>
+      <name>hbasene-user</name>
+      <subscribe></subscribe>
+      <unsubscribe></unsubscribe>
+      <archive>http://groups.google.com/group/hbasene-user</archive>
+    </mailingList>
   </mailingLists>
   <organization>
     <name>HBase as backing store for Lucene</name>
