@@ -136,7 +136,6 @@ public final class HBaseTopFieldCollector extends Collector implements
     if (this.pendingDocs > 0) {
       this.appendToPQ();
       this.pendingDocs = 0;
-      docs.clear();
     }
     int arraySize = (this.totalHits >= this.nDocs) ? this.nDocs
         : this.totalHits;
@@ -187,6 +186,7 @@ public final class HBaseTopFieldCollector extends Collector implements
                 it.remove();
               }
             }
+            LOG.info("Docs Size after  " + currentRow  + " is " + docs.size());
             if (docs.isEmpty()) {
               break;
             }
