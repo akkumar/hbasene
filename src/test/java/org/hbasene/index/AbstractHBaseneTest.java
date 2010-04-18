@@ -61,16 +61,17 @@ public class AbstractHBaseneTest extends HBaseClusterTestCase {
 
   protected static final int DEFAULT_POOL_SIZE = 20;
 
-  protected AbstractHBaseneTest() { 
+  protected AbstractHBaseneTest() {
     super(1);
   }
+
   /**
    * @throws java.lang.Exception
    */
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    //TEST_UTIL.startMiniCluster(1);
+    // TEST_UTIL.startMiniCluster(1);
     HBaseIndexStore.dropLuceneIndexTable(TEST_INDEX, conf);
     HBaseIndexStore.createLuceneIndexTable(TEST_INDEX, conf, true);
     this.tablePool = new HTablePool(conf, DEFAULT_POOL_SIZE);
@@ -79,7 +80,8 @@ public class AbstractHBaseneTest extends HBaseClusterTestCase {
     this.indexWriter = new HBaseIndexWriter(hbaseIndex, PK_FIELD);
     doInitDocs();
 
-    this.indexReader = new HBaseIndexReader(this.tablePool, TEST_INDEX);
+    this.indexReader = new HBaseIndexReader(this.tablePool, TEST_INDEX,
+        PK_FIELD);
     doSetupDerived();
 
   }
@@ -92,7 +94,6 @@ public class AbstractHBaseneTest extends HBaseClusterTestCase {
     this.addDefaultDocuments();
 
   }
-
 
   protected void addDefaultDocuments() throws CorruptIndexException,
       IOException {
@@ -139,7 +140,7 @@ public class AbstractHBaseneTest extends HBaseClusterTestCase {
 
   }
 
-  protected void assertDocumentPresent(final String docId) throws IOException {
+  protected void assertDocumentPresent(final long docId) throws IOException {
     Get get = new Get(Bytes.toBytes(docId));
     get.addFamily(HBaseneConstants.FAMILY_FIELDS);
     HTable table = new HTable(conf, TEST_INDEX);
@@ -164,6 +165,26 @@ public class AbstractHBaseneTest extends HBaseClusterTestCase {
       for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
         sb.append(" (" + Bytes.toString(entry.getKey()) + ", "
             + Bytes.toString(entry.getValue()) + ")");
+      }
+      LOGGER.info(Bytes.toString(result.getRow()) + sb.toString());
+      result = scanner.next();
+    }
+    table.close();
+    LOGGER.info("****** Close " + Bytes.toString(family) + "****");
+  }
+
+  protected void listSequence() throws IOException {
+    final byte[] family = HBaseneConstants.FAMILY_SEQUENCE;
+    LOGGER.info("****** " + Bytes.toString(family) + "****");
+    HTable table = new HTable(conf, TEST_INDEX);
+    ResultScanner scanner = table.getScanner(family);
+    Result result = scanner.next();
+    while (result != null) {
+      NavigableMap<byte[], byte[]> map = result.getFamilyMap(family);
+      final StringBuilder sb = new StringBuilder();
+      for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
+        sb.append(" (" + Bytes.toString(entry.getKey()) + ", "
+            + Bytes.toLong(entry.getValue()) + ")");
       }
       LOGGER.info(Bytes.toString(result.getRow()) + sb.toString());
       result = scanner.next();
@@ -230,6 +251,26 @@ public class AbstractHBaseneTest extends HBaseClusterTestCase {
     LOGGER.info("****** Close " + Bytes.toString(family) + "****");
   }
 
+  protected void listFields() throws IOException {
+    final byte[] family = HBaseneConstants.FAMILY_FIELDS;
+    LOGGER.info("****** " + Bytes.toString(family) + "****");
+    HTable table = new HTable(conf, TEST_INDEX);
+    ResultScanner scanner = table.getScanner(family);
+    Result result = scanner.next();
+    while (result != null) {
+      NavigableMap<byte[], byte[]> map = result.getFamilyMap(family);
+      final StringBuilder sb = new StringBuilder();
+      for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
+        sb.append(" (" + Bytes.toString(entry.getKey()) + ", "
+            + Bytes.toString(entry.getValue()) + ")");
+      }
+      LOGGER.info(Bytes.toLong(result.getRow()) + sb.toString());
+      result = scanner.next();
+    }
+    table.close();
+    LOGGER.info("****** Close " + Bytes.toString(family) + "****");
+  }
+
   /**
    * Asserts if a mapping exists between the given term and the doc Id.
    * 
@@ -265,5 +306,4 @@ public class AbstractHBaseneTest extends HBaseClusterTestCase {
     assertTermVectorDocumentMapping(term, Bytes.toBytes(docId));
   }
 
-  
 }

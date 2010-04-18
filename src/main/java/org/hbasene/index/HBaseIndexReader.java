@@ -77,15 +77,22 @@ public class HBaseIndexReader extends IndexReader {
   private final AbstractTermPositionsEncoder termPositionEncoder = new AsciiTermPositionsEncoder();
 
   /**
+   * Primary Key Field
+   */
+  private final byte[] primaryKeyField;
+  
+  
+  /**
    * 
    * @param tablePool
    *    TablePool to be used by the index reader
    * @param indexName
    *    Name of the index to be read from.  
    */
-  public HBaseIndexReader(final HTablePool tablePool, final String indexName) {
+  public HBaseIndexReader(final HTablePool tablePool, final String indexName, final String primaryKeyField) {
     this.tablePool = tablePool;
     this.indexName = indexName;
+    this.primaryKeyField = Bytes.toBytes(primaryKeyField);
   }
 
   @Override
@@ -154,13 +161,13 @@ public class HBaseIndexReader extends IndexReader {
     HTable table = this.getTablePool().getTable(this.indexName);
     try {
       Get get = new Get(Bytes.toBytes(index));
-      get.addColumn(HBaseneConstants.FAMILY_INT_TO_DOC,
-          HBaseneConstants.QUALIFIER_DOC);
+      get.addColumn(HBaseneConstants.FAMILY_FIELDS,
+          this.primaryKeyField);
       doc = new Document();
 
       Result result = table.get(get);
-      byte[] docId = result.getValue(HBaseneConstants.FAMILY_INT_TO_DOC,
-          HBaseneConstants.QUALIFIER_DOC);
+      byte[] docId = result.getValue(HBaseneConstants.FAMILY_FIELDS,
+          this.primaryKeyField);
       // TODO: Get the document schema, for the given document.
       // Change the HBaseIndexWriter appropriately to enable easy
       // reconstruction.

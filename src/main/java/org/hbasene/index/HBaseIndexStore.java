@@ -107,14 +107,14 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
           QUALIFIER_SEQUENCE, 1, true);
       if (newId >= Integer.MAX_VALUE) {
         throw new IllegalStateException(
-            "Lucene cannot store more than the integer count. Hold on until the limitation of the same is fixed in the Lucene API-s");
+            "API Limitation reached. ");
       }
       insertBiMap(table, primaryKey, Bytes.toBytes(newId));
     } finally {
       this.tablePool.putTable(table);
     }
 
-    return (int) newId;
+    return newId;
   }
 
   void insertBiMap(final HTable table, final byte[] primaryKey, final byte[] docId)
@@ -122,10 +122,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
     Put put = new Put(primaryKey);
     put.add(FAMILY_DOC_TO_INT, QUALIFIER_INT, docId);
     table.put(put);
-
-    Put put2 = new Put(docId);
-    put2.add(FAMILY_INT_TO_DOC, QUALIFIER_DOC, primaryKey);
-    table.put(put2);
 
     table.flushCommits();
   }
@@ -194,8 +190,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
         FAMILY_TERMVECTOR));
     tableDescriptor.addFamily(createUniversionLZO(admin,
         FAMILY_DOC_TO_INT));
-    tableDescriptor.addFamily(createUniversionLZO(admin,
-        FAMILY_INT_TO_DOC));
     tableDescriptor.addFamily(createUniversionLZO(admin,
         FAMILY_SEQUENCE));
     tableDescriptor.addFamily(createUniversionLZO(admin,
