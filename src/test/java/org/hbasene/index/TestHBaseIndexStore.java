@@ -22,6 +22,7 @@ package org.hbasene.index;
 
 import java.io.IOException;
 
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.store.LockObtainFailedException;
@@ -45,14 +46,12 @@ public class TestHBaseIndexStore extends AbstractHBaseneTest {
     listFields();
     listSequence();
     
-    //assertDocumentPresent(1L);
-    //assertDocumentPresent(2L);
-    //assertDocumentPresent(3L);
-    //assertDocumentPresent(4L);
+    for (long i = 0 ; i < 4; ++i) {
+      assertDocumentPresent(i);
+    }
 
-
-    //assertTermVectorDocumentMapping("content/messi", Bytes.toBytes(1L));
-    //assertTermVectorDocumentMapping("content/lionel", Bytes.toBytes(2L));
+    assertTermVectorDocumentMapping("content/messi", 0L);
+    assertTermVectorDocumentMapping("content/lionel", 1L);
   }
 
 }

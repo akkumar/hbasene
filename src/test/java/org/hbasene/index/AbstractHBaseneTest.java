@@ -279,7 +279,8 @@ public class AbstractHBaseneTest extends HBaseClusterTestCase {
    * @throws IOException
    */
   protected void assertTermVectorDocumentMapping(final String term,
-      final byte[] docId) throws IOException {
+      final long docId) throws IOException {
+    byte[] internalDocId = Bytes.toBytes(docId);
     Get get = new Get(Bytes.toBytes(term));
     get.addFamily(HBaseneConstants.FAMILY_TERMVECTOR);
     HTable table = new HTable(conf, TEST_INDEX);
@@ -288,22 +289,11 @@ public class AbstractHBaseneTest extends HBaseClusterTestCase {
       NavigableMap<byte[], byte[]> map = result
           .getFamilyMap(HBaseneConstants.FAMILY_TERMVECTOR);
       Assert.assertTrue(map.size() > 0);
-      Assert.assertNotNull(map.get(docId));
+      Assert.assertNotNull(map.get(internalDocId));
     } finally {
       table.close();
     }
   }
 
-  /**
-   * Asserts if a mapping exists between the given term and the doc Id.
-   * 
-   * @param term
-   * @param docId
-   * @throws IOException
-   */
-  protected void assertTermVectorDocumentMapping(final String term,
-      final long docId) throws IOException {
-    assertTermVectorDocumentMapping(term, Bytes.toBytes(docId));
-  }
 
 }
