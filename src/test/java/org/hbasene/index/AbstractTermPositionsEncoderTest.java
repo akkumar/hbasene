@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.hbasene.index.AbstractTermPositionsEncoder;
 import org.junit.Assert;
-import org.testng.annotations.BeforeTest;
+import org.junit.Before;
 
 /**
  * Rudimentary test case of testing the encode and the decode arrays, 
@@ -39,7 +39,7 @@ public abstract class AbstractTermPositionsEncoderTest {
 
   protected int[] termPositions;
 
-  @BeforeTest
+  @Before
   public void setup() {
     this.encoder = this.createEncoder();
     this.termPositions = new int[] { 1, 3, 4, 9, 10 };
@@ -52,7 +52,7 @@ public abstract class AbstractTermPositionsEncoderTest {
     }
     byte[] array = this.encoder.encode(input);
     int[] result = this.encoder.decode(array);
-    Assert.assertArrayEquals(result, inputTermPositions);
+    Assert.assertEquals(result, inputTermPositions);
   }
 
 

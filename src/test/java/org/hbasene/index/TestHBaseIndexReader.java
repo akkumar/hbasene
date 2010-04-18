@@ -29,8 +29,9 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.hbasene.index.search.HBaseIndexSearcher;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
+
 
 
 
@@ -41,23 +42,23 @@ public class TestHBaseIndexReader extends AbstractHBaseneTest {
     IndexSearcher searcher = new HBaseIndexSearcher(this.indexReader);
     TopDocs docs = searcher.search(new TermQuery(new Term("content", "plays")),
         3);
-    Assert.assertTrue(docs.totalHits > 3,
-        "At least 3 terms with the keyword plays available");
+    Assert.assertTrue(docs.totalHits > 3 );
+        //"At least 3 terms with the keyword plays available");
     for (ScoreDoc scoreDoc : docs.scoreDocs) {
-      Assert.assertTrue(scoreDoc.doc >= 0, "Doc Id  " + scoreDoc.doc
-          + " is >= 0"); // valid
+      Assert.assertTrue(scoreDoc.doc >= 0);// "Doc Id  " + scoreDoc.doc
+          //+ " is >= 0"); // valid
       // docId
-      Assert.assertTrue(scoreDoc.score > 0.0f, "Score " + scoreDoc.score
-          + " > 0.0f"); // valid
+      Assert.assertTrue(scoreDoc.score > 0.0f);// "Score " + scoreDoc.score
+          //+ " > 0.0f"); // valid
       // Score
 
       try {
-        Assert.assertNotNull(this.indexReader.document(scoreDoc.doc),
-            "Retrieving document for " + scoreDoc.doc);
+        Assert.assertNotNull(this.indexReader.document(scoreDoc.doc));
+            //"Retrieving document for " + scoreDoc.doc);
       } catch (Exception ex) {
-        Assert.assertTrue(false,
-            "Exception occurred while retrieving document for " + scoreDoc.doc
-                + " " + ex);
+        Assert.assertTrue(false);
+            //"Exception occurred while retrieving document for " + scoreDoc.doc
+            //    + " " + ex);
       }
 
       // valid document

@@ -29,7 +29,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -151,7 +151,7 @@ public final class HBaseTopFieldCollector extends Collector implements
   private void doAppendToPQ(final Map<byte[], SortFieldDoc> docMap,
       final PriorityQueue<SortFieldDoc> outputPq, final String sortField,
       final int sortIndex) throws IOException {
-    HTableInterface table = this.tablePool.getTable(this.indexName);
+    HTable table = this.tablePool.getTable(this.indexName);
     final String sortFieldPrefix = sortField + "/"; // separator
     try {
       byte[] row = Bytes.toBytes(sortFieldPrefix);

@@ -22,7 +22,7 @@ package org.hbasene.index;
 
 import org.hbasene.index.AbstractTermPositionsEncoder;
 import org.hbasene.index.AsciiTermPositionsEncoder;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 /**
  * Unit test case for a comma-separated ASCII based encoder.

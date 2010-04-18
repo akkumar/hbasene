@@ -23,14 +23,15 @@ package org.hbasene.index;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
+import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.Term;
 import org.hbasene.index.AbstractTermPositionsEncoder;
 import org.hbasene.index.AsciiTermPositionsEncoder;
 import org.hbasene.index.HBaseTermPositions;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 
 public class TestHBaseTermPositions extends AbstractHBaseneTest {
@@ -50,8 +51,8 @@ public class TestHBaseTermPositions extends AbstractHBaseneTest {
   /**
    * @throws java.lang.Exception
    */
-  @BeforeMethod
-  public void setUp() throws Exception {
+  @Before
+  public void doSetupDerived() throws CorruptIndexException, IOException {
     termPositions = new HBaseTermPositions(indexReader, this.termPositionEncoder);
 
   }
@@ -59,8 +60,8 @@ public class TestHBaseTermPositions extends AbstractHBaseneTest {
   /**
    * @throws java.lang.Exception
    */
-  @AfterMethod
-  public void tearDown() throws Exception {
+  @After
+  public void doTearDownDerived() throws Exception {
     termPositions.close();
   }
   
@@ -73,7 +74,7 @@ public class TestHBaseTermPositions extends AbstractHBaseneTest {
       Assert.assertTrue(termPositions.freq() > 0);
       ++count;
     }
-    Assert.assertEquals( 4, count, "plays occurs 4 ");
+    Assert.assertEquals( 4, count);
   }
 
   @Test

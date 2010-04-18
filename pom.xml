@@ -139,21 +139,36 @@
       <name>Java Net</name>
       <url>http://download.java.net/maven/2</url>
     </repository>
-
+    <repository>
+      <id>ibiblio</id>
+      <name>ibiblio</name>
+      <url>http://people.apache.org/repo/m2-ibiblio-rsync-repository/</url>
+    </repository>
   </repositories>
 
 
   <dependencies>
-     <dependency>
+    
+    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
       <version>${hadoop-core.version}</version>
     </dependency>
+    
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-core</artifactId>
-      <version>0.21.0-SNAPSHOT</version>
+      <version>0.20.4</version>
+      <systemPath>${basedir}/lib/hbase-0.20.4.jar</systemPath>
+      <scope>system</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>org.apache.hadoop.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
+      <version>3.2.2</version>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-core</artifactId>
@@ -176,15 +191,15 @@
     </dependency>
 
     <!--  TEST  -->
-
+   
     <dependency>
-      <groupId>org.testng</groupId>
-      <artifactId>testng</artifactId>
-      <version>5.11</version>
-      <classifier>jdk15</classifier>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.5</version>
       <scope>test</scope>
     </dependency>
 
+    
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-test</artifactId>
@@ -194,10 +209,10 @@
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-core</artifactId>
-      <version>0.21.0-SNAPSHOT</version>
-      <classifier>tests</classifier>
-      <scope>test</scope>
+      <artifactId>hbase-core-test</artifactId>
+      <version>0.20.4</version>
+      <systemPath>${basedir}/lib/hbase-0.20.4-test.jar</systemPath>
+      <scope>system</scope>
     </dependency>
 
 

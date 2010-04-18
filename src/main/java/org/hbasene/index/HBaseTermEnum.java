@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.NavigableMap;
 
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -38,7 +38,7 @@ import org.apache.lucene.index.TermEnum;
  */
 public class HBaseTermEnum extends TermEnum {
 
-  private final HTableInterface table;
+  private final HTable table;
 
   private ResultScanner resultScanner;
 

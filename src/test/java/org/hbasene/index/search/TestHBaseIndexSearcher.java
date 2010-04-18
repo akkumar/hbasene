@@ -45,7 +45,7 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.util.Version;
 import org.hbasene.index.AbstractHBaseneTest;
 import org.hbasene.index.search.HBaseIndexSearcher;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 
 public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
@@ -121,8 +121,7 @@ public class TestHBaseIndexSearcher extends AbstractHBaseneTest {
   }
 
   
-  @Test(enabled = false)
-  public void testNonExistentSortField() throws IOException {
+  public void tistNonExistentSortField() throws IOException {
     LOG.info(this.airportMap.toString());
     IndexSearcher searcher = new IndexSearcher(this.indexReader);
     try {

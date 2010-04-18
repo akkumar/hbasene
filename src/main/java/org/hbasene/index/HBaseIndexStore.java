@@ -24,13 +24,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -74,7 +72,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
 
   @Override
   public void commit() throws IOException {
-    HTableInterface table = this.tablePool.getTable(this.indexName);
+    HTable table = this.tablePool.getTable(this.indexName);
     try {
       table.put(this.puts);
       this.puts.clear();
@@ -101,7 +99,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
 
   @Override
   public long docId(final byte[] primaryKey) throws IOException {
-    HTableInterface table = this.tablePool.getTable(this.indexName);
+    HTable table = this.tablePool.getTable(this.indexName);
     long newId = -1;
     try {
       //FIXIT: What is primaryKey exists already in the table.
@@ -119,7 +117,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
     return (int) newId;
   }
 
-  void insertBiMap(final HTableInterface table, final byte[] primaryKey, final byte[] docId)
+  void insertBiMap(final HTable table, final byte[] primaryKey, final byte[] docId)
       throws IOException {
     Put put = new Put(primaryKey);
     put.add(FAMILY_DOC_TO_INT, QUALIFIER_INT, docId);
@@ -140,7 +138,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
    * @throws IOException
    */
   public static void dropLuceneIndexTable(final String tableName,
-      final Configuration configuration) throws IOException {
+      final HBaseConfiguration configuration) throws IOException {
     HBaseAdmin admin = new HBaseAdmin(configuration);
     doDropTable(admin, tableName);
   }
@@ -175,7 +173,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
    *           in case of any error with regard to the same.
    */
   public static HTable createLuceneIndexTable(final String tableName,
-      final Configuration configuration, boolean forceRecreate)
+      final HBaseConfiguration configuration, boolean forceRecreate)
       throws IOException {
     HBaseAdmin admin = new HBaseAdmin(configuration);
 

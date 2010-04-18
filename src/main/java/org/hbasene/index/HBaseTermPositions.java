@@ -28,7 +28,7 @@ import java.util.NavigableMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -57,7 +57,7 @@ public class HBaseTermPositions implements TermPositions {
 
   };
 
-  private final HTableInterface table;
+  private final HTable table;
 
   private final HTablePool pool;
 

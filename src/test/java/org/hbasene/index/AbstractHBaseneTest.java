@@ -24,8 +24,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.NavigableMap;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseTestingUtility;
+import org.apache.hadoop.hbase.HBaseClusterTestCase;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
@@ -39,25 +39,15 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.util.Version;
-import org.hbasene.index.HBaseIndexReader;
-import org.hbasene.index.HBaseIndexStore;
-import org.hbasene.index.HBaseIndexWriter;
-import org.hbasene.index.HBaseneConstants;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
+import org.junit.Assert;
 
 /**
  * Abstract HBasene Test
  */
-public class AbstractHBaseneTest {
+public class AbstractHBaseneTest extends HBaseClusterTestCase {
 
   private static final Logger LOGGER = Logger
       .getLogger(AbstractHBaseneTest.class.getName());
-
-  private final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
-
-  protected Configuration conf;
 
   protected static final String TEST_INDEX = "idx-hbase-lucene";
 
@@ -71,13 +61,16 @@ public class AbstractHBaseneTest {
 
   protected static final int DEFAULT_POOL_SIZE = 20;
 
+  protected AbstractHBaseneTest() { 
+    super(1);
+  }
   /**
    * @throws java.lang.Exception
    */
-  @BeforeClass
-  public final void setUpBeforeClass() throws Exception {
-    TEST_UTIL.startMiniCluster(1);
-    conf = TEST_UTIL.getConfiguration();
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    //TEST_UTIL.startMiniCluster(1);
     HBaseIndexStore.dropLuceneIndexTable(TEST_INDEX, conf);
     HBaseIndexStore.createLuceneIndexTable(TEST_INDEX, conf, true);
     this.tablePool = new HTablePool(conf, DEFAULT_POOL_SIZE);
@@ -100,11 +93,6 @@ public class AbstractHBaseneTest {
 
   }
 
-  @AfterClass
-  public final void tearDownBase() throws IOException {
-    this.indexReader.close();
-    // TODO: Release indexWriter resources.
-  }
 
   protected void addDefaultDocuments() throws CorruptIndexException,
       IOException {
@@ -130,13 +118,15 @@ public class AbstractHBaseneTest {
   /**
    * @throws java.lang.Exception
    */
-  @AfterClass
-  public void tearDownAfterClass() throws Exception {
+  @Override
+  public void tearDown() throws Exception {
     LOGGER.info("***   Shut down the HBase Cluster  ****");
     // this.tablePool.close();
     // TODO: HBASE-2435
     HBaseIndexStore.dropLuceneIndexTable(TEST_INDEX, conf);
-    TEST_UTIL.shutdownMiniCluster();
+    this.indexReader.close();
+    // TODO: Release indexWriter resources.
+    super.tearDown();
   }
 
   protected Document createDocument(final String id, final String content)
@@ -275,4 +265,5 @@ public class AbstractHBaseneTest {
     assertTermVectorDocumentMapping(term, Bytes.toBytes(docId));
   }
 
+  
 }

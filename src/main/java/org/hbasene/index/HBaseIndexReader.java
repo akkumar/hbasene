@@ -30,7 +30,7 @@ import java.util.NavigableMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -129,7 +129,7 @@ public class HBaseIndexReader extends IndexReader {
     final String rowKey = t.field() + "/" + t.text();
     Get get = new Get(Bytes.toBytes(rowKey));
     get.addFamily(HBaseneConstants.FAMILY_TERMVECTOR);
-    HTableInterface table = this.getTablePool().getTable(this.indexName);
+    HTable table = this.getTablePool().getTable(this.indexName);
     try {
       Result result = table.get(get);
       if (result == null) {
@@ -151,7 +151,7 @@ public class HBaseIndexReader extends IndexReader {
       throws CorruptIndexException, IOException {
     final long index = (long) n; // internally, all row keys are long.
     Document doc = null;
-    HTableInterface table = this.getTablePool().getTable(this.indexName);
+    HTable table = this.getTablePool().getTable(this.indexName);
     try {
       Get get = new Get(Bytes.toBytes(index));
       get.addColumn(HBaseneConstants.FAMILY_INT_TO_DOC,
@@ -239,7 +239,7 @@ public class HBaseIndexReader extends IndexReader {
 
   @Override
   public int numDocs() {
-    HTableInterface table = this.getTablePool().getTable(this.indexName);
+    HTable table = this.getTablePool().getTable(this.indexName);
     int numDocs = 0;
     try {
       Get get = new Get(HBaseneConstants.ROW_SEQUENCE_ID);

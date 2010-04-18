@@ -27,11 +27,12 @@ import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.hbasene.index.HBaseTermEnum;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
+@SuppressWarnings("unused")
 public class TestHBaseTermEnum extends AbstractHBaseneTest {
 
   @SuppressWarnings("unused")
@@ -44,8 +45,7 @@ public class TestHBaseTermEnum extends AbstractHBaseneTest {
   /**
    * @throws java.lang.Exception
    */
-  @BeforeMethod
-  public void setUp() throws Exception {
+  protected void doSetupDerived() throws CorruptIndexException, IOException {
     termEnum = new HBaseTermEnum(indexReader);
 
   }
@@ -53,7 +53,7 @@ public class TestHBaseTermEnum extends AbstractHBaseneTest {
   /**
    * @throws java.lang.Exception
    */
-  @AfterMethod
+  
   public void tearDown() throws Exception {
     termEnum.close();
   }
@@ -65,8 +65,8 @@ public class TestHBaseTermEnum extends AbstractHBaseneTest {
       Term term = termEnum.term();
       String field = term.field();
       Assert.assertTrue(field.contains("content") || field.contains("id"));
-      Assert.assertTrue(termEnum.docFreq() > 0,
-          "At least one document present with the given term");
+      Assert.assertTrue(termEnum.docFreq() > 0);
+          //"At least one document present with the given term");
     }
 
   }
