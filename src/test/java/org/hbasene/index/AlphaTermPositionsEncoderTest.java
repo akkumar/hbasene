@@ -20,40 +20,23 @@
  */
 package org.hbasene.index;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hbasene.index.AbstractTermPositionsEncoder;
-import org.junit.Assert;
-import org.junit.Before;
+import org.hbasene.index.AsciiTermPositionsEncoder;
+import org.junit.Test;
 
 /**
- * Rudimentary test case of testing the encode and the decode arrays, 
- * to be used by derived classes.
+ * Unit test case for a comma-separated ASCII based encoder.
  */
-public abstract class AbstractTermPositionsEncoderTest {
+public class AlphaTermPositionsEncoderTest extends
+    AbstractTermPositionsEncoderTest {
 
-  protected AbstractTermPositionsEncoder encoder;
-
-  protected abstract AbstractTermPositionsEncoder createEncoder();
-
-  protected int[] termPositions;
-
-  @Before
-  public void setup() {
-    this.encoder = this.createEncoder();
-    this.termPositions = new int[] { 1, 3, 4, 9, 10 };
+  protected AbstractTermPositionsEncoder createEncoder() {
+    return new AlphaTermPositionsEncoder();
   }
 
-  protected void assertEncodeDecode(final int[] inputTermPositions) {
-    List<Integer> input = new ArrayList<Integer>(inputTermPositions.length);
-    for (int i : inputTermPositions) {
-      input.add(i);
-    }
-    byte[] array = this.encoder.encode(input);
-    int[] result = this.encoder.decode(array);
-    Assert.assertArrayEquals(inputTermPositions, result);
+  @Test
+  public void testEncodeDecode() {
+    this.assertEncodeDecode(termPositions);
   }
-
 
 }
