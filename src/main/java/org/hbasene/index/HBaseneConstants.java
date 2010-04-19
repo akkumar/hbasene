@@ -60,16 +60,6 @@ public interface HBaseneConstants {
    */
   static final byte[] QUALIFIER_INT = Bytes.toBytes("qual.Int");
 
-  /**
-   * Column family that contains the mapping from an integer to a docId.
-   */
-  //static final byte[] FAMILY_INT_TO_DOC = Bytes.toBytes("fm.int2doc");
-
-  /**
-   * Qualifier belonging to family {@link #FAMILY_INT_TO_DOC}, representing the
-   * document Id as defined by the application.
-   */
-  //static final byte[] QUALIFIER_DOC = Bytes.toBytes("qual.document");
 
   /**
    * Column family to store the sequence of the counter used by lucene.
