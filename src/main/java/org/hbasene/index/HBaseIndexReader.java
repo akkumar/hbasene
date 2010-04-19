@@ -74,8 +74,9 @@ public class HBaseIndexReader extends IndexReader {
   /**
    * Encoder of termPositions
    */
-  private final AbstractTermPositionsEncoder termPositionEncoder = new AsciiTermPositionsEncoder();
-
+  private final AbstractTermPositionsEncoder termPositionEncoder = new AlphaTermPositionsEncoder();
+  //TODO: Use HBaseIndexStore to do this 
+  
   /**
    * Primary Key Field
    */

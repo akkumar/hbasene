@@ -21,7 +21,6 @@
 package org.hbasene.index;
 
 import org.hbasene.index.AbstractTermPositionsEncoder;
-import org.hbasene.index.AsciiTermPositionsEncoder;
 import org.junit.Test;
 
 /**

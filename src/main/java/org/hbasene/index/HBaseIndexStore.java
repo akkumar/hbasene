@@ -61,7 +61,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
   /**
    * Encoder of termPositions
    */
-  private final AbstractTermPositionsEncoder termPositionEncoder = new AsciiTermPositionsEncoder();
+  private final AbstractTermPositionsEncoder termPositionEncoder = new AlphaTermPositionsEncoder();
 
   public HBaseIndexStore(final HTablePool tablePool, final String indexName) throws IOException {
     this.puts = new ArrayList<Put>();

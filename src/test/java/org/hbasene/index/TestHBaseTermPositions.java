@@ -26,7 +26,6 @@ import org.apache.log4j.Logger;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.Term;
 import org.hbasene.index.AbstractTermPositionsEncoder;
-import org.hbasene.index.AsciiTermPositionsEncoder;
 import org.hbasene.index.HBaseTermPositions;
 import org.junit.After;
 import org.junit.Assert;
@@ -45,7 +44,7 @@ public class TestHBaseTermPositions extends AbstractHBaseneTest {
   /**
    * Encoder of termPositions
    */
-  private final AbstractTermPositionsEncoder termPositionEncoder = new AsciiTermPositionsEncoder();
+  private final AbstractTermPositionsEncoder termPositionEncoder = new AlphaTermPositionsEncoder();
 
 
   /**
