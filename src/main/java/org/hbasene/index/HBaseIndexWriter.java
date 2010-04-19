@@ -184,7 +184,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
       }
     }
 
-    this.indexStore.commit();
+    //this.indexStore.commit();
   }
 
   // TODO: This method needs to be refactored to the NoSqlIndexWriter

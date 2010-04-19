@@ -83,18 +83,28 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
 
   @Override
   public void addTermPositions(String fieldTerm, byte[] docId,
-      final List<Integer> termPositionVector) {
+      final List<Integer> termPositionVector) throws IOException {
     Put put = new Put(Bytes.toBytes(fieldTerm));
     put.add(FAMILY_TERMVECTOR, docId, this.termPositionEncoder
         .encode(termPositionVector));
-    this.puts.add(put);
+    HTable table = this.tablePool.getTable(this.indexName);
+    try { 
+      table.put(put);
+    } finally { 
+      this.tablePool.putTable(table);
+    }
   }
 
   @Override
-  public void storeField(byte[] docId, String fieldName, byte[] value) {
+  public void storeField(byte[] docId, String fieldName, byte[] value) throws IOException {
     Put put = new Put(docId);
     put.add(FAMILY_FIELDS, Bytes.toBytes(fieldName), value);
-    this.puts.add(put);
+    HTable table = this.tablePool.getTable(this.indexName);
+    try { 
+      table.put(put);
+    } finally { 
+      this.tablePool.putTable(table);
+    }
   }
 
   @Override
@@ -123,7 +133,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
     put.add(FAMILY_DOC_TO_INT, QUALIFIER_INT, docId);
     table.put(put);
 
-    table.flushCommits();
   }
 
   /**

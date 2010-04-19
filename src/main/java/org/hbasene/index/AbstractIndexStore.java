@@ -49,7 +49,7 @@ public abstract class AbstractIndexStore {
    *          given docId.
    */
   public abstract void addTermPositions(final String fieldTerm, byte[] docId,
-      final List<Integer> termPositionVectors);
+      final List<Integer> termPositionVectors) throws IOException;
 
   /**
    * Store the given field in the lucene hbase index.
@@ -58,7 +58,7 @@ public abstract class AbstractIndexStore {
    * @param value
    */
   public abstract void storeField(final byte[] docId, final String fieldName,
-      byte[] value);
+      byte[] value) throws IOException;
 
   /**
    * Retrieve a docId for the given primary key in the Lucene schema.
