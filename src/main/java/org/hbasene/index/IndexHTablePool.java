@@ -44,10 +44,11 @@ public class IndexHTablePool extends HTablePool {
    * @return HTable instance.
    * @deprecated Use createHTable
    */
+  @Override
   protected HTable newHTable(String tableName) {
     try {
       HTable table =  new HTable(conf, Bytes.toBytes(tableName));
-      table.setAutoFlush(false);
+      table.setAutoFlush(false); //client throughput
       return table;
     } catch(IOException ioe) {
       throw new RuntimeException(ioe);
