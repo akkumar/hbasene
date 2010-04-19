@@ -64,7 +64,7 @@ public class TestHBaseIndexReader extends AbstractHBaseneTest {
       // valid document
     }
     Document doc = this.indexReader.document(docs.scoreDocs[0].doc);
-    Assert.assertEquals("FourthTimes", doc.get(PK_FIELD));
+    Assert.assertEquals("FourthTimesT", doc.get(PK_FIELD));
     // maximum # of plays - hence expecting it to be top-most rank.
   }
 }
