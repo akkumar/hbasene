@@ -22,7 +22,6 @@ package org.hbasene.index;
 import java.io.IOException;
 import java.util.NavigableMap;
 
-import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Result;
@@ -49,8 +48,7 @@ public class HBaseTermEnum extends TermEnum {
   public HBaseTermEnum(final HBaseIndexReader reader) throws IOException {
     this.pool = reader.getTablePool();
     table = pool.getTable(reader.getIndexName());
-    this.resultScanner = table
-        .getScanner(HBaseneConstants.FAMILY_TERMVECTOR);
+    this.resultScanner = table.getScanner(HBaseneConstants.FAMILY_TERMVECTOR);
   }
 
   @Override
@@ -61,11 +59,15 @@ public class HBaseTermEnum extends TermEnum {
 
   @Override
   public int docFreq() {
+
+    Scan get = new Scan(Bytes.toBytes(this.currentTerm.field() + "/"
+        + this.currentTerm.text()));
+    get.addFamily(HBaseneConstants.FAMILY_TERMVECTOR);
+    ResultScanner scanner = null;
     try {
-      Get get = new Get(Bytes.toBytes(this.currentTerm.field() + "/"
-          + this.currentTerm.text()));
-      get.addFamily(HBaseneConstants.FAMILY_TERMVECTOR);
-      Result result = this.table.get(get);
+      scanner = this.table.getScanner(HBaseneConstants.FAMILY_TERMVECTOR);
+      final Result result = scanner.next();
+
       if (result == null) {
         return 0;
       }
@@ -74,7 +76,10 @@ public class HBaseTermEnum extends TermEnum {
       return map.size();
     } catch (Exception ex) {
       return 0;
+    } finally {
+      scanner.close();
     }
+
   }
 
   @Override
@@ -83,7 +88,7 @@ public class HBaseTermEnum extends TermEnum {
       Result result = resultScanner.next();
       if (result != null) {
         String fieldTerm = Bytes.toString(result.getRow());
-        String[] fieldTerms = fieldTerm.split(",");
+        String[] fieldTerms = fieldTerm.split("/");
         this.currentTerm = new Term(fieldTerms[0], fieldTerms[1]);
         return true;
       } else {
