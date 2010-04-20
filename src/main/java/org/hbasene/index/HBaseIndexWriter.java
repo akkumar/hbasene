@@ -102,8 +102,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
     }
 
     long assignedDocId = indexStore.docId(Bytes.toBytes(docId));
-    byte [] fieldRowKey = Bytes.toBytes(assignedDocId);
-    this.indexStore.storeField(fieldRowKey, this.primaryKeyField,
+    this.indexStore.storeField(assignedDocId, this.primaryKeyField,
         Bytes.toBytes(docId));
     List<String> allIndexedTerms = new ArrayList<String>(DEFAULT_TERM_CAPACITY);
 
@@ -150,7 +149,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
         for (Map.Entry<String, List<Integer>> term : termPositions.entrySet()) {
           String key = term.getKey();
-          indexStore.addTermPositions(key, Bytes.toBytes(assignedDocId),
+          indexStore.addTermPositions(key, assignedDocId,
               term.getValue());
         }
       }
@@ -162,7 +161,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
         String key = term;
 
-        indexStore.addTermPositions(key, Bytes.toBytes(assignedDocId),
+        indexStore.addTermPositions(key, assignedDocId,
             EMPTY_TERM_POSITIONS);
       }
 
@@ -179,7 +178,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
         value[value.length - 1] = (byte) (field.isBinary() ? 'B' : 'T');
 
 
-        this.indexStore.storeField(fieldRowKey, field.name(),
+        this.indexStore.storeField(assignedDocId, field.name(),
             value);
       }
     }
