@@ -99,13 +99,11 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     put.add(FAMILY_TERMFREQUENCY, docIdBytes, this.termPositionEncoder
         .encode(termPositionVector));
     
-    Put put2 = new Put(fieldTermBytes);
-    put2.add(FAMILY_TERMVECTOR, QUALIFIER_DOCUMENTS, docIdBytes );
     
     HTable table = this.tablePool.getTable(this.indexName);
     try {
-      table.put(put2);
-      //table.put(put);
+      table.addDocToTerm(fieldTermBytes, FAMILY_TERMVECTOR, docId, true);
+      //TODO: table.put(put);
     } finally {
       this.tablePool.putTable(table);
     }
