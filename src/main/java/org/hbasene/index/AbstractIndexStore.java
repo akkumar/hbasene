@@ -48,7 +48,7 @@ public abstract class AbstractIndexStore {
    *          Term Position Vectors for the given fieldTerm , present in the
    *          given docId.
    */
-  public abstract void addTermPositions(final String fieldTerm, byte[] docId,
+  public abstract void addTermPositions(final String fieldTerm, long docId,
       final List<Integer> termPositionVectors) throws IOException;
 
   /**
@@ -57,7 +57,7 @@ public abstract class AbstractIndexStore {
    * @param key
    * @param value
    */
-  public abstract void storeField(final byte[] docId, final String fieldName,
+  public abstract void storeField(final long docId, final String fieldName,
       byte[] value) throws IOException;
 
   /**
@@ -67,5 +67,5 @@ public abstract class AbstractIndexStore {
    * @return correct docId, if in place. -1, otherwise.
    * @throws IOException
    */
-  public abstract long docId(byte[] primaryKey) throws IOException;
+  public abstract long docId(final byte[] primaryKey) throws IOException;
 }
