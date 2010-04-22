@@ -105,7 +105,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     HTable table = this.tablePool.getTable(this.indexName);
     try {
       table.put(put2);
-      table.put(put);
+      //table.put(put);
     } finally {
       this.tablePool.putTable(table);
     }
