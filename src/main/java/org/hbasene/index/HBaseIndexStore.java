@@ -68,6 +68,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   /**
    * Encoder of termPositions
    */
+  //TODO: Better encoding rather than the integer form is needed.
+  //Use OpenBitSet preferably again, for term frequencies
   private final AbstractTermPositionsEncoder termPositionEncoder = new AlphaTermPositionsEncoder();
 
   public HBaseIndexStore(final HTablePool tablePool, final String indexName)
@@ -91,12 +93,14 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   @Override
   public void addTermPositions(String fieldTerm, long docId,
       final List<Integer> termPositionVector) throws IOException {
-    Put put = new Put(Bytes.toBytes(fieldTerm));
-    put.add(FAMILY_TERMFREQUENCY, Bytes.toBytes(docId), this.termPositionEncoder
+    byte[] fieldTermBytes = Bytes.toBytes(fieldTerm);
+    byte[] docIdBytes = Bytes.toBytes(docId);
+    Put put = new Put(fieldTermBytes);
+    put.add(FAMILY_TERMFREQUENCY, docIdBytes, this.termPositionEncoder
         .encode(termPositionVector));
     
-    Put put2 = new Put(Bytes.toBytes(fieldTerm));
-    put2.add(FAMILY_TERMVECTOR, QUALIFIER_DOCUMENTS, Bytes.toBytes(docId) );
+    Put put2 = new Put(fieldTermBytes);
+    put2.add(FAMILY_TERMVECTOR, QUALIFIER_DOCUMENTS, docIdBytes );
     
     HTable table = this.tablePool.getTable(this.indexName);
     try {
