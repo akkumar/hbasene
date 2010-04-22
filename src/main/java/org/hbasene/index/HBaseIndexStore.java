@@ -24,13 +24,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.HBaseneConstants;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 
 /**
@@ -45,30 +51,31 @@ import org.apache.hadoop.hbase.util.Bytes;
  * To create a HBase Table, specific to the index schema, refer to
  * {@link #createLuceneIndexTable(String, HBaseConfiguration, boolean)} .
  */
-public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConstants {
+public class HBaseIndexStore extends AbstractIndexStore implements
+    HBaseneConstants {
+
+  private static final Log LOG = LogFactory.getLog(HBaseIndexStore.class);
 
   /**
    * List of puts to go in.
    */
   private List<Put> puts;
 
-  
   private final HTablePool tablePool;
-  
-  
+
   private final String indexName;
-  
+
   /**
    * Encoder of termPositions
    */
   private final AbstractTermPositionsEncoder termPositionEncoder = new AlphaTermPositionsEncoder();
 
-  public HBaseIndexStore(final HTablePool tablePool, final String indexName) throws IOException {
+  public HBaseIndexStore(final HTablePool tablePool, final String indexName)
+      throws IOException {
     this.puts = new ArrayList<Put>();
     this.tablePool = tablePool;
     this.indexName = indexName;
   }
-
 
   @Override
   public void commit() throws IOException {
@@ -76,7 +83,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
     try {
       table.put(this.puts);
       this.puts.clear();
-    } finally { 
+    } finally {
       this.tablePool.putTable(table);
     }
   }
@@ -85,24 +92,25 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
   public void addTermPositions(String fieldTerm, byte[] docId,
       final List<Integer> termPositionVector) throws IOException {
     Put put = new Put(Bytes.toBytes(fieldTerm));
-    put.add(FAMILY_TERMVECTOR, docId, this.termPositionEncoder
+    put.add(FAMILY_TERMFREQUENCY, docId, this.termPositionEncoder
         .encode(termPositionVector));
     HTable table = this.tablePool.getTable(this.indexName);
-    try { 
+    try {
       table.put(put);
-    } finally { 
+    } finally {
       this.tablePool.putTable(table);
     }
   }
 
   @Override
-  public void storeField(byte[] docId, String fieldName, byte[] value) throws IOException {
+  public void storeField(byte[] docId, String fieldName, byte[] value)
+      throws IOException {
     Put put = new Put(docId);
     put.add(FAMILY_FIELDS, Bytes.toBytes(fieldName), value);
     HTable table = this.tablePool.getTable(this.indexName);
-    try { 
+    try {
       table.put(put);
-    } finally { 
+    } finally {
       this.tablePool.putTable(table);
     }
   }
@@ -112,12 +120,13 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
     HTable table = this.tablePool.getTable(this.indexName);
     long newId = -1;
     try {
-      //FIXIT: What is primaryKey exists already in the table.
+      // FIXIT: What if, primaryKey already exists in the table.
+      // Atomic RPC to HBase region server
+
       newId = table.incrementColumnValue(ROW_SEQUENCE_ID, FAMILY_SEQUENCE,
           QUALIFIER_SEQUENCE, 1, true);
       if (newId >= Integer.MAX_VALUE) {
-        throw new IllegalStateException(
-            "API Limitation reached. ");
+        throw new IllegalStateException("API Limitation reached. ");
       }
       insertBiMap(table, primaryKey, Bytes.toBytes(newId));
     } finally {
@@ -127,8 +136,27 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
     return newId;
   }
 
-  void insertBiMap(final HTable table, final byte[] primaryKey, final byte[] docId)
-      throws IOException {
+  public byte[] getCellValue(final byte[] row, final byte[] columnFamily,
+      final byte[] columnQualifier) throws IOException {
+    HTable table = this.tablePool.getTable(this.indexName);
+    try {
+      Scan scan = new Scan(row);
+      scan.addColumn(columnFamily, columnQualifier);
+      ResultScanner scanner = table.getScanner(scan);
+      try {
+        Result result = scanner.next();
+        return result.getValue(columnFamily, columnQualifier);
+      } finally {
+        scanner.close();
+      }
+    } finally {
+      this.tablePool.putTable(table);
+    }
+
+  }
+
+  void insertBiMap(final HTable table, final byte[] primaryKey,
+      final byte[] docId) throws IOException {
     Put put = new Put(primaryKey);
     put.add(FAMILY_DOC_TO_INT, QUALIFIER_INT, docId);
     table.put(put);
@@ -193,32 +221,27 @@ public class HBaseIndexStore extends AbstractIndexStore implements HBaseneConsta
 
     HTableDescriptor tableDescriptor = new HTableDescriptor(Bytes
         .toBytes(tableName));
-    tableDescriptor.addFamily(createUniversionLZO(admin,
-        FAMILY_FIELDS));
-    tableDescriptor.addFamily(createUniversionLZO(admin,
-        FAMILY_TERMVECTOR));
-    tableDescriptor.addFamily(createUniversionLZO(admin,
-        FAMILY_DOC_TO_INT));
-    tableDescriptor.addFamily(createUniversionLZO(admin,
-        FAMILY_SEQUENCE));
-    tableDescriptor.addFamily(createUniversionLZO(admin,
-        FAMILY_PAYLOADS));
-    
+    tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_FIELDS));
+    tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_TERMVECTOR));
+    tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_TERMFREQUENCY));
+    tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_DOC_TO_INT));
+    tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_SEQUENCE));
+    tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_PAYLOADS));
 
     admin.createTable(tableDescriptor);
     HTableDescriptor descriptor = admin.getTableDescriptor(Bytes
         .toBytes(tableName));
-    
-    if (descriptor != null) { 
+
+    if (descriptor != null) {
       HTable table = new HTable(configuration, tableName);
-    
+
       Put put = new Put(ROW_SEQUENCE_ID);
       put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(-1L));
       table.put(put);
       table.flushCommits();
-      
+
       return table;
-    } else { 
+    } else {
       return null;
     }
   }

@@ -22,6 +22,7 @@ package org.hbasene.index;
 import java.io.IOException;
 import java.util.NavigableMap;
 
+import org.apache.hadoop.hbase.client.HBaseneConstants;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Result;

@@ -25,6 +25,7 @@ import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hbase.client.HBaseneConstants;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.search.Filter;
@@ -34,7 +35,6 @@ import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.Weight;
 import org.hbasene.index.HBaseIndexReader;
-import org.hbasene.index.HBaseneConstants;
 
 
 /**

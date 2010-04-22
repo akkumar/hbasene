@@ -46,6 +46,7 @@ import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermPositions;
 import org.apache.lucene.index.TermVectorMapper;
 import org.apache.lucene.search.DefaultSimilarity;
+import org.apache.hadoop.hbase.client.HBaseneConstants;
 
 /**
  * Index Reader specific to HBase
