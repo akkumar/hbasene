@@ -159,7 +159,7 @@
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-core</artifactId>
       <version>0.20.4</version>
-      <systemPath>${basedir}/lib/hbase-0.20.4.jar</systemPath>
+      <systemPath>${basedir}/lib/hbase-0.20.4-dev.jar</systemPath>
       <scope>system</scope>
     </dependency>
     
