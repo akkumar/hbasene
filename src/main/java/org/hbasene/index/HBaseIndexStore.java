@@ -98,11 +98,10 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     Put put = new Put(fieldTermBytes);
     put.add(FAMILY_TERMFREQUENCY, docIdBytes, this.termPositionEncoder
         .encode(termPositionVector));
-    
-    
+    put.setWriteToWAL(false);// Do not write to WAL, since it would be very expensive.
     HTable table = this.tablePool.getTable(this.indexName);
     try {
-      table.addDocToTerm(fieldTermBytes, FAMILY_TERMVECTOR, docId, true);
+      table.addDocToTerm(fieldTermBytes, FAMILY_TERMVECTOR, docId, false);
       //TODO: table.put(put);
     } finally {
       this.tablePool.putTable(table);
@@ -130,7 +129,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       // Atomic RPC to HBase region server
 
       newId = table.incrementColumnValue(ROW_SEQUENCE_ID, FAMILY_SEQUENCE,
-          QUALIFIER_SEQUENCE, 1, true);
+          QUALIFIER_SEQUENCE, 1, false); // Do not worry about the WAL, at this point of insertion.
       if (newId >= Integer.MAX_VALUE) {
         throw new IllegalStateException("API Limitation reached. ");
       }
