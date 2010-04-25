@@ -133,7 +133,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       if (newId >= Integer.MAX_VALUE) {
         throw new IllegalStateException("API Limitation reached. ");
       }
-      insertBiMap(table, primaryKey, Bytes.toBytes(newId));
+      insertDocToInt(table, primaryKey, Bytes.toBytes(newId));
     } finally {
       this.tablePool.putTable(table);
     }
@@ -160,7 +160,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   }
 
-  void insertBiMap(final HTable table, final byte[] primaryKey,
+  void insertDocToInt(final HTable table, final byte[] primaryKey,
       final byte[] docId) throws IOException {
     Put put = new Put(primaryKey);
     put.add(FAMILY_DOC_TO_INT, QUALIFIER_INT, docId);
