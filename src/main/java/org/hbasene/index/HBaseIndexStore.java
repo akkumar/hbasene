@@ -30,7 +30,6 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HBaseneConstants;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Put;
@@ -96,11 +95,12 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     byte[] fieldTermBytes = Bytes.toBytes(fieldTerm);
     byte[] docIdBytes = Bytes.toBytes(docId);
     Put put = new Put(fieldTermBytes);
-    put.add(FAMILY_TERMFREQUENCY, docIdBytes, this.termPositionEncoder
+    put.add(FAMILY_TERMPOSITIONS, docIdBytes, this.termPositionEncoder
         .encode(termPositionVector));
     put.setWriteToWAL(false);// Do not write to WAL, since it would be very expensive.
     HTable table = this.tablePool.getTable(this.indexName);
     try {
+
       table.addDocToTerm(fieldTermBytes, FAMILY_TERMVECTOR, docId, false);
       //TODO: table.put(put);
     } finally {
@@ -228,7 +228,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         .toBytes(tableName));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_FIELDS));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_TERMVECTOR));
-    tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_TERMFREQUENCY));
+    tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_TERMPOSITIONS));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_DOC_TO_INT));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_SEQUENCE));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_PAYLOADS));

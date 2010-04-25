@@ -22,7 +22,7 @@ package org.hbasene.index;
 
 import java.io.IOException;
 
-import org.apache.hadoop.hbase.client.HBaseneConstants;
+
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.store.LockObtainFailedException;
