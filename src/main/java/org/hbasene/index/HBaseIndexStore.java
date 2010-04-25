@@ -100,7 +100,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     put.setWriteToWAL(false);// Do not write to WAL, since it would be very expensive.
     HTable table = this.tablePool.getTable(this.indexName);
     try {
-
       table.addDocToTerm(fieldTermBytes, FAMILY_TERMVECTOR, docId, false);
       //TODO: table.put(put);
     } finally {
@@ -112,6 +111,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   public void storeField(long docId, String fieldName, byte[] value) throws IOException {
     Put put = new Put(Bytes.toBytes(docId));
     put.add(FAMILY_FIELDS, Bytes.toBytes(fieldName), value);
+    put.setWriteToWAL(false);//Do not write to val
     HTable table = this.tablePool.getTable(this.indexName);
     try {
       table.put(put);
@@ -164,6 +164,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       final byte[] docId) throws IOException {
     Put put = new Put(primaryKey);
     put.add(FAMILY_DOC_TO_INT, QUALIFIER_INT, docId);
+    put.setWriteToWAL(false);
     table.put(put);
 
   }
