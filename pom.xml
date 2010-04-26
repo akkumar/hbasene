@@ -5,7 +5,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.hbasene</groupId>
-  <artifactId>hbasene-core</artifactId>
+  <artifactId>hbasene</artifactId>
   <packaging>jar</packaging>
   <version>0.1.0-SNAPSHOT</version>
   <name>HBasene</name>
@@ -109,71 +109,14 @@
 
 
 
-  <repositories>
-    <repository>
-      <id>private repo</id>
-      <name>hadoop 0.20.2 custom ( hdfs sync + others)</name>
-      <url>http://people.apache.org/~rawson/repo/</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-    <repository>
-      <id>apache-snapshot</id>
-      <name>Apache Snapshot repository</name>
-      <url>https://repository.apache.org/content/repositories/snapshots/</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>apache-releases</id>
-      <name>Apache Releases repository</name>
-      <url>https://repository.apache.org/content/repositories/releases/</url>
-    </repository>
-    <repository>
-      <id>java-net</id>
-      <name>Java Net</name>
-      <url>http://download.java.net/maven/2</url>
-    </repository>
-    <repository>
-      <id>ibiblio</id>
-      <name>ibiblio</name>
-      <url>http://people.apache.org/repo/m2-ibiblio-rsync-repository/</url>
-    </repository>
-  </repositories>
-
-
   <dependencies>
     
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-      <version>${hadoop-core.version}</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
+      <groupId>org.hbasene</groupId>
       <artifactId>hbase-core</artifactId>
-      <version>0.20.4</version>
-      <systemPath>${basedir}/lib/hbase-0.20.4-dev.jar</systemPath>
-      <scope>system</scope>
+      <version>0.20.5-SNAPSHOT</version>
     </dependency>
     
-    <dependency>
-      <groupId>org.apache.hadoop.zookeeper</groupId>
-      <artifactId>zookeeper</artifactId>
-      <version>3.2.2</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-core</artifactId>
-      <version>${lucene.version}</version>
-    </dependency>
     <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
@@ -215,7 +158,6 @@
       <scope>system</scope>
     </dependency>
 
-
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-queryparser</artifactId>
@@ -223,7 +165,6 @@
       <scope>test</scope>
     </dependency>
 
-    
   </dependencies>
 
 
@@ -231,9 +172,11 @@
     <repository>
       <id>sonatype-nexus-staging</id>
       <name>Nexus Staging Repository</name>
-      <url>http://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+      <!-- http://oss.sonatype.org/service/local/staging/deploy/maven2</url> -->
     </repository>
   </distributionManagement>
+  
 
   <profiles>
     <profile>
