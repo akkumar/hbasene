@@ -100,8 +100,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     put.setWriteToWAL(false);// Do not write to WAL, since it would be very expensive.
     HTable table = this.tablePool.getTable(this.indexName);
     try {
-      table.addDocToTerm(fieldTermBytes, FAMILY_TERMVECTOR, docId, false);
-      //TODO: table.put(put);
+      table.addDocToTerm(fieldTermBytes, docId);
+      //table.put(put);
     } finally {
       this.tablePool.putTable(table);
     }
