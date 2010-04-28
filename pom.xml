@@ -144,11 +144,11 @@
 
 
     <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-core-test</artifactId>
-      <version>0.20.4</version>
-      <systemPath>${basedir}/lib/hbase-0.20.4-test.jar</systemPath>
-      <scope>system</scope>
+      <groupId>org.hbasene</groupId>
+      <artifactId>hbase-core</artifactId>
+      <version>0.20.5-SNAPSHOT</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
