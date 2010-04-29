@@ -30,6 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
@@ -46,6 +48,8 @@ import org.apache.lucene.store.LockObtainFailedException;
  * 
  */
 public class HBaseIndexWriter { // TODO: extends IndexWriter {
+
+  private static final Log LOG = LogFactory.getLog(HBaseIndexWriter.class);
 
   /**
    * Abstraction of the index store
@@ -108,9 +112,10 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
     int position = 0;
 
     for (Fieldable field : doc.getFields()) {
-
+      
       // Indexed field
       if (field.isIndexed() && field.isTokenized()) {
+        LOG.info("Processing - [I, T] " + field.name() );
 
         TokenStream tokens = field.tokenStreamValue();
 
@@ -145,7 +150,8 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
           pvec.add(++position);
 
         }
-
+        tokens.close();
+        
         for (Map.Entry<String, List<Integer>> term : termPositions.entrySet()) {
           String key = term.getKey();
           indexStore.addTermPositions(key, assignedDocId,
@@ -155,6 +161,8 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
       // Untokenized fields go in without a termPosition
       if (field.isIndexed() && !field.isTokenized()) {
+        LOG.info("Processing - [I,  not T] " + field.name() );
+
         String term = this.createColumnName(field.name(), field.stringValue());
         allIndexedTerms.add(term);
 
