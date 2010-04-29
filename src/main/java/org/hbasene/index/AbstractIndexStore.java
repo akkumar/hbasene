@@ -38,6 +38,14 @@ public abstract class AbstractIndexStore {
    */
   public abstract void commit() throws IOException;
 
+  
+  /**
+   * Close the transactions.
+   * 
+   * @throws IOException
+   */
+  public abstract void close() throws IOException;
+  
   /**
    * Adds term vectors for a given 'field/Term' combination.
    * 

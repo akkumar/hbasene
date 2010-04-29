@@ -189,7 +189,10 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
     this.indexStore.commit();
   }
   
-  // TODO: This method needs to be refactored to the NoSqlIndexWriter
+  public void close() throws IOException {
+    this.indexStore.close();
+  }
+  
   String createColumnName(final String fieldName, final String term) {
     return fieldName + "/" + term;
   }

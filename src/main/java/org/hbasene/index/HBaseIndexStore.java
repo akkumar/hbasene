@@ -37,6 +37,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.lucene.document.Field;
 
 /**
  * An index formed on-top of HBase. This requires a table with the following
@@ -78,6 +79,16 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     this.indexName = indexName;
   }
 
+  @Override
+  public void close() throws IOException {
+    HTable table = this.tablePool.getTable(this.indexName);
+    try {
+      table.close();
+    } finally {
+      this.tablePool.putTable(table);
+    }
+  }
+  
   @Override
   public void commit() throws IOException {
     HTable table = this.tablePool.getTable(this.indexName);
