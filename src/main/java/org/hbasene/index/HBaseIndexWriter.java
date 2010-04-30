@@ -38,7 +38,6 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.store.LockObtainFailedException;
@@ -115,8 +114,6 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
       
       // Indexed field
       if (field.isIndexed() && field.isTokenized()) {
-        LOG.info("Processing - [I, T] " + field.name() );
-
         TokenStream tokens = field.tokenStreamValue();
 
         if (tokens == null) {
@@ -125,6 +122,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
         }
         tokens.addAttribute(TermAttribute.class);
         tokens.addAttribute(PositionIncrementAttribute.class);
+
 
         // collect term frequencies per doc
         Map<String, List<Integer>> termPositions = new HashMap<String, List<Integer>>();
@@ -161,8 +159,6 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
       // Untokenized fields go in without a termPosition
       if (field.isIndexed() && !field.isTokenized()) {
-        LOG.info("Processing - [I,  not T] " + field.name() );
-
         String term = this.createColumnName(field.name(), field.stringValue());
         allIndexedTerms.add(term);
 
