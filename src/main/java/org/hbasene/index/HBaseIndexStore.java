@@ -169,13 +169,13 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       ((OpenBitSet) docs).set(docId);
     }
     if (this.currentTermBufferSize > this.termVectorThreshold) {
-      doFlushCommitTermDocs();
+      doFlushCommitTermDocs((int)docId);
       this.termDocs.clear();
       this.currentTermBufferSize = 0;
     }
   }
 
-  private void doFlushCommitTermDocs() throws IOException {
+  private void doFlushCommitTermDocs(int endDocId) throws IOException {
     HTable table = this.tablePool.getTable(this.indexName);
     try {
       LOG.info("HBaseIndexStore#Flushing " + this.termDocs.size()
@@ -196,13 +196,21 @@ public class HBaseIndexStore extends AbstractIndexStore implements
           put.add(FAMILY_TERMVECTOR, Bytes
               .toBytes(HBaseneUtil.QUALIFIER_DOCUMENTS_PREFIX), HBaseneUtil
               .toBytes(bitset));
-          bitset.clear(0, 1000000);
+          bitset.clear(0, endDocId);
         }
         put.setWriteToWAL(false);
         puts.add(put);
+        
+        if (puts.size() == 30000) { 
+          table.put(puts);
+          table.flushCommits();
+          puts.clear();
+        }
       }
       table.put(puts);
       table.flushCommits();
+      LOG.info("HBaseIndexStore#Flushed " + this.termDocs.size()
+          + " terms of " + table);      
     } finally {
       this.tablePool.putTable(table);
     }
