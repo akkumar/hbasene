@@ -74,7 +74,7 @@ public class AbstractHBaseneTest extends HBaseClusterTestCase {
     HBaseIndexStore.dropLuceneIndexTable(TEST_INDEX, conf);
     HBaseIndexStore.createLuceneIndexTable(TEST_INDEX, conf, true);
     this.tablePool = new HTablePool(conf, DEFAULT_POOL_SIZE);
-    HBaseIndexStore hbaseIndex = new HBaseIndexStore(this.tablePool, TEST_INDEX);
+    HBaseIndexStore hbaseIndex = new HBaseIndexStore(this.tablePool, conf, TEST_INDEX);
 
     this.indexWriter = new HBaseIndexWriter(hbaseIndex, PK_FIELD);
     doInitDocs();
