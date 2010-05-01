@@ -75,8 +75,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private int termVectorThreshold;
 
-  private long lastVisitedDocId = 0;
-
   private long docBase = 0;
 
   private long currentTermBufferSize = 0;
@@ -99,7 +97,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     this.indexName = indexName;
 
     this.termVectorThreshold = configuration.getInt(CONF_MAX_TERM_VECTOR,
-        10 * 1000 * 1000);
+        5 * 1000 * 1000);
 
     this.doIncrementSegmentId();
   }
