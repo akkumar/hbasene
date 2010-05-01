@@ -176,6 +176,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       }
       table.put(puts);
       table.flushCommits();
+      this.termDocs.clear();
     } finally {
       this.tablePool.putTable(table);
     }
