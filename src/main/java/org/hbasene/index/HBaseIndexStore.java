@@ -203,7 +203,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
             .toBytes(this.docBase), docSet); //this.docBase to be added as well
         put.setWriteToWAL(false);
         puts.add(put);
-        if (puts.size() == 20000) { 
+        if (puts.size() == 25000) { 
           this.termVectorTable.put(puts);
           this.termVectorTable.flushCommits();
           puts.clear();
