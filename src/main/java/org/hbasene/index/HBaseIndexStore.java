@@ -182,8 +182,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   }
   
   private void doFlushCommitTermDocs() throws IOException {
-      LOG.info("HBaseIndexStore#Flushing " + this.termDocs.size()
-          + " terms of " + this.termVectorTable);
+      int sz = this.termDocs.size();
+      long start = System.nanoTime();
       List<Put> puts = new ArrayList<Put>();
       OpenBitSet bitset = new OpenBitSet();
       for (final Map.Entry<String, Object> entry : this.termDocs.entrySet()) {
@@ -211,8 +211,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       }
       this.termVectorTable.put(puts);
       this.termVectorTable.flushCommits();
-      LOG.info("HBaseIndexStore#Flushed " + this.termDocs.size()
-          + " terms of " + this.termVectorTable);      
+      LOG.info("HBaseIndexStore#Flushed " + sz
+          + " terms of " + this.termVectorTable + (double)(System.nanoTime() - start)/ (double)1000000 + " secs ");      
     doIncrementSegmentId();
   }
 
