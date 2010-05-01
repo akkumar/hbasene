@@ -147,20 +147,23 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       throws IOException {
     Object docs = this.termDocs.get(fieldTerm);
     if (docs == null) {
-      docs = new ArrayList<Integer>(200);
+      docs = new ArrayList<Integer>(100);
       this.termDocs.put(fieldTerm, docs);
     }
     if (docs instanceof List) {
       List<Integer> listImpl = (List<Integer>) docs;
       listImpl.add((int) docId);
       this.currentTermBufferSize += 4;
-      if (listImpl.size() > 200) {
+      if (listImpl.size() > 100) {
         OpenBitSet bitset = new OpenBitSet();
         for (Integer value : listImpl) {
           bitset.set(value);
         }
         listImpl.clear();
         this.termDocs.put(fieldTerm, bitset);
+        
+        this.currentTermBufferSize -= (100 * 4);
+        this.currentTermBufferSize += (bitset.getNumWords() * 8);
       }
     } else if (docs instanceof OpenBitSet) {
       ((OpenBitSet) docs).set(docId);
