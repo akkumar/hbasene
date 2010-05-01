@@ -163,9 +163,9 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   }
 
   private void doFlushCommitTermDocs() throws IOException { 
-    LOG.info("HBaseIndexStore#Flushing " + this.termDocs.size() + " terms of " + this);
     HTable table = this.tablePool.getTable(this.indexName);
     try { 
+      LOG.info("HBaseIndexStore#Flushing " + this.termDocs.size() + " terms of " + table);
       List<Put> puts = new ArrayList<Put>();
       for (final Map.Entry<String, OpenBitSet> entry : this.termDocs.entrySet()) {
         Put put = new Put(Bytes.toBytes("s" + this.segmentId + "/" + entry.getKey()));
