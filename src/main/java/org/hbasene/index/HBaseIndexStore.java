@@ -135,13 +135,16 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         .encode(termPositionVector));
     put.setWriteToWAL(false);// Do not write to WAL, since it would be very
                              // expensive.
+    /*
     HTable table = this.tablePool.getTable(this.indexName);
     try {
-      doAddDocToTerm(fieldTerm, docId);
       // table.put(put);
     } finally {
       this.tablePool.putTable(table);
     }
+    */
+    doAddDocToTerm(fieldTerm, docId);
+    
   }
   
   private void doAddDocToTerm(final String fieldTerm, final long docId) throws IOException {
