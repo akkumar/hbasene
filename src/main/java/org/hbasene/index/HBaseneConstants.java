@@ -86,9 +86,20 @@ public interface HBaseneConstants {
    */
   static final byte[] QUALIFIER_SEQUENCE = Bytes.toBytes("qual.sequence");
 
+  
   /**
-   * Row Key for a special entry
+   * Qualifier that represents a segment.
+   */
+  static final byte[] QUALIFIER_SEGMENT = Bytes.toBytes("qual.segment");
+  
+  /**
+   * Row Key representing the id for a sequence.
    */
   static final byte[] ROW_SEQUENCE_ID = Bytes.toBytes("sequenceId");
+  
+  /**
+   * Row key representing a sequence.
+   */
+  static final byte[] ROW_SEGMENT_ID = Bytes.toBytes("segmentId");
   
 }
