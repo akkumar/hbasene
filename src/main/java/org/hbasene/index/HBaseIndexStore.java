@@ -160,7 +160,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   }
 
   private void doFlushCommitTermDocs() throws IOException { 
-    LOG.info("Flushing " + this.termDocs.size() + " terms of " + this);
+    LOG.info("HBaseIndexStore#Flushing " + this.termDocs.size() + " terms of " + this);
     HTable table = this.tablePool.getTable(this.indexName);
     try { 
       List<Put> puts = new ArrayList<Put>();
