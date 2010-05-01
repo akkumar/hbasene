@@ -150,9 +150,10 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       docs = new ArrayList<Integer>(100);
       this.termDocs.put(fieldTerm, docs);
     }
+    long relativeId = docId - docBase;
     if (docs instanceof List) {
       List<Integer> listImpl = (List<Integer>) docs;
-      listImpl.add((int) docId);
+      listImpl.add((int) relativeId);
       this.currentTermBufferSize += 4;
       if (listImpl.size() > 100) {
         OpenBitSet bitset = new OpenBitSet();
@@ -166,16 +167,17 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         this.currentTermBufferSize += (bitset.getNumWords() * 8);
       }
     } else if (docs instanceof OpenBitSet) {
-      ((OpenBitSet) docs).set(docId);
+      ((OpenBitSet) docs).set(relativeId);
     }
     if (this.currentTermBufferSize > this.termVectorThreshold) {
-      doFlushCommitTermDocs((int)docId);
+      doFlushCommitTermDocs(relativeId);
       this.termDocs.clear();
       this.currentTermBufferSize = 0;
+      this.docBase = docId;
     }
   }
 
-  private void doFlushCommitTermDocs(int endDocId) throws IOException {
+  private void doFlushCommitTermDocs(long relativeDocId) throws IOException {
     HTable table = this.tablePool.getTable(this.indexName);
     try {
       LOG.info("HBaseIndexStore#Flushing " + this.termDocs.size()
@@ -183,12 +185,11 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       List<Put> puts = new ArrayList<Put>();
       OpenBitSet bitset = new OpenBitSet();
       for (final Map.Entry<String, Object> entry : this.termDocs.entrySet()) {
-        Put put = new Put(Bytes.toBytes("s" + this.segmentId + "/"
-            + entry.getKey()));
+        Put put = new Put(Bytes.toBytes(entry.getKey()));
         if (entry.getValue() instanceof OpenBitSet) {
           put.add(FAMILY_TERMVECTOR, Bytes
-              .toBytes(HBaseneUtil.QUALIFIER_DOCUMENTS_PREFIX), HBaseneUtil
-              .toBytes((OpenBitSet) entry.getValue()));
+              .toBytes(HBaseneUtil.QUALIFIER_DOCUMENTS_PREFIX + ".s" + this.segmentId), HBaseneUtil
+              .toBytes((OpenBitSet) entry.getValue())); //this.docBase to be added as well
         } else if (entry.getValue() instanceof List) {
           for (final Integer integer : (List<Integer>) entry.getValue()) {
             bitset.set(integer);
@@ -196,7 +197,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
           put.add(FAMILY_TERMVECTOR, Bytes
               .toBytes(HBaseneUtil.QUALIFIER_DOCUMENTS_PREFIX), HBaseneUtil
               .toBytes(bitset));
-          bitset.clear(0, endDocId);
+          bitset.clear(0, relativeDocId);
         }
         put.setWriteToWAL(false);
         puts.add(put);
