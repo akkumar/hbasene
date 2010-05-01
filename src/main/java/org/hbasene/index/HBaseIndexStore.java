@@ -157,6 +157,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     this.termDocs.put(fieldTerm, docs);
     if (this.currentTermBufferSize > this.termVectorThreshold) {
       doFlushCommitTermDocs();
+      this.termDocs.clear();
+      this.currentTermBufferSize = 0;
     }
     
 
@@ -176,7 +178,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       }
       table.put(puts);
       table.flushCommits();
-      this.termDocs.clear();
     } finally {
       this.tablePool.putTable(table);
     }
