@@ -23,6 +23,7 @@ package org.hbasene.index;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -73,17 +74,17 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   private final String indexName;
 
   private int termVectorThreshold;
-  
+
   private long lastVisitedDocId = 0;
 
   private long docBase = 0;
-  
+
   private long currentTermBufferSize = 0;
 
-  private final Map<String, OpenBitSet> termDocs = new HashMap<String,  OpenBitSet>();
+  private final Map<String, Object> termDocs = new HashMap<String, Object>();
 
   private long segmentId = -1;
-  
+
   /**
    * Encoder of termPositions
    */
@@ -96,13 +97,12 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       throws IOException {
     this.tablePool = tablePool;
     this.indexName = indexName;
-    
-    this.termVectorThreshold = configuration.getInt(CONF_MAX_TERM_VECTOR, 10 * 1000 * 1000);
-    
+
+    this.termVectorThreshold = configuration.getInt(CONF_MAX_TERM_VECTOR,
+        10 * 1000 * 1000);
+
     this.doIncrementSegmentId();
   }
-  
-  
 
   @Override
   public void close() throws IOException {
@@ -134,45 +134,67 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     put.add(FAMILY_TERMPOSITIONS, docIdBytes, this.termPositionEncoder
         .encode(termPositionVector));
     put.setWriteToWAL(false);// Do not write to WAL, since it would be very
-                             // expensive.
+    // expensive.
     /*
-    HTable table = this.tablePool.getTable(this.indexName);
-    try {
-      // table.put(put);
-    } finally {
-      this.tablePool.putTable(table);
-    }
-    */
+     * HTable table = this.tablePool.getTable(this.indexName); try { //
+     * table.put(put); } finally { this.tablePool.putTable(table); }
+     */
     doAddDocToTerm(fieldTerm, docId);
-    
+
   }
-  
-  private void doAddDocToTerm(final String fieldTerm, final long docId) throws IOException {
-    OpenBitSet docs = this.termDocs.get(fieldTerm);
-    if (docs == null) { 
-      docs = new OpenBitSet(docId);
-      currentTermBufferSize += (docs.getNumWords() * 8 );
+
+  private void doAddDocToTerm(final String fieldTerm, final long docId)
+      throws IOException {
+    Object docs = this.termDocs.get(fieldTerm);
+    if (docs == null) {
+      docs = new ArrayList<Integer>(200);
+      this.termDocs.put(fieldTerm, docs);
     }
-    docs.set(docId - docBase);
-    this.termDocs.put(fieldTerm, docs);
+    if (docs instanceof List) {
+      List<Integer> listImpl = (List<Integer>) docs;
+      listImpl.add((int) docId);
+      this.currentTermBufferSize += 4;
+      if (listImpl.size() > 200) {
+        OpenBitSet bitset = new OpenBitSet();
+        for (Integer value : listImpl) {
+          bitset.set(value);
+        }
+        listImpl.clear();
+        this.termDocs.put(fieldTerm, bitset);
+      }
+    } else if (docs instanceof OpenBitSet) {
+      ((OpenBitSet) docs).set(docId);
+    }
     if (this.currentTermBufferSize > this.termVectorThreshold) {
       doFlushCommitTermDocs();
       this.termDocs.clear();
       this.currentTermBufferSize = 0;
     }
-    
-
   }
 
-  private void doFlushCommitTermDocs() throws IOException { 
+  private void doFlushCommitTermDocs() throws IOException {
     HTable table = this.tablePool.getTable(this.indexName);
-    try { 
-      LOG.info("HBaseIndexStore#Flushing " + this.termDocs.size() + " terms of " + table);
+    try {
+      LOG.info("HBaseIndexStore#Flushing " + this.termDocs.size()
+          + " terms of " + table);
       List<Put> puts = new ArrayList<Put>();
-      for (final Map.Entry<String, OpenBitSet> entry : this.termDocs.entrySet()) {
-        Put put = new Put(Bytes.toBytes("s" + this.segmentId + "/" + entry.getKey()));
-        put.add(FAMILY_TERMVECTOR, Bytes.toBytes(HBaseneUtil.QUALIFIER_DOCUMENTS_PREFIX), 
-            HBaseneUtil.toBytes(entry.getValue()));
+      OpenBitSet bitset = new OpenBitSet();
+      for (final Map.Entry<String, Object> entry : this.termDocs.entrySet()) {
+        Put put = new Put(Bytes.toBytes("s" + this.segmentId + "/"
+            + entry.getKey()));
+        if (entry.getValue() instanceof OpenBitSet) {
+          put.add(FAMILY_TERMVECTOR, Bytes
+              .toBytes(HBaseneUtil.QUALIFIER_DOCUMENTS_PREFIX), HBaseneUtil
+              .toBytes((OpenBitSet) entry.getValue()));
+        } else if (entry.getValue() instanceof List) {
+          for (final Integer integer : (List<Integer>) entry.getValue()) {
+            bitset.set(integer);
+          }
+          put.add(FAMILY_TERMVECTOR, Bytes
+              .toBytes(HBaseneUtil.QUALIFIER_DOCUMENTS_PREFIX), HBaseneUtil
+              .toBytes(bitset));
+          bitset.clear(0, 1000000);
+        }
         put.setWriteToWAL(false);
         puts.add(put);
       }
@@ -183,19 +205,18 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     }
     doIncrementSegmentId();
   }
-  
-  
-  void doIncrementSegmentId() throws IOException { 
+
+  void doIncrementSegmentId() throws IOException {
     HTable table = this.tablePool.getTable(this.indexName);
-    try { 
+    try {
       segmentId = table.incrementColumnValue(ROW_SEGMENT_ID, FAMILY_SEQUENCE,
-        QUALIFIER_SEGMENT, 1, true); 
+          QUALIFIER_SEGMENT, 1, true);
     } finally {
       this.tablePool.putTable(table);
     }
 
   }
-  
+
   @Override
   public void storeField(long docId, String fieldName, byte[] value)
       throws IOException {
@@ -220,7 +241,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
       newId = table.incrementColumnValue(ROW_SEQUENCE_ID, FAMILY_SEQUENCE,
           QUALIFIER_SEQUENCE, 1, false); // Do not worry about the WAL, at this
-                                        // point of insertion.
+      // point of insertion.
       if (newId >= Integer.MAX_VALUE) {
         throw new IllegalStateException("API Limitation reached. ");
       }
