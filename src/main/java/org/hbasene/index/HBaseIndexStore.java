@@ -150,8 +150,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   private void doAddDocToTerm(final String fieldTerm, final long docId) throws IOException {
     OpenBitSet docs = this.termDocs.get(fieldTerm);
     if (docs == null) { 
-      docs = new OpenBitSet();
-      currentTermBufferSize += (docs.getNumWords() * 8 * 2000);
+      docs = new OpenBitSet(docId);
+      currentTermBufferSize += (docs.getNumWords() * 8 );
     }
     docs.set(docId - docBase);
     this.termDocs.put(fieldTerm, docs);
