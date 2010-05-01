@@ -23,11 +23,8 @@ package org.hbasene.index;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,10 +38,8 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.ServerCallable;
 import org.apache.hadoop.hbase.regionserver.lucene.HBaseneUtil;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.util.OpenBitSet;
 
 /**
@@ -62,10 +57,6 @@ import org.apache.lucene.util.OpenBitSet;
 public class HBaseIndexStore extends AbstractIndexStore implements
     HBaseneConstants {
 
-  /**
-   * Maximum Term Vector
-   */
-  public static final String CONF_MAX_TERM_VECTOR = "max.term.vector";
 
   private static final Log LOG = LogFactory.getLog(HBaseIndexStore.class);
 
@@ -73,7 +64,9 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private final String indexName;
 
-  private int termVectorThreshold;
+  private int termVectorBufferSize;
+  
+  private int termVectorArrayThreshold;
 
   private long docBase = 0;
 
@@ -83,6 +76,13 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private long segmentId = -1;
 
+  private long lastDocId = -1;
+  
+  /**
+   * For maximum throughput, use a single table.
+   */
+  private final HTable termVectorTable;
+  
   /**
    * Encoder of termPositions
    */
@@ -95,28 +95,32 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       throws IOException {
     this.tablePool = tablePool;
     this.indexName = indexName;
-
-    this.termVectorThreshold = configuration.getInt(CONF_MAX_TERM_VECTOR,
+    this.termVectorTable = tablePool.getTable(this.indexName);
+    this.termVectorBufferSize = configuration.getInt(HBaseneConfiguration.CONF_MAX_TERM_VECTOR,
         5 * 1000 * 1000);
+    
+    this.termVectorArrayThreshold = configuration.getInt(HBaseneConfiguration.CONF_TERM_VECTOR_LIST_THRESHOLD, 100);
 
     this.doIncrementSegmentId();
+    this.initDocBase();
+  }
+  
+  void initDocBase() throws IOException {
+    this.docBase = Bytes.toLong(this.getCellValue(ROW_SEQUENCE_ID, FAMILY_SEQUENCE, QUALIFIER_SEQUENCE));
   }
 
   @Override
   public void close() throws IOException {
-    HTable table = this.tablePool.getTable(this.indexName);
-    try {
-      table.close();
-    } finally {
-      this.tablePool.putTable(table);
-    }
+    commit();
   }
 
   @Override
   public void commit() throws IOException {
+    this.doCommit();
+    //TODO: Close all tables in the tablepool
     HTable table = this.tablePool.getTable(this.indexName);
     try {
-      table.flushCommits();
+      table.close();
     } finally {
       this.tablePool.putTable(table);
     }
@@ -133,27 +137,24 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         .encode(termPositionVector));
     put.setWriteToWAL(false);// Do not write to WAL, since it would be very
     // expensive.
-    /*
-     * HTable table = this.tablePool.getTable(this.indexName); try { //
-     * table.put(put); } finally { this.tablePool.putTable(table); }
-     */
+    //TODO: Add this put appropriate to the table.
     doAddDocToTerm(fieldTerm, docId);
 
   }
 
-  private void doAddDocToTerm(final String fieldTerm, final long docId)
+  synchronized void doAddDocToTerm(final String fieldTerm, final long docId)
       throws IOException {
     Object docs = this.termDocs.get(fieldTerm);
     if (docs == null) {
-      docs = new ArrayList<Integer>(100);
+      docs = new ArrayList<Integer>();
       this.termDocs.put(fieldTerm, docs);
     }
     long relativeId = docId - docBase;
     if (docs instanceof List) {
       List<Integer> listImpl = (List<Integer>) docs;
       listImpl.add((int) relativeId);
-      this.currentTermBufferSize += 4;
-      if (listImpl.size() > 100) {
+      this.currentTermBufferSize += Bytes.SIZEOF_INT;
+      if (listImpl.size() > this.termVectorArrayThreshold) {
         OpenBitSet bitset = new OpenBitSet();
         for (Integer value : listImpl) {
           bitset.set(value);
@@ -161,58 +162,57 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         listImpl.clear();
         this.termDocs.put(fieldTerm, bitset);
         
-        this.currentTermBufferSize -= (100 * 4);
-        this.currentTermBufferSize += (bitset.getNumWords() * 8);
+        this.currentTermBufferSize -= (this.termVectorArrayThreshold * Bytes.SIZEOF_INT);
+        this.currentTermBufferSize += (bitset.getNumWords() * Bytes.SIZEOF_LONG);
       }
     } else if (docs instanceof OpenBitSet) {
       ((OpenBitSet) docs).set(relativeId);
     }
-    if (this.currentTermBufferSize > this.termVectorThreshold) {
-      doFlushCommitTermDocs(relativeId);
-      this.termDocs.clear();
-      this.currentTermBufferSize = 0;
-      this.docBase = docId;
+    if (this.currentTermBufferSize > this.termVectorBufferSize) {
+      this.doCommit();
     }
+    this.lastDocId = docId;
   }
 
-  private void doFlushCommitTermDocs(long relativeDocId) throws IOException {
-    HTable table = this.tablePool.getTable(this.indexName);
-    try {
+  private void doCommit() throws IOException {
+    doFlushCommitTermDocs();
+    this.termDocs.clear();
+    this.currentTermBufferSize = 0;
+    this.docBase = this.lastDocId;
+  }
+  
+  private void doFlushCommitTermDocs() throws IOException {
       LOG.info("HBaseIndexStore#Flushing " + this.termDocs.size()
-          + " terms of " + table);
+          + " terms of " + this.termVectorTable);
       List<Put> puts = new ArrayList<Put>();
       OpenBitSet bitset = new OpenBitSet();
       for (final Map.Entry<String, Object> entry : this.termDocs.entrySet()) {
         Put put = new Put(Bytes.toBytes(entry.getKey()));
+        byte[] docSet = null;
         if (entry.getValue() instanceof OpenBitSet) {
-          put.add(FAMILY_TERMVECTOR, Bytes
-              .toBytes(HBaseneUtil.QUALIFIER_DOCUMENTS_PREFIX + ".s" + this.segmentId), HBaseneUtil
-              .toBytes((OpenBitSet) entry.getValue())); //this.docBase to be added as well
+          docSet = HBaseneUtil
+              .toBytes((OpenBitSet) entry.getValue()); //this.docBase to be added as well
         } else if (entry.getValue() instanceof List) {
+          bitset.clear(0, this.lastDocId);
           for (final Integer integer : (List<Integer>) entry.getValue()) {
             bitset.set(integer);
           }
-          put.add(FAMILY_TERMVECTOR, Bytes
-              .toBytes(HBaseneUtil.QUALIFIER_DOCUMENTS_PREFIX), HBaseneUtil
-              .toBytes(bitset));
-          bitset.clear(0, relativeDocId);
+          docSet = HBaseneUtil.toBytes(bitset);
         }
+        put.add(FAMILY_TERMVECTOR, Bytes
+            .toBytes(this.docBase), docSet); //this.docBase to be added as well
         put.setWriteToWAL(false);
         puts.add(put);
-        
-        if (puts.size() == 30000) { 
-          table.put(puts);
-          table.flushCommits();
+        if (puts.size() == 20000) { 
+          this.termVectorTable.put(puts);
+          this.termVectorTable.flushCommits();
           puts.clear();
         }
       }
-      table.put(puts);
-      table.flushCommits();
+      this.termVectorTable.put(puts);
+      this.termVectorTable.flushCommits();
       LOG.info("HBaseIndexStore#Flushed " + this.termDocs.size()
-          + " terms of " + table);      
-    } finally {
-      this.tablePool.putTable(table);
-    }
+          + " terms of " + this.termVectorTable);      
     doIncrementSegmentId();
   }
 
@@ -224,7 +224,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     } finally {
       this.tablePool.putTable(table);
     }
-
   }
 
   @Override
@@ -259,7 +258,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     } finally {
       this.tablePool.putTable(table);
     }
-
     return newId;
   }
 
