@@ -199,7 +199,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     final BlockingQueue<Put> queuePuts = new LinkedBlockingQueue<Put>(CAPACITY);
     final String[] keys = this.termDocs.keySet().toArray(new String[0]);
     final byte[] PUT_EOS_ROW = Bytes.toBytes("--row--");
-    LOG.info("About to flush Term Docs" );
     Future<Boolean> future = ST_POOL.submit(new Callable<Boolean>() {
 
       @Override
