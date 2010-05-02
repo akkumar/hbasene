@@ -189,21 +189,19 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     int sz = this.termDocs.size();
     long start = System.nanoTime();
     List<Put> puts = new ArrayList<Put>();
-    OpenBitSet bitset = new OpenBitSet();
     for (final Map.Entry<String, Object> entry : this.termDocs.entrySet()) {
       Put put = new Put(Bytes.toBytes(entry.getKey()));
       byte[] docSet = null;
       if (entry.getValue() instanceof OpenBitSet) {
-        docSet = HBaseneUtil.toBytes((OpenBitSet) entry.getValue()); // this.docBase
-                                                                     // to be
-                                                                     // added as
-                                                                     // well
+        docSet = Bytes.add( Bytes.toBytes('O')  ,HBaseneUtil.toBytes((OpenBitSet) entry.getValue()));
+        //TODO: Scope for optimization
       } else if (entry.getValue() instanceof List) {
-        bitset.clear(0, this.lastDocId);
-        for (final Integer integer : (List<Integer>) entry.getValue()) {
-          bitset.set(integer);
+        List<Integer> list = (List<Integer>) entry.getValue();
+        byte[] out = new byte[list.size()];
+        for (int i = 0; i < list.size(); ++i) { 
+          Bytes.putInt(out, i * Bytes.SIZEOF_INT, list.get(i));
         }
-        docSet = HBaseneUtil.toBytes(bitset);
+        docSet = Bytes.add( Bytes.toBytes('A'), out);
       }
       put.add(FAMILY_TERMVECTOR, Bytes.toBytes(this.docBase), docSet); // this.docBase
                                                                        // to be
