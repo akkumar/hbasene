@@ -79,7 +79,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   private long lastDocId = -1;
 
   /**
-   * For maximum throughput, use a single table.
+   * For maximum throughput, use a single table, since the .META. of the term vector is cached in the table 
+   * as we continue to add more information about the terms to the table.
    */
   private final HTable termVectorTable;
 
