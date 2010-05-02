@@ -25,7 +25,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import jsr166y.ForkJoinPool;
 
@@ -41,9 +47,9 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.regionserver.lucene.HBaseneUtil;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.lucene.util.OpenBitSet;
+
+import com.google.common.collect.Maps;
 
 /**
  * An index formed on-top of HBase. This requires a table with predefined column
@@ -64,6 +70,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private static final ForkJoinPool FORK_POOL = new ForkJoinPool();
   
+  private static final ExecutorService ST_POOL = Executors.newSingleThreadExecutor();
+
   private final HTablePool tablePool;
 
   private final String indexName;
@@ -81,7 +89,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   private long segmentId = -1;
 
   private long lastDocId = -1;
-  
+
   /**
    * For maximum throughput, use a single table, since the .META. of the term
    * vector is cached in the table as we continue to add more information about
@@ -138,32 +146,39 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   public void addTermPositions(long docId,
       final Map<String, List<Integer>> termPositionVector) throws IOException {
     doAddDocToTerms(termPositionVector.keySet(), docId);
-    //doAddTermFrequency(termPositionVector, docId);
+    // doAddTermFrequency(termPositionVector, docId);
   }
 
   void doAddTermFrequency(final Map<String, List<Integer>> termFrequencies,
       long docId) throws IOException {
     List<Put> puts = new ArrayList<Put>();
-    for (final Map.Entry<String, List<Integer>> entry : termFrequencies.entrySet()) { 
-      Put put = new Put(Bytes.toBytes(HBaseneConstants.TERM_FREQ_PREFIX + "/" + entry.getKey()));
-      put.add(HBaseneConstants.FAMILY_TERMFREQUENCIES, Bytes.toBytes(docId), Bytes.toBytes(termFrequencies.size()));
+    for (final Map.Entry<String, List<Integer>> entry : termFrequencies
+        .entrySet()) {
+      Put put = new Put(Bytes.toBytes(HBaseneConstants.TERM_FREQ_PREFIX + "/"
+          + entry.getKey()));
+      put.add(HBaseneConstants.FAMILY_TERMFREQUENCIES, Bytes.toBytes(docId),
+          Bytes.toBytes(termFrequencies.size()));
       puts.add(put);
     }
     HTable table = this.tablePool.getTable(this.indexName);
-    try  {
+    try {
       table.put(puts);
       table.flushCommits();
-    } finally { 
+    } finally {
       this.tablePool.putTable(table);
     }
-    
+
   }
 
   synchronized void doAddDocToTerms(final Set<String> fieldTerms,
       final long docId) throws IOException {
-    final String[] keys = fieldTerms.toArray(new String[0]);
-    FORK_POOL.execute(new TermVectorAppendTask(keys, 0, keys.length, docId, this.termDocs, this.termVectorArrayThreshold, this.docBase));
-    this.currentTermBufferSize += (keys.length * Bytes.SIZEOF_INT);
+    long relativeId = docId - this.docBase;
+    TermVectorAppendTask task = new TermVectorAppendTask(null, 0, fieldTerms.size(), 
+        this.termDocs, this.termVectorArrayThreshold, relativeId);    
+    for (final String fieldTerm : fieldTerms) { 
+      task.processAssign(fieldTerm);
+    }
+    this.currentTermBufferSize += (fieldTerms.size() * Bytes.SIZEOF_INT);
     if (this.currentTermBufferSize > this.termVectorBufferSize) {
       this.doCommit();
     }
@@ -178,41 +193,57 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   }
 
   private void doFlushCommitTermDocs() throws IOException {
-    int sz = this.termDocs.size();
-    long start = System.nanoTime();
-    List<Put> puts = new ArrayList<Put>();
-    for (final Map.Entry<String, Object> entry : this.termDocs.entrySet()) {
-      Put put = new Put(Bytes.toBytes(entry.getKey()));
-      byte[] docSet = null;
-      if (entry.getValue() instanceof OpenBitSet) {
-        docSet = Bytes.add(Bytes.toBytes('O'), HBaseneUtil
-            .toBytes((OpenBitSet) entry.getValue()));
-        // TODO: Scope for optimization, Avoid the redundant array creation and
-        // copying.
-      } else if (entry.getValue() instanceof List) {
-        List<Integer> list = (List<Integer>) entry.getValue();
-        byte[] out = new byte[(list.size() + 1) * Bytes.SIZEOF_INT];
-        Bytes.putInt(out, 0, list.size());
-        for (int i = 0; i < list.size(); ++i) {
-          Bytes.putInt(out, (i + 1) * Bytes.SIZEOF_INT, list.get(i));
+    final int sz = this.termDocs.size();
+    final long start = System.nanoTime();
+    final int CAPACITY = 30000;
+    final BlockingQueue<Put> queuePuts = new LinkedBlockingQueue<Put>(CAPACITY);
+    final String[] keys = this.termDocs.keySet().toArray(new String[0]);
+    final byte[] PUT_EOS_ROW = Bytes.toBytes("--row--");
+    LOG.info("About to flush Term Docs" );
+    Future<Boolean> future = ST_POOL.submit(new Callable<Boolean>() {
+
+      @Override
+      public Boolean call() {
+        try {
+          List<Put> puts = new ArrayList<Put>();
+          while (true) {
+            Put put = queuePuts.take();
+            if (Bytes.compareTo(put.getRow(), PUT_EOS_ROW) == 0) {
+              break;
+            }
+            puts.add(put);
+            if (puts.size() == CAPACITY) {
+              termVectorTable.put(puts);
+              termVectorTable.flushCommits();
+              puts.clear();
+            }
+          }
+          termVectorTable.put(puts);
+          termVectorTable.flushCommits();
+          return true;
+        } catch (Exception ex) {
+          LOG.error("Error on receiving the future after bulk committing " , ex);
+          ex.printStackTrace();
+          return false;
         }
-        docSet = Bytes.add(Bytes.toBytes('A'), out);
       }
-      put.add(FAMILY_TERMVECTOR, Bytes.toBytes(this.docBase), docSet);
-      put.setWriteToWAL(true);
-      puts.add(put);
-      if (puts.size() == 50000) {
-        this.termVectorTable.put(puts);
-        this.termVectorTable.flushCommits();
-        puts.clear();
-      }
+
+    });
+
+    FORK_POOL.invoke(new TermVectorPutTask(keys, 0, keys.length, this.termDocs,
+        this.docBase, queuePuts));
+    try {
+      queuePuts.put(new Put(PUT_EOS_ROW));
+      future.get();
+      LOG.info("HBaseIndexStore#Flushed " + sz + " terms of " + termVectorTable
+          + " in " + (double) (System.nanoTime() - start) / (double) 1000000
+          + " m.secs ");
+    } catch (Exception e) {
+      LOG.error("Error on receiving the future after bulk committing " , e);
+      e.printStackTrace();
+    } finally {
+      doIncrementSegmentId();
     }
-    this.termVectorTable.put(puts);
-    this.termVectorTable.flushCommits();
-    LOG.info("HBaseIndexStore#Flushed " + sz + " terms of "
-        + this.termVectorTable + " in " + (double) (System.nanoTime() - start)
-        / (double) 1000000 + " m.secs ");
-    doIncrementSegmentId();
   }
 
   void doIncrementSegmentId() throws IOException {
@@ -348,7 +379,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         .toBytes(tableName));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_FIELDS));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_TERMVECTOR));
-    tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_TERMFREQUENCIES));
+    tableDescriptor
+        .addFamily(createUniversionLZO(admin, FAMILY_TERMFREQUENCIES));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_DOC_TO_INT));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_SEQUENCE));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_PAYLOADS));
