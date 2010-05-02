@@ -1,7 +1,8 @@
-bin
+./bin
 target
 build
-index
-test-output
+./index
+./test-output
+*.asc
 
 
