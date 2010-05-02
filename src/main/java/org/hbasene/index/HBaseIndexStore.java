@@ -101,7 +101,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         HBaseneConfiguration.CONF_MAX_TERM_VECTOR, 5 * 1000 * 1000);
 
     this.termVectorArrayThreshold = configuration.getInt(
-        HBaseneConfiguration.CONF_TERM_VECTOR_LIST_THRESHOLD, 100);
+        HBaseneConfiguration.CONF_TERM_VECTOR_LIST_THRESHOLD, 40);
 
     this.doIncrementSegmentId();
     this.initDocBase();
