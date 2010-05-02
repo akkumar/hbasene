@@ -102,6 +102,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
     this.termVectorArrayThreshold = configuration.getInt(
         HBaseneConfiguration.CONF_TERM_VECTOR_LIST_THRESHOLD, 40);
+    
 
     this.doIncrementSegmentId();
     this.initDocBase();
@@ -206,7 +207,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         docSet = Bytes.add( Bytes.toBytes('A'), out);
       }
       put.add(FAMILY_TERMVECTOR, Bytes.toBytes(this.docBase), docSet);
-      put.setWriteToWAL(false);
+      put.setWriteToWAL(true);
       puts.add(put);
       if (puts.size() == 50000) {
         this.termVectorTable.put(puts);
@@ -237,7 +238,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       throws IOException {
     Put put = new Put(Bytes.toBytes(docId));
     put.add(FAMILY_FIELDS, Bytes.toBytes(fieldName), value);
-    put.setWriteToWAL(false);// Do not write to val
+    put.setWriteToWAL(true);// Do not write to val
     HTable table = this.tablePool.getTable(this.indexName);
     try {
       table.put(put);
@@ -290,7 +291,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       final byte[] docId) throws IOException {
     Put put = new Put(primaryKey);
     put.add(FAMILY_DOC_TO_INT, QUALIFIER_INT, docId);
-    put.setWriteToWAL(false);
+    put.setWriteToWAL(true);
     table.put(put);
 
   }
