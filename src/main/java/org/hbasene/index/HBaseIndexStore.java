@@ -79,8 +79,9 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   private long lastDocId = -1;
 
   /**
-   * For maximum throughput, use a single table, since the .META. of the term vector is cached in the table 
-   * as we continue to add more information about the terms to the table.
+   * For maximum throughput, use a single table, since the .META. of the term
+   * vector is cached in the table as we continue to add more information about
+   * the terms to the table.
    */
   private final HTable termVectorTable;
 
@@ -102,7 +103,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
     this.termVectorArrayThreshold = configuration.getInt(
         HBaseneConfiguration.CONF_TERM_VECTOR_LIST_THRESHOLD, 40);
-    
 
     this.doIncrementSegmentId();
     this.initDocBase();
@@ -133,17 +133,26 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   @Override
   public void addTermPositions(long docId,
       final Map<String, List<Integer>> termPositionVector) throws IOException {
-
-    //byte[] fieldTermBytes = Bytes.toBytes(fieldTerm);
-    //byte[] docIdBytes = Bytes.toBytes(docId);
-    //Put put = new Put(fieldTermBytes);
-    //put.add(FAMILY_TERMPOSITIONS, docIdBytes, this.termPositionEncoder
-   //     .encode(termPositionVector));
-    //put.setWriteToWAL(false);// Do not write to WAL, since it would be very
-    // expensive.
-    // TODO: Add this put appropriate to the table.
     doAddDocToTerms(termPositionVector.keySet(), docId);
+    doAddTermFrequency(termPositionVector, docId);
+  }
 
+  void doAddTermFrequency(final Map<String, List<Integer>> termFrequencies,
+      long docId) throws IOException {
+    List<Put> puts = new ArrayList<Put>();
+    for (final Map.Entry<String, List<Integer>> entry : termFrequencies.entrySet()) { 
+      Put put = new Put(Bytes.toBytes(HBaseneConstants.TERM_FREQ_PREFIX + "/" + entry.getKey()));
+      put.add(HBaseneConstants.FAMILY_TERMFREQUENCIES, Bytes.toBytes(docId), Bytes.toBytes(termFrequencies.size()));
+      puts.add(put);
+    }
+    HTable table = this.tablePool.getTable(this.indexName);
+    try  {
+      table.put(puts);
+      table.flushCommits();
+    } finally { 
+      this.tablePool.putTable(table);
+    }
+    
   }
 
   synchronized void doAddDocToTerms(final Set<String> fieldTerms,
@@ -195,16 +204,18 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       Put put = new Put(Bytes.toBytes(entry.getKey()));
       byte[] docSet = null;
       if (entry.getValue() instanceof OpenBitSet) {
-        docSet = Bytes.add( Bytes.toBytes('O')  ,HBaseneUtil.toBytes((OpenBitSet) entry.getValue()));
-        //TODO: Scope for optimization
+        docSet = Bytes.add(Bytes.toBytes('O'), HBaseneUtil
+            .toBytes((OpenBitSet) entry.getValue()));
+        // TODO: Scope for optimization, Avoid the redundant array creation and
+        // copying.
       } else if (entry.getValue() instanceof List) {
         List<Integer> list = (List<Integer>) entry.getValue();
-        byte[] out = new byte[( list.size() + 1 ) * Bytes.SIZEOF_INT];
-        for (int i = 0; i < list.size(); ++i) { 
+        byte[] out = new byte[(list.size() + 1) * Bytes.SIZEOF_INT];
+        Bytes.putInt(out, 0, list.size());
+        for (int i = 0; i < list.size(); ++i) {
           Bytes.putInt(out, (i + 1) * Bytes.SIZEOF_INT, list.get(i));
         }
-        Bytes.putInt(out, 0, list.size());        
-        docSet = Bytes.add( Bytes.toBytes('A'), out);
+        docSet = Bytes.add(Bytes.toBytes('A'), out);
       }
       put.add(FAMILY_TERMVECTOR, Bytes.toBytes(this.docBase), docSet);
       put.setWriteToWAL(true);
@@ -356,7 +367,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         .toBytes(tableName));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_FIELDS));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_TERMVECTOR));
-    tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_TERMPOSITIONS));
+    tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_TERMFREQUENCIES));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_DOC_TO_INT));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_SEQUENCE));
     tableDescriptor.addFamily(createUniversionLZO(admin, FAMILY_PAYLOADS));

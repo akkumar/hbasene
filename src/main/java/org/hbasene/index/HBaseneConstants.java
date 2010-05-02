@@ -39,7 +39,7 @@ public interface HBaseneConstants {
   /**
    * Column family representing the term positions for a given document in a given document.
    */
-  static final byte[] FAMILY_TERMPOSITIONS = Bytes.toBytes("fm.termPositions");
+  static final byte[] FAMILY_TERMFREQUENCIES = Bytes.toBytes("fm.termFrequencies");
   
   /**
    * Column Family representing the payloads associated with a given term for a given document.
@@ -101,5 +101,11 @@ public interface HBaseneConstants {
    * Row key representing a sequence.
    */
   static final byte[] ROW_SEGMENT_ID = Bytes.toBytes("segmentId");
+  
+  
+  /**
+   * Prefix for the row containing the term frequency
+   */
+  static final String TERM_FREQ_PREFIX = "fm";
   
 }
