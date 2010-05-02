@@ -63,8 +63,9 @@ public class TestHBaseIndexWriter {
     Map<String, List<Long>> tfs = new HashMap<String, List<Long>>();
     
     @Override
-    public void addTermPositions(String fieldTerm, long docId,
-        List<Integer> termPositionVectors) throws IOException {
+    public void addTermPositions(long docId,
+        Map<String, List<Integer>> termPositionVectors) throws IOException {
+      for (final String fieldTerm: termPositionVectors.keySet()) { 
       List<Long> docs = this.tfs.get(fieldTerm);
       if (docs == null) {
         docs = new ArrayList<Long>();
@@ -72,6 +73,7 @@ public class TestHBaseIndexWriter {
       }
       docs.add(docId);
       this.tfs.put(fieldTerm, docs);
+      }
     }
 
     @Override

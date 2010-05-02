@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,7 +58,6 @@ import org.apache.lucene.util.OpenBitSet;
 public class HBaseIndexStore extends AbstractIndexStore implements
     HBaseneConstants {
 
-
   private static final Log LOG = LogFactory.getLog(HBaseIndexStore.class);
 
   private final HTablePool tablePool;
@@ -65,7 +65,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   private final String indexName;
 
   private int termVectorBufferSize;
-  
+
   private int termVectorArrayThreshold;
 
   private long docBase = 0;
@@ -77,12 +77,12 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   private long segmentId = -1;
 
   private long lastDocId = -1;
-  
+
   /**
    * For maximum throughput, use a single table.
    */
   private final HTable termVectorTable;
-  
+
   /**
    * Encoder of termPositions
    */
@@ -96,17 +96,19 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     this.tablePool = tablePool;
     this.indexName = indexName;
     this.termVectorTable = tablePool.getTable(this.indexName);
-    this.termVectorBufferSize = configuration.getInt(HBaseneConfiguration.CONF_MAX_TERM_VECTOR,
-        5 * 1000 * 1000);
-    
-    this.termVectorArrayThreshold = configuration.getInt(HBaseneConfiguration.CONF_TERM_VECTOR_LIST_THRESHOLD, 100);
+    this.termVectorBufferSize = configuration.getInt(
+        HBaseneConfiguration.CONF_MAX_TERM_VECTOR, 5 * 1000 * 1000);
+
+    this.termVectorArrayThreshold = configuration.getInt(
+        HBaseneConfiguration.CONF_TERM_VECTOR_LIST_THRESHOLD, 100);
 
     this.doIncrementSegmentId();
     this.initDocBase();
   }
-  
+
   void initDocBase() throws IOException {
-    this.docBase = Bytes.toLong(this.getCellValue(ROW_SEQUENCE_ID, FAMILY_SEQUENCE, QUALIFIER_SEQUENCE));
+    this.docBase = Bytes.toLong(this.getCellValue(ROW_SEQUENCE_ID,
+        FAMILY_SEQUENCE, QUALIFIER_SEQUENCE));
   }
 
   @Override
@@ -117,7 +119,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   @Override
   public void commit() throws IOException {
     this.doCommit();
-    //TODO: Close all tables in the tablepool
+    // TODO: Close all tables in the tablepool
     HTable table = this.tablePool.getTable(this.indexName);
     try {
       table.close();
@@ -127,46 +129,48 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   }
 
   @Override
-  public void addTermPositions(String fieldTerm, long docId,
-      final List<Integer> termPositionVector) throws IOException {
+  public void addTermPositions(long docId,
+      final Map<String, List<Integer>> termPositionVector) throws IOException {
 
-    byte[] fieldTermBytes = Bytes.toBytes(fieldTerm);
-    byte[] docIdBytes = Bytes.toBytes(docId);
-    Put put = new Put(fieldTermBytes);
-    put.add(FAMILY_TERMPOSITIONS, docIdBytes, this.termPositionEncoder
-        .encode(termPositionVector));
-    put.setWriteToWAL(false);// Do not write to WAL, since it would be very
+    //byte[] fieldTermBytes = Bytes.toBytes(fieldTerm);
+    //byte[] docIdBytes = Bytes.toBytes(docId);
+    //Put put = new Put(fieldTermBytes);
+    //put.add(FAMILY_TERMPOSITIONS, docIdBytes, this.termPositionEncoder
+   //     .encode(termPositionVector));
+    //put.setWriteToWAL(false);// Do not write to WAL, since it would be very
     // expensive.
-    //TODO: Add this put appropriate to the table.
-    doAddDocToTerm(fieldTerm, docId);
+    // TODO: Add this put appropriate to the table.
+    doAddDocToTerms(termPositionVector.keySet(), docId);
 
   }
 
-  synchronized void doAddDocToTerm(final String fieldTerm, final long docId)
-      throws IOException {
-    Object docs = this.termDocs.get(fieldTerm);
-    if (docs == null) {
-      docs = new ArrayList<Integer>();
-      this.termDocs.put(fieldTerm, docs);
-    }
-    long relativeId = docId - docBase;
-    if (docs instanceof List) {
-      List<Integer> listImpl = (List<Integer>) docs;
-      listImpl.add((int) relativeId);
-      this.currentTermBufferSize += Bytes.SIZEOF_INT;
-      if (listImpl.size() > this.termVectorArrayThreshold) {
-        OpenBitSet bitset = new OpenBitSet();
-        for (Integer value : listImpl) {
-          bitset.set(value);
-        }
-        listImpl.clear();
-        this.termDocs.put(fieldTerm, bitset);
-        
-        this.currentTermBufferSize -= (this.termVectorArrayThreshold * Bytes.SIZEOF_INT);
-        this.currentTermBufferSize += (bitset.getNumWords() * Bytes.SIZEOF_LONG);
+  synchronized void doAddDocToTerms(final Set<String> fieldTerms,
+      final long docId) throws IOException {
+    for (final String fieldTerm : fieldTerms) {
+      Object docs = this.termDocs.get(fieldTerm);
+      if (docs == null) {
+        docs = new ArrayList<Integer>();
+        this.termDocs.put(fieldTerm, docs);
       }
-    } else if (docs instanceof OpenBitSet) {
-      ((OpenBitSet) docs).set(relativeId);
+      long relativeId = docId - docBase;
+      if (docs instanceof List) {
+        List<Integer> listImpl = (List<Integer>) docs;
+        listImpl.add((int) relativeId);
+        this.currentTermBufferSize += Bytes.SIZEOF_INT;
+        if (listImpl.size() > this.termVectorArrayThreshold) {
+          OpenBitSet bitset = new OpenBitSet();
+          for (Integer value : listImpl) {
+            bitset.set(value);
+          }
+          listImpl.clear();
+          this.termDocs.put(fieldTerm, bitset);
+
+          this.currentTermBufferSize -= (this.termVectorArrayThreshold * Bytes.SIZEOF_INT);
+          this.currentTermBufferSize += (bitset.getNumWords() * Bytes.SIZEOF_LONG);
+        }
+      } else if (docs instanceof OpenBitSet) {
+        ((OpenBitSet) docs).set(relativeId);
+      }
     }
     if (this.currentTermBufferSize > this.termVectorBufferSize) {
       this.doCommit();
@@ -180,39 +184,45 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     this.currentTermBufferSize = 0;
     this.docBase = this.lastDocId;
   }
-  
+
   private void doFlushCommitTermDocs() throws IOException {
-      int sz = this.termDocs.size();
-      long start = System.nanoTime();
-      List<Put> puts = new ArrayList<Put>();
-      OpenBitSet bitset = new OpenBitSet();
-      for (final Map.Entry<String, Object> entry : this.termDocs.entrySet()) {
-        Put put = new Put(Bytes.toBytes(entry.getKey()));
-        byte[] docSet = null;
-        if (entry.getValue() instanceof OpenBitSet) {
-          docSet = HBaseneUtil
-              .toBytes((OpenBitSet) entry.getValue()); //this.docBase to be added as well
-        } else if (entry.getValue() instanceof List) {
-          bitset.clear(0, this.lastDocId);
-          for (final Integer integer : (List<Integer>) entry.getValue()) {
-            bitset.set(integer);
-          }
-          docSet = HBaseneUtil.toBytes(bitset);
+    int sz = this.termDocs.size();
+    long start = System.nanoTime();
+    List<Put> puts = new ArrayList<Put>();
+    OpenBitSet bitset = new OpenBitSet();
+    for (final Map.Entry<String, Object> entry : this.termDocs.entrySet()) {
+      Put put = new Put(Bytes.toBytes(entry.getKey()));
+      byte[] docSet = null;
+      if (entry.getValue() instanceof OpenBitSet) {
+        docSet = HBaseneUtil.toBytes((OpenBitSet) entry.getValue()); // this.docBase
+                                                                     // to be
+                                                                     // added as
+                                                                     // well
+      } else if (entry.getValue() instanceof List) {
+        bitset.clear(0, this.lastDocId);
+        for (final Integer integer : (List<Integer>) entry.getValue()) {
+          bitset.set(integer);
         }
-        put.add(FAMILY_TERMVECTOR, Bytes
-            .toBytes(this.docBase), docSet); //this.docBase to be added as well
-        put.setWriteToWAL(false);
-        puts.add(put);
-        if (puts.size() == 25000) { 
-          this.termVectorTable.put(puts);
-          this.termVectorTable.flushCommits();
-          puts.clear();
-        }
+        docSet = HBaseneUtil.toBytes(bitset);
       }
-      this.termVectorTable.put(puts);
-      this.termVectorTable.flushCommits();
-      LOG.info("HBaseIndexStore#Flushed " + sz
-          + " terms of " + this.termVectorTable + " in " + (double)(System.nanoTime() - start)/ (double)1000000 + " m.secs ");      
+      put.add(FAMILY_TERMVECTOR, Bytes.toBytes(this.docBase), docSet); // this.docBase
+                                                                       // to be
+                                                                       // added
+                                                                       // as
+                                                                       // well
+      put.setWriteToWAL(false);
+      puts.add(put);
+      if (puts.size() == 25000) {
+        this.termVectorTable.put(puts);
+        this.termVectorTable.flushCommits();
+        puts.clear();
+      }
+    }
+    this.termVectorTable.put(puts);
+    this.termVectorTable.flushCommits();
+    LOG.info("HBaseIndexStore#Flushed " + sz + " terms of "
+        + this.termVectorTable + " in " + (double) (System.nanoTime() - start)
+        / (double) 1000000 + " m.secs ");
     doIncrementSegmentId();
   }
 

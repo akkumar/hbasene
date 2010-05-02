@@ -109,6 +109,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
     List<String> allIndexedTerms = new ArrayList<String>(DEFAULT_TERM_CAPACITY);
 
     int position = 0;
+    Map<String, List<Integer>> termPositions = new HashMap<String, List<Integer>>();
 
     for (Fieldable field : doc.getFields()) {
       
@@ -125,7 +126,6 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
 
         // collect term frequencies per doc
-        Map<String, List<Integer>> termPositions = new HashMap<String, List<Integer>>();
         if (position > 0) {
           position += analyzer.getPositionIncrementGap(field.name());
         }
@@ -150,11 +150,6 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
         }
         tokens.close();
         
-        for (Map.Entry<String, List<Integer>> term : termPositions.entrySet()) {
-          String key = term.getKey();
-          indexStore.addTermPositions(key, assignedDocId,
-              term.getValue());
-        }
       }
 
       // Untokenized fields go in without a termPosition
@@ -163,9 +158,8 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
         allIndexedTerms.add(term);
 
         String key = term;
+        termPositions.put(key, EMPTY_TERM_POSITIONS);
 
-        indexStore.addTermPositions(key, assignedDocId,
-            EMPTY_TERM_POSITIONS);
       }
 
       // Stores each field as a column under this doc key
@@ -185,6 +179,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
             value);
       }
     }
+    indexStore.addTermPositions(assignedDocId, termPositions);
 
     //this.indexStore.commit();
   }

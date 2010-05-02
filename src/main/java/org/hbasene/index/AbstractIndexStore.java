@@ -22,6 +22,7 @@ package org.hbasene.index;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Transaction Log of (Lucene) Index operations. Rudimentary TF-IDF operations.
@@ -56,8 +57,8 @@ public abstract class AbstractIndexStore {
    *          Term Position Vectors for the given fieldTerm , present in the
    *          given docId.
    */
-  public abstract void addTermPositions(final String fieldTerm, long docId,
-      final List<Integer> termPositionVectors) throws IOException;
+  public abstract void addTermPositions(long docId,
+      final Map<String, List<Integer> > termPositionVectors) throws IOException;
 
   /**
    * Store the given field in the lucene hbase index.
