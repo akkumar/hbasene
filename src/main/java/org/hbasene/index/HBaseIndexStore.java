@@ -197,10 +197,11 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         //TODO: Scope for optimization
       } else if (entry.getValue() instanceof List) {
         List<Integer> list = (List<Integer>) entry.getValue();
-        byte[] out = new byte[list.size()];
+        byte[] out = new byte[( list.size() + 1 ) * Bytes.SIZEOF_INT];
         for (int i = 0; i < list.size(); ++i) { 
-          Bytes.putInt(out, i * Bytes.SIZEOF_INT, list.get(i));
+          Bytes.putInt(out, (i + 1) * Bytes.SIZEOF_INT, list.get(i));
         }
+        Bytes.putInt(out, 0, list.size());        
         docSet = Bytes.add( Bytes.toBytes('A'), out);
       }
       put.add(FAMILY_TERMVECTOR, Bytes.toBytes(this.docBase), docSet); // this.docBase
