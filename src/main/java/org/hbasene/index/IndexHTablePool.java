@@ -51,6 +51,12 @@ public class IndexHTablePool extends HTablePool {
     this.maxSize = maxSize;
   }
 
+  
+  public void close(final String tableName) throws IOException { 
+    for (int i = 0; i < this.maxSize; ++i) { 
+      this.getTable(tableName).close();
+    }
+  }
   /**
    * @param tableName
    * @return HTable instance.

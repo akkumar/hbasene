@@ -180,7 +180,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
       }
     }
     indexStore.addTermPositions(assignedDocId, termPositions);
-
+    termPositions.clear();
     //this.indexStore.commit();
   }
 
