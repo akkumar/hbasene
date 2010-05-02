@@ -22,10 +22,12 @@ package org.hbasene.index;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import jsr166y.ForkJoinPool;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -60,6 +62,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private static final Log LOG = LogFactory.getLog(HBaseIndexStore.class);
 
+  private static final ForkJoinPool FORK_POOL = new ForkJoinPool();
+  
   private final HTablePool tablePool;
 
   private final String indexName;
@@ -72,12 +76,12 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private long currentTermBufferSize = 0;
 
-  private final Map<String, Object> termDocs = new HashMap<String, Object>();
+  private final ConcurrentHashMap<String, Object> termDocs = new ConcurrentHashMap<String, Object>();
 
   private long segmentId = -1;
 
   private long lastDocId = -1;
-
+  
   /**
    * For maximum throughput, use a single table, since the .META. of the term
    * vector is cached in the table as we continue to add more information about
@@ -134,7 +138,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   public void addTermPositions(long docId,
       final Map<String, List<Integer>> termPositionVector) throws IOException {
     doAddDocToTerms(termPositionVector.keySet(), docId);
-    doAddTermFrequency(termPositionVector, docId);
+    //doAddTermFrequency(termPositionVector, docId);
   }
 
   void doAddTermFrequency(final Map<String, List<Integer>> termFrequencies,
@@ -157,32 +161,9 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   synchronized void doAddDocToTerms(final Set<String> fieldTerms,
       final long docId) throws IOException {
-    for (final String fieldTerm : fieldTerms) {
-      Object docs = this.termDocs.get(fieldTerm);
-      if (docs == null) {
-        docs = new ArrayList<Integer>();
-        this.termDocs.put(fieldTerm, docs);
-      }
-      long relativeId = docId - docBase;
-      if (docs instanceof List) {
-        List<Integer> listImpl = (List<Integer>) docs;
-        listImpl.add((int) relativeId);
-        this.currentTermBufferSize += Bytes.SIZEOF_INT;
-        if (listImpl.size() > this.termVectorArrayThreshold) {
-          OpenBitSet bitset = new OpenBitSet();
-          for (Integer value : listImpl) {
-            bitset.set(value);
-          }
-          listImpl.clear();
-          this.termDocs.put(fieldTerm, bitset);
-
-          this.currentTermBufferSize -= (this.termVectorArrayThreshold * Bytes.SIZEOF_INT);
-          this.currentTermBufferSize += (bitset.getNumWords() * Bytes.SIZEOF_LONG);
-        }
-      } else if (docs instanceof OpenBitSet) {
-        ((OpenBitSet) docs).set(relativeId);
-      }
-    }
+    final String[] keys = fieldTerms.toArray(new String[0]);
+    FORK_POOL.execute(new TermVectorAppendTask(keys, 0, keys.length, docId, this.termDocs, this.termVectorArrayThreshold, this.docBase));
+    this.currentTermBufferSize += (keys.length * Bytes.SIZEOF_INT);
     if (this.currentTermBufferSize > this.termVectorBufferSize) {
       this.doCommit();
     }
