@@ -75,6 +75,9 @@ public class TermVectorPutTask extends RecursiveAction {
         ex.printStackTrace();
       }
     } else {
+      if (low < 0 || high < 0) { 
+        return;
+      }
       int mid = (low + high) >>> 1;
 
       invokeAll(new TermVectorPutTask(this.inputTerms, low, mid,
@@ -87,6 +90,9 @@ public class TermVectorPutTask extends RecursiveAction {
 
   void processPut() throws InterruptedException {
     for (int i = low; i < high; ++i) {
+      if (i < 0) {
+        continue;
+      }
       final String key = this.inputTerms[i];
       final Object value = this.termVectorMap.get(key);
       Put put = new Put(Bytes.toBytes(key));
