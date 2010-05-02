@@ -212,7 +212,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       this.termVectorTable.put(puts);
       this.termVectorTable.flushCommits();
       LOG.info("HBaseIndexStore#Flushed " + sz
-          + " terms of " + this.termVectorTable + (double)(System.nanoTime() - start)/ (double)1000000 + " secs ");      
+          + " terms of " + this.termVectorTable + " in " + (double)(System.nanoTime() - start)/ (double)1000000 + " m.secs ");      
     doIncrementSegmentId();
   }
 
