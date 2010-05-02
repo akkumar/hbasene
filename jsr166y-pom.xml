@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.hbasene</groupId>
+  <artifactId>jsr166y</artifactId>
+  <packaging>jar</packaging>
+  <version>1.7.0-20100501</version>
+  <name>jsr166y</name>
+  <description>JSR 166y Artifacts republished here as maven</description>
+  <url>http://gee.cs.oswego.edu/dl/concurrency-interest/index.html</url>
+  <licenses>
+    <license>
+      <name>Creative Commons License</name>
+      <url>http://creativecommons.org/licenses/publicdomain</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:cvs://:pserver:anonymous@gee.cs.oswego.edu/home/jsr166/jsr166</connection>
+    <url>http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/src/jsr166y/</url>
+  </scm>
+  <developers>
+    <developer>
+      <id>Doug Lea</id>
+      <name>Doug Lea</name>
+    </developer>
+  </developers>
+  
+  <dependencies>
+  </dependencies>
+  
+
+  <distributionManagement>
+    <repository>
+      <id>sonatype-nexus-staging</id>
+      <name>Nexus Staging Repository</name>
+      <url>http://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+    </repository>
+  </distributionManagement>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+	    <configuration>
+          <url>http://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+          <repositoryId>sonatype-nexus-staging</repositoryId>
+         </configuration>
+	  </plugin>
+	</plugins>
+  </build>
+  
+  <profiles>
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project> 
