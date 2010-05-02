@@ -138,7 +138,11 @@
       <artifactId>google-collections</artifactId>
       <version>1.0</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.hbasene</groupId>
+      <artifactId>jsr166y</artifactId>
+      <version>1.7.0-20100501</version>
+    </dependency>
     <!--  TEST  -->
    
     <dependency>
