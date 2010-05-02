@@ -64,9 +64,9 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private final String indexName;
 
-  private int termVectorBufferSize;
+  private final int termVectorBufferSize;
 
-  private int termVectorArrayThreshold;
+  private final int termVectorArrayThreshold;
 
   private long docBase = 0;
 
