@@ -204,14 +204,10 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         Bytes.putInt(out, 0, list.size());        
         docSet = Bytes.add( Bytes.toBytes('A'), out);
       }
-      put.add(FAMILY_TERMVECTOR, Bytes.toBytes(this.docBase), docSet); // this.docBase
-                                                                       // to be
-                                                                       // added
-                                                                       // as
-                                                                       // well
+      put.add(FAMILY_TERMVECTOR, Bytes.toBytes(this.docBase), docSet);
       put.setWriteToWAL(false);
       puts.add(put);
-      if (puts.size() == 25000) {
+      if (puts.size() == 50000) {
         this.termVectorTable.put(puts);
         this.termVectorTable.flushCommits();
         puts.clear();
