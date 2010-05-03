@@ -64,6 +64,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private final int maxCommitDocs = 1000;
 
+  private final int arrayThreshold;
+
   /**
    * For maximum throughput, use a single table, since the .META. of the term
    * vector is cached in the table as we continue to add more information about
@@ -84,6 +86,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     this.table = tablePool.getTable(indexName);
 
     this.doIncrementSegmentId();
+    this.arrayThreshold = OpenBitSet.bits2words(maxCommitDocs);
   }
 
   @Override
@@ -163,10 +166,13 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       if (bitset instanceof List) {
         List<Integer> impl = (List<Integer>) bitset;
         impl.add(docId);
-        if (impl.size() > 10) { 
-          
+        if (impl.size() >= this.arrayThreshold) {
+          OpenBitSet newBitSet = new OpenBitSet();
+          for (Integer existingDocId : impl) {
+            newBitSet.set(existingDocId);
+          }
         }
-      } 
+      }
       if (bitset instanceof OpenBitSet) {
         ((OpenBitSet) bitset).set(docId);
       }
@@ -178,12 +184,23 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     final long start = System.nanoTime();
     for (final Map.Entry<String, Object> entry : this.termVector.entrySet()) {
       final String key = entry.getKey();
+      final Object value = entry.getValue();
       Put put = new Put(Bytes.toBytes(key));
       byte[] docSet = null;
-      docSet = Bytes.add(Bytes.toBytes('O'), HBaseneUtil
-          .toBytes((OpenBitSet) entry.getValue()));
-      put.add(HBaseneConstants.FAMILY_TERMVECTOR, Bytes.toBytes("s"
-          + this.segmentId), docSet);
+      if (value instanceof OpenBitSet) {
+        docSet = Bytes.add(Bytes.toBytes('O'), HBaseneUtil
+            .toBytes((OpenBitSet) entry.getValue()));
+      } else if (value instanceof List) {
+        List<Integer> list = (List<Integer>) value;
+        byte[] out = new byte[(list.size() + 1) * Bytes.SIZEOF_INT];
+        Bytes.putInt(out, 0, list.size());
+        for (int i = 0; i < list.size(); ++i) {
+          Bytes.putInt(out, (i + 1) * Bytes.SIZEOF_INT, list.get(i).intValue());
+        }
+        docSet = Bytes.add(Bytes.toBytes('A'), out);
+      }
+      put.add(HBaseneConstants.FAMILY_TERMVECTOR,
+          Bytes.toBytes(this.segmentId), docSet);
       put.setWriteToWAL(true);
       this.table.getWriteBuffer().add(put);
     }
