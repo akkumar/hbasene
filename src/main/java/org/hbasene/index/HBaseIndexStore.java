@@ -192,7 +192,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     LOG.info("HBaseIndexStore#Flushed " + sz + " terms of " + table + " in "
         + (double) (System.nanoTime() - start) / (double) 1000000 + " m.secs ");
     this.documentId = 0;
-    doIncrementSegmentId();
+    this.segmentId = doIncrementSegmentId();
   }
 
   long doIncrementSegmentId() throws IOException {
