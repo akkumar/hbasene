@@ -69,8 +69,9 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   private static final Log LOG = LogFactory.getLog(HBaseIndexStore.class);
 
   private static final ForkJoinPool FORK_POOL = new ForkJoinPool();
-  
-  private static final ExecutorService ST_POOL = Executors.newSingleThreadExecutor();
+
+  private static final ExecutorService ST_POOL = Executors
+      .newSingleThreadExecutor();
 
   private final HTablePool tablePool;
 
@@ -173,9 +174,9 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   synchronized void doAddDocToTerms(final Set<String> fieldTerms,
       final long docId) throws IOException {
     long relativeId = docId - this.docBase;
-    TermVectorAppendTask task = new TermVectorAppendTask(null, 0, fieldTerms.size(), 
-        this.termDocs, this.termVectorArrayThreshold, relativeId);    
-    for (final String fieldTerm : fieldTerms) { 
+    TermVectorAppendTask task = new TermVectorAppendTask(null, 0, fieldTerms
+        .size(), this.termDocs, this.termVectorArrayThreshold, relativeId);
+    for (final String fieldTerm : fieldTerms) {
       task.processAssign(fieldTerm);
     }
     this.currentTermBufferSize += (fieldTerms.size() * Bytes.SIZEOF_INT);
@@ -195,54 +196,26 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   private void doFlushCommitTermDocs() throws IOException {
     final int sz = this.termDocs.size();
     final long start = System.nanoTime();
-    final int CAPACITY = 30000;
-    final BlockingQueue<Put> queuePuts = new LinkedBlockingQueue<Put>(CAPACITY);
-    final String[] keys = this.termDocs.keySet().toArray(new String[0]);
-    final byte[] PUT_EOS_ROW = Bytes.toBytes("--row--");
-    Future<Boolean> future = ST_POOL.submit(new Callable<Boolean>() {
+    final int CAPACITY = 50000;
+    TermVectorPutTask task = new TermVectorPutTask(null, 0, this.termDocs
+        .size(), this.termDocs, this.docBase, null);
 
-      @Override
-      public Boolean call() {
-        try {
-          List<Put> puts = new ArrayList<Put>();
-          while (true) {
-            Put put = queuePuts.take();
-            if (Bytes.compareTo(put.getRow(), PUT_EOS_ROW) == 0) {
-              break;
-            }
-            puts.add(put);
-            if (puts.size() == CAPACITY) {
-              termVectorTable.put(puts);
-              termVectorTable.flushCommits();
-              puts.clear();
-            }
-          }
-          termVectorTable.put(puts);
-          termVectorTable.flushCommits();
-          return true;
-        } catch (Exception ex) {
-          LOG.error("Error on receiving the future after bulk committing " , ex);
-          ex.printStackTrace();
-          return false;
-        }
+    List<Put> puts = new ArrayList<Put>();
+    for (final String fieldTerm : this.termDocs.keySet()) {
+      puts.add(task.generatePut(fieldTerm));
+      if (puts.size() == CAPACITY) { 
+        this.termVectorTable.put(puts);
+        this.termVectorTable.flushCommits();
+        puts.clear();
       }
-
-    });
-
-    FORK_POOL.invoke(new TermVectorPutTask(keys, 0, keys.length, this.termDocs,
-        this.docBase, queuePuts));
-    try {
-      queuePuts.put(new Put(PUT_EOS_ROW));
-      future.get();
-      LOG.info("HBaseIndexStore#Flushed " + sz + " terms of " + termVectorTable
-          + " in " + (double) (System.nanoTime() - start) / (double) 1000000
-          + " m.secs ");
-    } catch (Exception e) {
-      LOG.error("Error on receiving the future after bulk committing " , e);
-      e.printStackTrace();
-    } finally {
-      doIncrementSegmentId();
     }
+    this.termVectorTable.put(puts);
+    this.termVectorTable.flushCommits();
+    
+    LOG.info("HBaseIndexStore#Flushed " + sz + " terms of " + termVectorTable
+        + " in " + (double) (System.nanoTime() - start) / (double) 1000000
+        + " m.secs ");
+    doIncrementSegmentId();
   }
 
   void doIncrementSegmentId() throws IOException {

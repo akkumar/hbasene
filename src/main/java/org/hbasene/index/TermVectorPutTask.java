@@ -55,8 +55,8 @@ public class TermVectorPutTask extends RecursiveAction {
   private final BlockingQueue<Put> queuePuts;
 
   public TermVectorPutTask(final String[] inputTerms, int low, int high,
-      final ConcurrentHashMap<String, Object> termVectorMap, final long docBase,
-      final BlockingQueue<Put> queuePuts) {
+      final ConcurrentHashMap<String, Object> termVectorMap,
+      final long docBase, final BlockingQueue<Put> queuePuts) {
     this.inputTerms = inputTerms;
     this.low = low;
     this.high = high;
@@ -69,13 +69,15 @@ public class TermVectorPutTask extends RecursiveAction {
   protected void compute() {
     if ((high - low) < THRESHOLD) {
       try {
-        processPut();
+        for (int i = low; i < high; ++i) {
+          generatePut(this.inputTerms[i]);
+        }
       } catch (final Exception ex) {
-        LOG.error("Error encounterd while generating puts " , ex);
+        LOG.error("Error encounterd while generating puts ", ex);
         ex.printStackTrace();
       }
     } else {
-      if (low < 0 || high < 0) { 
+      if (low < 0 || high < 0) {
         return;
       }
       int mid = (low + high) >>> 1;
@@ -88,34 +90,28 @@ public class TermVectorPutTask extends RecursiveAction {
     }
   }
 
-  void processPut() throws InterruptedException {
-    for (int i = low; i < high; ++i) {
-      if (i < 0) {
-        continue;
+  Put generatePut(final String key) {
+    final Object value = this.termVectorMap.get(key);
+    Put put = new Put(Bytes.toBytes(key));
+    byte[] docSet = null;
+    if (value instanceof OpenBitSet) {
+      docSet = Bytes.add(Bytes.toBytes('O'), HBaseneUtil
+          .toBytes((OpenBitSet) value));
+      // TODO: Scope for optimization, Avoid the redundant array creation and
+      // copying.
+    } else if (value instanceof List) {
+      List<Integer> list = (List<Integer>) value;
+      byte[] out = new byte[(list.size() + 1) * Bytes.SIZEOF_INT];
+      Bytes.putInt(out, 0, list.size());
+      for (int k = 0; k < list.size(); ++k) {
+        Bytes.putInt(out, (k + 1) * Bytes.SIZEOF_INT, list.get(k));
       }
-      final String key = this.inputTerms[i];
-      final Object value = this.termVectorMap.get(key);
-      Put put = new Put(Bytes.toBytes(key));
-      byte[] docSet = null;
-      if (value instanceof OpenBitSet) {
-        docSet = Bytes.add(Bytes.toBytes('O'), HBaseneUtil
-            .toBytes((OpenBitSet) value));
-        // TODO: Scope for optimization, Avoid the redundant array creation and
-        // copying.
-      } else if (value instanceof List) {
-        List<Integer> list = (List<Integer>) value;
-        byte[] out = new byte[(list.size() + 1) * Bytes.SIZEOF_INT];
-        Bytes.putInt(out, 0, list.size());
-        for (int k = 0; k < list.size(); ++k) {
-          Bytes.putInt(out, (k + 1) * Bytes.SIZEOF_INT, list.get(k));
-        }
-        docSet = Bytes.add(Bytes.toBytes('A'), out);
-      }
-      put.add(HBaseneConstants.FAMILY_TERMVECTOR, Bytes.toBytes(this.docBase),
-          docSet);
-      put.setWriteToWAL(true);
-      this.queuePuts.put(put);
+      docSet = Bytes.add(Bytes.toBytes('A'), out);
     }
+    put.add(HBaseneConstants.FAMILY_TERMVECTOR, Bytes.toBytes(this.docBase),
+        docSet);
+    put.setWriteToWAL(true);
+    return put;
   }
 
 }
