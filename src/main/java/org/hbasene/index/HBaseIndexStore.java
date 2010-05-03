@@ -133,14 +133,14 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   @Override
   public void commit() throws IOException {
-    this.doCommit();
+    //this.doCommit();
     // TODO: Close all tables in the tablepool
-    HTable table = this.tablePool.getTable(this.indexName);
-    try {
-      table.close();
-    } finally {
-      this.tablePool.putTable(table);
-    }
+    //HTable table = this.tablePool.getTable(this.indexName);
+    //try {
+      //table.close();
+    //} finally {
+      //this.tablePool.putTable(table);
+    //}
   }
 
   @Override
@@ -251,7 +251,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       // Atomic RPC to HBase region server
 
       newId = table.incrementColumnValue(ROW_SEQUENCE_ID, FAMILY_SEQUENCE,
-          QUALIFIER_SEQUENCE, 1, false); // Do not worry about the WAL, at this
+          QUALIFIER_SEQUENCE, 1, true); // Do not worry about the WAL, at this
       // point of insertion.
       if (newId >= Integer.MAX_VALUE) {
         throw new IllegalStateException("API Limitation reached. ");

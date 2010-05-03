@@ -42,38 +42,39 @@ public class TermVectorPutTask extends RecursiveAction {
 
   private static final int THRESHOLD = 500;
 
-  private final String[] inputTerms;
+  //private final String[] inputTerms;
 
-  private final int low;
+  //private final int low;
 
-  private final int high;
+  //private final int high;
 
   private final long docBase;
 
   private final ConcurrentHashMap<String, Object> termVectorMap;
 
-  private final BlockingQueue<Put> queuePuts;
+  //private final BlockingQueue<Put> queuePuts;
 
   public TermVectorPutTask(final String[] inputTerms, int low, int high,
       final ConcurrentHashMap<String, Object> termVectorMap,
       final long docBase, final BlockingQueue<Put> queuePuts) {
-    this.inputTerms = inputTerms;
-    this.low = low;
-    this.high = high;
+    //this.inputTerms = inputTerms;
+    //this.low = low;
+    //this.high = high;
     this.termVectorMap = termVectorMap;
     this.docBase = docBase;
-    this.queuePuts = queuePuts;
+    //this.queuePuts = queuePuts;
   }
 
   @Override
-  protected void compute() {
+  protected void compute() { }
+ /** 
     if ((high - low) < THRESHOLD) {
       try {
         for (int i = low; i < high; ++i) {
           generatePut(this.inputTerms[i]);
         }
       } catch (final Exception ex) {
-        LOG.error("Error encounterd while generating puts ", ex);
+        LOG.error("Error encountered while generating puts ", ex);
         ex.printStackTrace();
       }
     } else {
@@ -88,7 +89,8 @@ public class TermVectorPutTask extends RecursiveAction {
               this.docBase, this.queuePuts));
 
     }
-  }
+  }  **/
+  
 
   Put generatePut(final String key) {
     final Object value = this.termVectorMap.get(key);
@@ -103,8 +105,8 @@ public class TermVectorPutTask extends RecursiveAction {
       List<Integer> list = (List<Integer>) value;
       byte[] out = new byte[(list.size() + 1) * Bytes.SIZEOF_INT];
       Bytes.putInt(out, 0, list.size());
-      for (int k = 0; k < list.size(); ++k) {
-        Bytes.putInt(out, (k + 1) * Bytes.SIZEOF_INT, list.get(k));
+      for (int i = 0; i < list.size(); ++i) {
+        Bytes.putInt(out, (i + 1) * Bytes.SIZEOF_INT, list.get(i).intValue());
       }
       docSet = Bytes.add(Bytes.toBytes('A'), out);
     }
