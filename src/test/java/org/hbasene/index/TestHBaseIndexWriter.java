@@ -62,19 +62,6 @@ public class TestHBaseIndexWriter {
 
     Map<String, List<Long>> tfs = new HashMap<String, List<Long>>();
     
-    @Override
-    public void addTermPositions(long docId,
-        Map<String, List<Integer>> termPositionVectors) throws IOException {
-      for (final String fieldTerm: termPositionVectors.keySet()) { 
-      List<Long> docs = this.tfs.get(fieldTerm);
-      if (docs == null) {
-        docs = new ArrayList<Long>();
-        this.tfs.put(fieldTerm, docs);
-      }
-      docs.add(docId);
-      this.tfs.put(fieldTerm, docs);
-      }
-    }
 
     @Override
     public void close() throws IOException {
@@ -88,17 +75,13 @@ public class TestHBaseIndexWriter {
 
     }
 
-    @Override
-    public long docId(byte[] primaryKey) throws IOException {
-      // TODO Auto-generated method stub
-      return 0;
-    }
+  
 
     @Override
-    public void storeField(long docId, String fieldName, byte[] value)
-        throws IOException {
+    public SegmentInfo indexDocument(String key,
+        DocumentIndexContext documentIndexContext) throws IOException {
       // TODO Auto-generated method stub
-
+      return null;
     }
 
   }

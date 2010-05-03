@@ -22,18 +22,10 @@ package org.hbasene.index;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-
-import jsr166y.ForkJoinPool;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,21 +36,17 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.io.hfile.Compression.Algorithm;
+import org.apache.hadoop.hbase.regionserver.lucene.HBaseneUtil;
 import org.apache.hadoop.hbase.util.Bytes;
-
-import com.google.common.collect.Maps;
+import org.apache.lucene.util.OpenBitSet;
 
 /**
- * An index formed on-top of HBase. This requires a table with predefined column
- * families.
- * 
- * <ul>
- * <li>fm.termVector</li>
- * <li>fm.fields</li>
- * </ul>
+ * An index formed on-top of HBase.
+ * <p>
+ * Important:
+ * </p>
+ * This class is not thread-safe.
  * 
  * To create a HBase Table, specific to the index schema, refer to
  * {@link #createLuceneIndexTable(String, HBaseConfiguration, boolean)} .
@@ -68,35 +56,20 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private static final Log LOG = LogFactory.getLog(HBaseIndexStore.class);
 
-  private static final ForkJoinPool FORK_POOL = new ForkJoinPool();
+  private final Map<String, Object> termVector = new HashMap<String, Object>();
 
-  private static final ExecutorService ST_POOL = Executors
-      .newSingleThreadExecutor();
+  private long segmentId = 0;
 
-  private final HTablePool tablePool;
+  private int documentId = -1;
 
-  private final String indexName;
-
-  private final int termVectorBufferSize;
-
-  private final int termVectorArrayThreshold;
-
-  private long docBase = 0;
-
-  private long currentTermBufferSize = 0;
-
-  private final ConcurrentHashMap<String, Object> termDocs = new ConcurrentHashMap<String, Object>();
-
-  private long segmentId = -1;
-
-  private long lastDocId = -1;
+  private final int maxCommitDocs = 1000;
 
   /**
    * For maximum throughput, use a single table, since the .META. of the term
    * vector is cached in the table as we continue to add more information about
    * the terms to the table.
    */
-  private final HTable termVectorTable;
+  private final HTable table;
 
   /**
    * Encoder of termPositions
@@ -108,50 +81,65 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   public HBaseIndexStore(final HTablePool tablePool,
       final HBaseConfiguration configuration, final String indexName)
       throws IOException {
-    this.tablePool = tablePool;
-    this.indexName = indexName;
-    this.termVectorTable = tablePool.getTable(this.indexName);
-    this.termVectorBufferSize = configuration.getInt(
-        HBaseneConfiguration.CONF_MAX_TERM_VECTOR, 5 * 1000 * 1000);
-
-    this.termVectorArrayThreshold = configuration.getInt(
-        HBaseneConfiguration.CONF_TERM_VECTOR_LIST_THRESHOLD, 40);
+    this.table = tablePool.getTable(indexName);
 
     this.doIncrementSegmentId();
-    this.initDocBase();
-  }
-
-  void initDocBase() throws IOException {
-    this.docBase = Bytes.toLong(this.getCellValue(ROW_SEQUENCE_ID,
-        FAMILY_SEQUENCE, QUALIFIER_SEQUENCE));
   }
 
   @Override
-  public void close() throws IOException {
+  public synchronized void close() throws IOException {
     commit();
   }
 
   @Override
-  public void commit() throws IOException {
-    //this.doCommit();
+  public synchronized void commit() throws IOException {
+    this.doCommit();
+    // this.doCommit();
     // TODO: Close all tables in the tablepool
-    //HTable table = this.tablePool.getTable(this.indexName);
-    //try {
-      //table.close();
-    //} finally {
-      //this.tablePool.putTable(table);
-    //}
+    // HTable table = this.tablePool.getTable(this.indexName);
+    // try {
+    // table.close();
+    // } finally {
+    // this.tablePool.putTable(table);
+    // }
   }
 
-  @Override
-  public void addTermPositions(long docId,
-      final Map<String, List<Integer>> termPositionVector) throws IOException {
-    doAddDocToTerms(termPositionVector.keySet(), docId);
-    // doAddTermFrequency(termPositionVector, docId);
+  /**
+   * Index a given document.
+   * 
+   * @param key
+   * @param documentIndexContext
+   * @return SegmentInfo that contains a segment id and a document id.
+   * @throws IOException
+   */
+  public synchronized SegmentInfo indexDocument(final String key,
+      final DocumentIndexContext documentIndexContext) throws IOException {
+    ++this.documentId;
+    final byte[] currentRow = this.getCurrentRow();
+    this.doAddTermVector(documentId, documentIndexContext.termPositionVectors
+        .keySet());
+    // TODO: Store the term frequency as well.
+    // this.doAddTermFrequency(documentId,
+    // documentIndexContext.termPositionVectors);
+    this.doStoreFields(currentRow, documentIndexContext.storeFields);
+    this.doStoreReverseMapping(key, currentRow);
+    SegmentInfo segmentInfo = new SegmentInfo(this.segmentId, this.documentId);
+    if (this.documentId == this.maxCommitDocs) {
+      doCommit();
+    }
+    return segmentInfo;
+
   }
 
-  void doAddTermFrequency(final Map<String, List<Integer>> termFrequencies,
-      long docId) throws IOException {
+  void doStoreReverseMapping(final String key, final byte[] currentRow) {
+    Put put = new Put(Bytes.toBytes(key));
+    put.add(FAMILY_DOC_TO_INT, QUALIFIER_INT, currentRow);
+    put.setWriteToWAL(true);
+    this.table.getWriteBuffer().add(put);
+  }
+
+  void doAddTermFrequency(final int docId,
+      final Map<String, List<Integer>> termFrequencies) throws IOException {
     List<Put> puts = new ArrayList<Put>();
     for (final Map.Entry<String, List<Integer>> entry : termFrequencies
         .entrySet()) {
@@ -161,128 +149,72 @@ public class HBaseIndexStore extends AbstractIndexStore implements
           Bytes.toBytes(termFrequencies.size()));
       puts.add(put);
     }
-    HTable table = this.tablePool.getTable(this.indexName);
-    try {
-      table.put(puts);
-      table.flushCommits();
-    } finally {
-      this.tablePool.putTable(table);
-    }
-
+    this.table.getWriteBuffer().addAll(puts);
   }
 
-  synchronized void doAddDocToTerms(final Set<String> fieldTerms,
-      final long docId) throws IOException {
-    long relativeId = docId - this.docBase;
-    TermVectorAppendTask task = new TermVectorAppendTask(null, 0, fieldTerms
-        .size(), this.termDocs, this.termVectorArrayThreshold, relativeId);
+  void doAddTermVector(final int docId, final Set<String> fieldTerms)
+      throws IOException {
     for (final String fieldTerm : fieldTerms) {
-      task.processAssign(fieldTerm);
+      Object bitset = this.termVector.get(fieldTerm);
+      if (bitset == null) {
+        bitset = new ArrayList<Integer>();// Allocate at least 1 long
+        this.termVector.put(fieldTerm, bitset);
+      }
+      if (bitset instanceof List) {
+        List<Integer> impl = (List<Integer>) bitset;
+        impl.add(docId);
+        if (impl.size() > 10) { 
+          
+        }
+      } 
+      if (bitset instanceof OpenBitSet) {
+        ((OpenBitSet) bitset).set(docId);
+      }
     }
-    this.currentTermBufferSize += (fieldTerms.size() * Bytes.SIZEOF_INT);
-    if (this.currentTermBufferSize > this.termVectorBufferSize) {
-      this.doCommit();
-    }
-    this.lastDocId = docId;
   }
 
   private void doCommit() throws IOException {
-    doFlushCommitTermDocs();
-    this.termDocs.clear();
-    this.currentTermBufferSize = 0;
-    this.docBase = this.lastDocId;
-  }
-
-  private void doFlushCommitTermDocs() throws IOException {
-    final int sz = this.termDocs.size();
+    final int sz = this.termVector.size();
     final long start = System.nanoTime();
-    final int CAPACITY = 50000;
-    TermVectorPutTask task = new TermVectorPutTask(null, 0, this.termDocs
-        .size(), this.termDocs, this.docBase, null);
-
-    List<Put> puts = new ArrayList<Put>();
-    for (final String fieldTerm : this.termDocs.keySet()) {
-      puts.add(task.generatePut(fieldTerm));
-      if (puts.size() == CAPACITY) { 
-        this.termVectorTable.put(puts);
-        this.termVectorTable.flushCommits();
-        puts.clear();
-      }
+    for (final Map.Entry<String, Object> entry : this.termVector.entrySet()) {
+      final String key = entry.getKey();
+      Put put = new Put(Bytes.toBytes(key));
+      byte[] docSet = null;
+      docSet = Bytes.add(Bytes.toBytes('O'), HBaseneUtil
+          .toBytes((OpenBitSet) entry.getValue()));
+      put.add(HBaseneConstants.FAMILY_TERMVECTOR, Bytes.toBytes("s"
+          + this.segmentId), docSet);
+      put.setWriteToWAL(true);
+      this.table.getWriteBuffer().add(put);
     }
-    this.termVectorTable.put(puts);
-    this.termVectorTable.flushCommits();
-    
-    LOG.info("HBaseIndexStore#Flushed " + sz + " terms of " + termVectorTable
-        + " in " + (double) (System.nanoTime() - start) / (double) 1000000
-        + " m.secs ");
+    this.termVector.clear();
+    this.table.flushCommits();
+    LOG.info("HBaseIndexStore#Flushed " + sz + " terms of " + table + " in "
+        + (double) (System.nanoTime() - start) / (double) 1000000 + " m.secs ");
+    this.documentId = 0;
     doIncrementSegmentId();
   }
 
-  void doIncrementSegmentId() throws IOException {
-    HTable table = this.tablePool.getTable(this.indexName);
-    try {
-      segmentId = table.incrementColumnValue(ROW_SEGMENT_ID, FAMILY_SEQUENCE,
-          QUALIFIER_SEGMENT, 1, true);
-    } finally {
-      this.tablePool.putTable(table);
+  long doIncrementSegmentId() throws IOException {
+    return this.table.incrementColumnValue(ROW_SEGMENT_ID, FAMILY_SEQUENCE,
+        QUALIFIER_SEGMENT, 1, true);
+  }
+
+  void doStoreFields(final byte[] currentRow,
+      final Map<String, byte[]> fieldsToStore) throws IOException {
+    for (final Map.Entry<String, byte[]> entry : fieldsToStore.entrySet()) {
+      Put put = new Put(currentRow);
+      put.add(FAMILY_FIELDS, Bytes.toBytes(entry.getKey()), entry.getValue());
+      put.setWriteToWAL(true);// Do not write to val
+      this.table.getWriteBuffer().add(put);
     }
   }
 
-  @Override
-  public void storeField(long docId, String fieldName, byte[] value)
-      throws IOException {
-    Put put = new Put(Bytes.toBytes(docId));
-    put.add(FAMILY_FIELDS, Bytes.toBytes(fieldName), value);
-    put.setWriteToWAL(true);// Do not write to val
-    HTable table = this.tablePool.getTable(this.indexName);
-    try {
-      table.put(put);
-    } finally {
-      this.tablePool.putTable(table);
-    }
+  byte[] getCurrentRow() {
+    return Bytes.toBytes("s" + this.segmentId + "/" + this.documentId);
   }
 
-  @Override
-  public long docId(final byte[] primaryKey) throws IOException {
-    HTable table = this.tablePool.getTable(this.indexName);
-    long newId = -1;
-    try {
-      // FIXIT: What if, primaryKey already exists in the table.
-      // Atomic RPC to HBase region server
-
-      newId = table.incrementColumnValue(ROW_SEQUENCE_ID, FAMILY_SEQUENCE,
-          QUALIFIER_SEQUENCE, 1, true); // Do not worry about the WAL, at this
-      // point of insertion.
-      if (newId >= Integer.MAX_VALUE) {
-        throw new IllegalStateException("API Limitation reached. ");
-      }
-      insertDocToInt(table, primaryKey, Bytes.toBytes(newId));
-    } finally {
-      this.tablePool.putTable(table);
-    }
-    return newId;
-  }
-
-  public byte[] getCellValue(final byte[] row, final byte[] columnFamily,
-      final byte[] columnQualifier) throws IOException {
-    HTable table = this.tablePool.getTable(this.indexName);
-    try {
-      Scan scan = new Scan(row);
-      scan.addColumn(columnFamily, columnQualifier);
-      ResultScanner scanner = table.getScanner(scan);
-      try {
-        Result result = scanner.next();
-        return result.getValue(columnFamily, columnQualifier);
-      } finally {
-        scanner.close();
-      }
-    } finally {
-      this.tablePool.putTable(table);
-    }
-
-  }
-
-  void insertDocToInt(final HTable table, final byte[] primaryKey,
+  void insertUserIdToSegmentId(final HTable table, final byte[] primaryKey,
       final byte[] docId) throws IOException {
     Put put = new Put(primaryKey);
     put.add(FAMILY_DOC_TO_INT, QUALIFIER_INT, docId);
@@ -290,6 +222,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     table.put(put);
 
   }
+
+  // TABLE MANIPULATION ROUTINES .
 
   /**
    * Drop the given Lucene index table.
@@ -383,6 +317,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   static HColumnDescriptor createUniversionLZO(final HBaseAdmin admin,
       final byte[] columnFamilyName) {
     HColumnDescriptor desc = new HColumnDescriptor(columnFamilyName);
+    desc.setCompressionType(Algorithm.GZ);
     // TODO: Is there anyway to check the algorithms supported by HBase in the
     // admin interface ?
     // if (admin.isSupported(Algorithm.LZO)) {

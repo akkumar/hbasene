@@ -71,7 +71,6 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
   private static final List<Integer> EMPTY_TERM_POSITIONS = Arrays
       .asList(new Integer[] { 0 });
 
-
   /**
    * 
    * @param indexTransactionLog
@@ -81,10 +80,8 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
    * @throws LockObtainFailedException
    * @throws IOException
    */
-  public HBaseIndexWriter(
-      final AbstractIndexStore indexTransactionLog,
-      final String primaryKeyField) throws 
-      IOException {
+  public HBaseIndexWriter(final AbstractIndexStore indexTransactionLog,
+      final String primaryKeyField) throws IOException {
     // super(d, a, create, deletionPolicy, mfl);
     // TODO: bring super ctor in when we inherit from IndexWriter.
 
@@ -92,7 +89,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
     this.primaryKeyField = primaryKeyField;
 
     // Reset the transaction Log.
-    //this.indexStore.init();
+    // this.indexStore.init();
   }
 
   public void addDocument(Document doc, Analyzer analyzer)
@@ -104,15 +101,12 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
       // TODO: Special type of exception needed ?
 
     }
-
-    long assignedDocId = indexStore.docId(Bytes.toBytes(docId));
-    List<String> allIndexedTerms = new ArrayList<String>(DEFAULT_TERM_CAPACITY);
-
     int position = 0;
     Map<String, List<Integer>> termPositions = new HashMap<String, List<Integer>>();
+    Map<String, byte[]> fieldsToStore = new HashMap<String, byte[]>();
 
     for (Fieldable field : doc.getFields()) {
-      
+
       // Indexed field
       if (field.isIndexed() && field.isTokenized()) {
         TokenStream tokens = field.tokenStreamValue();
@@ -124,7 +118,6 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
         tokens.addAttribute(TermAttribute.class);
         tokens.addAttribute(PositionIncrementAttribute.class);
 
-
         // collect term frequencies per doc
         if (position > 0) {
           position += analyzer.getPositionIncrementGap(field.name());
@@ -134,7 +127,6 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
         while (tokens.incrementToken()) {
           String term = createColumnName(field.name(), tokens.getAttribute(
               TermAttribute.class).term());
-          allIndexedTerms.add(term);
 
           List<Integer> pvec = termPositions.get(term);
 
@@ -149,14 +141,12 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
         }
         tokens.close();
-        
+
       }
 
       // Untokenized fields go in without a termPosition
       if (field.isIndexed() && !field.isTokenized()) {
         String term = this.createColumnName(field.name(), field.stringValue());
-        allIndexedTerms.add(term);
-
         String key = term;
         termPositions.put(key, EMPTY_TERM_POSITIONS);
 
@@ -165,33 +155,30 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
       // Stores each field as a column under this doc key
       if (field.isStored()) {
 
-        byte[] _value = field.isBinary() ? field.getBinaryValue() : field
-            .stringValue().getBytes();
+        byte[] value = field.isBinary() ? field.getBinaryValue() : Bytes
+            .toBytes(field.stringValue());
 
-        // last byte flags if binary or not
-        byte[] value = new byte[_value.length + 1];
-        System.arraycopy(_value, 0, value, 0, _value.length);
+        // first byte flags if binary or not
+        final byte[] prefix = Bytes.toBytes((field.isBinary() ? 'B' : 'T'));
 
-        value[value.length - 1] = (byte) (field.isBinary() ? 'B' : 'T');
-
-
-        this.indexStore.storeField(assignedDocId, field.name(),
-            value);
+        fieldsToStore.put(field.name(), Bytes.add(prefix, value));
       }
     }
-    indexStore.addTermPositions(assignedDocId, termPositions);
+    indexStore.indexDocument(docId, new DocumentIndexContext(termPositions,
+        fieldsToStore));
     termPositions.clear();
-    //this.indexStore.commit();
+    fieldsToStore.clear();
+    // this.indexStore.commit();
   }
 
-  public void commit() throws IOException { 
+  public void commit() throws IOException {
     this.indexStore.commit();
   }
-  
+
   public void close() throws IOException {
     this.indexStore.close();
   }
-  
+
   String createColumnName(final String fieldName, final String term) {
     return fieldName + "/" + term;
   }

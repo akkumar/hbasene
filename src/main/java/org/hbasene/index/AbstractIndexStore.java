@@ -21,8 +21,6 @@
 package org.hbasene.index;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Transaction Log of (Lucene) Index operations. Rudimentary TF-IDF operations.
@@ -31,7 +29,6 @@ import java.util.Map;
  */
 public abstract class AbstractIndexStore {
 
-
   /**
    * Commit the transactions.
    * 
@@ -39,42 +36,22 @@ public abstract class AbstractIndexStore {
    */
   public abstract void commit() throws IOException;
 
-  
   /**
    * Close the transactions.
    * 
    * @throws IOException
    */
   public abstract void close() throws IOException;
-  
-  /**
-   * Adds term vectors for a given 'field/Term' combination.
-   * 
-   * @param docId
-   * @param fieldTerm
-   *          Field/Term combination
-   * @param termPositionVectors
-   *          Term Position Vectors for the given fieldTerm , present in the
-   *          given docId.
-   */
-  public abstract void addTermPositions(long docId,
-      final Map<String, List<Integer> > termPositionVectors) throws IOException;
 
   /**
-   * Store the given field in the lucene hbase index.
+   * Index a given document.
    * 
    * @param key
-   * @param value
-   */
-  public abstract void storeField(final long docId, final String fieldName,
-      byte[] value) throws IOException;
-
-  /**
-   * Retrieve a docId for the given primary key in the Lucene schema.
-   * 
-   * @param primaryKey
-   * @return correct docId, if in place. -1, otherwise.
+   * @param documentIndexContext
+   * @return SegmentInfo that contains a segment id and a document id.
    * @throws IOException
    */
-  public abstract long docId(final byte[] primaryKey) throws IOException;
+  public abstract SegmentInfo indexDocument(final String key,
+      final DocumentIndexContext documentIndexContext) throws IOException;
+
 }
