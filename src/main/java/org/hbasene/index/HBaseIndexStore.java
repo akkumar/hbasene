@@ -92,6 +92,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   @Override
   public synchronized void close() throws IOException {
     commit();
+    this.table.close();
   }
 
   @Override
