@@ -41,6 +41,8 @@ import org.apache.hadoop.hbase.regionserver.lucene.HBaseneUtil;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.util.OpenBitSet;
 
+import com.google.common.collect.Maps;
+
 /**
  * An index formed on-top of HBase.
  * <p>
@@ -57,6 +59,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   private static final Log LOG = LogFactory.getLog(HBaseIndexStore.class);
 
   private final Map<String, Object> termVector = new HashMap<String, Object>();
+
+  private final Map<String, Map<Integer, List<Integer>>> termFrequencies = new HashMap<String, Map<Integer, List<Integer>>>();
 
   private long segmentId = 0;
 
@@ -122,9 +126,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     final byte[] currentRow = this.getCurrentRow();
     this.doAddTermVector(documentId, documentIndexContext.termPositionVectors
         .keySet());
-    // TODO: Store the term frequency as well.
-    // this.doAddTermFrequency(documentId,
-    // documentIndexContext.termPositionVectors);
+    this.doAddTermFrequency(documentId,
+        documentIndexContext.termPositionVectors);
     this.doStoreFields(currentRow, documentIndexContext.storeFields);
     this.doStoreReverseMapping(key, currentRow);
     SegmentInfo segmentInfo = new SegmentInfo(this.segmentId, this.documentId);
@@ -144,16 +147,16 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   void doAddTermFrequency(final int docId,
       final Map<String, List<Integer>> termFrequencies) throws IOException {
-    List<Put> puts = new ArrayList<Put>();
     for (final Map.Entry<String, List<Integer>> entry : termFrequencies
         .entrySet()) {
-      Put put = new Put(Bytes.toBytes(HBaseneConstants.TERM_FREQ_PREFIX + "/"
-          + entry.getKey()));
-      put.add(HBaseneConstants.FAMILY_TERMFREQUENCIES, Bytes.toBytes(docId),
-          Bytes.toBytes(termFrequencies.size()));
-      puts.add(put);
+      Map<Integer, List<Integer>> existingFrequencies = this.termFrequencies
+          .get(entry.getKey());
+      if (existingFrequencies == null) {
+        existingFrequencies = Maps.newHashMap();
+        this.termFrequencies.put(entry.getKey(), existingFrequencies);
+      }
+      existingFrequencies.put(docId, entry.getValue());
     }
-    this.table.getWriteBuffer().addAll(puts);
   }
 
   void doAddTermVector(final int docId, final Set<String> fieldTerms)
@@ -161,17 +164,18 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     for (final String fieldTerm : fieldTerms) {
       Object bitset = this.termVector.get(fieldTerm);
       if (bitset == null) {
-        bitset = new ArrayList<Integer>();// Allocate at least 1 long
+        bitset = new ArrayList<Integer>();
         this.termVector.put(fieldTerm, bitset);
       }
       if (bitset instanceof List) {
         List<Integer> impl = (List<Integer>) bitset;
         impl.add(docId);
         if (impl.size() >= this.arrayThreshold) {
-          OpenBitSet newBitSet = new OpenBitSet();
+          bitset = new OpenBitSet();
           for (Integer existingDocId : impl) {
-            newBitSet.set(existingDocId);
+            ((OpenBitSet) bitset).set(existingDocId);
           }
+          this.termVector.put(fieldTerm, bitset);
         }
       }
       if (bitset instanceof OpenBitSet) {
@@ -183,6 +187,15 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   private void doCommit() throws IOException {
     final int sz = this.termVector.size();
     final long start = System.nanoTime();
+    this.doCommitTermVector();
+    this.table.flushCommits();
+    LOG.info("HBaseIndexStore#Flushed " + sz + " terms of " + table + " in "
+        + (double) (System.nanoTime() - start) / (double) 1000000 + " m.secs ");
+    this.documentId = 0;
+    this.segmentId = doIncrementSegmentId();
+  }
+
+  private void doCommitTermVector() throws IOException {
     for (final Map.Entry<String, Object> entry : this.termVector.entrySet()) {
       final String key = entry.getKey();
       final Object value = entry.getValue();
@@ -206,11 +219,24 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       this.table.getWriteBuffer().add(put);
     }
     this.termVector.clear();
-    this.table.flushCommits();
-    LOG.info("HBaseIndexStore#Flushed " + sz + " terms of " + table + " in "
-        + (double) (System.nanoTime() - start) / (double) 1000000 + " m.secs ");
-    this.documentId = 0;
-    this.segmentId = doIncrementSegmentId();
+  }
+
+  private void doCommitTermFrequencies() throws IOException {
+    List<Put> puts = new ArrayList<Put>();
+    for (Map.Entry<String, Map<Integer, List<Integer>>> entry : termFrequencies
+        .entrySet()) {
+      Put put = new Put(Bytes.toBytes(HBaseneConstants.TERM_FREQ_PREFIX + "/"
+          + entry.getKey()));
+      for (final Map.Entry<Integer, List<Integer>> termFrequencyEntry : entry
+          .getValue().entrySet()) {
+        put.add(HBaseneConstants.FAMILY_TERMFREQUENCIES, Bytes
+            .toBytes(termFrequencyEntry.getKey()), Bytes
+            .toBytes(termFrequencyEntry.getValue().size()));
+      }
+      puts.add(put);
+    }
+    this.table.getWriteBuffer().addAll(puts);
+
   }
 
   long doIncrementSegmentId() throws IOException {

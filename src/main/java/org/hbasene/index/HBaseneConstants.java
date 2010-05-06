@@ -106,6 +106,8 @@ public interface HBaseneConstants {
   /**
    * Prefix for the row containing the term frequency
    */
-  static final String TERM_FREQ_PREFIX = "fm";
+  static final String TERM_FREQ_PREFIX = "zfm";
+  //Have the prefix start as a 'z' just to group them after the actual content,
+  //to spread out the requests.
   
 }
