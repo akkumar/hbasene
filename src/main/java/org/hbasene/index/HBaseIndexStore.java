@@ -232,6 +232,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         put.add(HBaseneConstants.FAMILY_TERMFREQUENCIES, Bytes
             .toBytes(termFrequencyEntry.getKey()), Bytes
             .toBytes(termFrequencyEntry.getValue().size()));
+        //TODO: Rudimentary encoding saves only the term frequencies and not the term vector containing 
+        // the actual positions.
       }
       puts.add(put);
     }
