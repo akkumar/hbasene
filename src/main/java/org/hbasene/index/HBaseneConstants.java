@@ -110,4 +110,9 @@ public interface HBaseneConstants {
   //Have the prefix start as a 'z' just to group them after the actual content,
   //to spread out the requests.
   
+  
+  /**
+   * Auto-Commit frequency of the maxdocs.
+   */
+  static final String CONF_AUTOCOMMIT_MAXDOCS = "hbasene.autocommit.maxdocs";
 }

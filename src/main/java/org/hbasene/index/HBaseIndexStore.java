@@ -66,7 +66,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private int documentId = -1;
 
-  private final int maxCommitDocs = 1000;
+  private final int maxCommitDocs;
 
   private final int arrayThreshold;
 
@@ -90,6 +90,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     this.table = tablePool.getTable(indexName);
 
     this.doIncrementSegmentId();
+    this.maxCommitDocs = configuration.getInt(CONF_AUTOCOMMIT_MAXDOCS, 1000);
     this.arrayThreshold = OpenBitSet.bits2words(maxCommitDocs);
   }
 
