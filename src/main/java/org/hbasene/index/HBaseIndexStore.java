@@ -356,10 +356,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     if (descriptor != null) {
       HTable table = new HTable(configuration, tableName);
 
-      Put put = new Put(ROW_SEQUENCE_ID);
-      put.add(FAMILY_SEQUENCE, QUALIFIER_SEQUENCE, Bytes.toBytes(-1L));
-      table.put(put);
-
       Put put2 = new Put(ROW_SEGMENT_ID);
       put2.add(FAMILY_SEQUENCE, QUALIFIER_SEGMENT, Bytes.toBytes(-1L));
       table.put(put2);
