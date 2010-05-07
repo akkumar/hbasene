@@ -249,6 +249,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     this.table.getWriteBuffer().addAll(puts);
     this.table.flushCommits();
     puts.clear();
+    this.termFrequencies.clear();
   }
 
   long doIncrementSegmentId() throws IOException {

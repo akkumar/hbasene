@@ -43,6 +43,7 @@ import com.google.common.base.Function;
  */
 public class HBaseTermPositions implements TermPositions {
 
+  @SuppressWarnings("unused")
   private static final Log LOG = LogFactory.getLog(HBaseTermPositions.class);
 
   /**
