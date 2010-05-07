@@ -149,6 +149,9 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       final Map<String, List<Integer>> termFrequencies) throws IOException {
     for (final Map.Entry<String, List<Integer>> entry : termFrequencies
         .entrySet()) {
+      if (entry.getValue().size() == 1 && entry.getValue().get(0) == 0) {
+        continue;
+      }
       Map<Integer, List<Integer>> existingFrequencies = this.termFrequencies
           .get(entry.getKey());
       if (existingFrequencies == null) {
@@ -189,6 +192,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     final long start = System.nanoTime();
     this.doCommitTermVector();
     this.table.flushCommits();
+    this.doCommitTermFrequencies();
     LOG.info("HBaseIndexStore#Flushed " + sz + " terms of " + table + " in "
         + (double) (System.nanoTime() - start) / (double) 1000000 + " m.secs ");
     this.documentId = 0;
@@ -236,9 +240,15 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         // the actual positions.
       }
       puts.add(put);
+      if (puts.size() == 30000) {
+        this.table.getWriteBuffer().addAll(puts);
+        this.table.flushCommits();
+        puts.clear();
+      }
     }
     this.table.getWriteBuffer().addAll(puts);
-
+    this.table.flushCommits();
+    puts.clear();
   }
 
   long doIncrementSegmentId() throws IOException {
