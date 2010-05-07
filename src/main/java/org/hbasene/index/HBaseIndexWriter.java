@@ -60,15 +60,11 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
    */
   private final String primaryKeyField;
 
-  /**
-   * The default capacity of the number of terms in the given document.
-   */
-  private static final int DEFAULT_TERM_CAPACITY = 50;
 
   /**
    * List of empty term vectors
    */
-  private static final List<Integer> EMPTY_TERM_POSITIONS = Arrays
+  static final List<Integer> EMPTY_TERM_POSITIONS = Arrays
       .asList(new Integer[] { 0 });
 
   /**
