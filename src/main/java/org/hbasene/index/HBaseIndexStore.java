@@ -192,7 +192,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     final int sz = this.termVector.size();
     final long start = System.nanoTime();
     this.doCommitTermVector();
-    this.table.flushCommits();
     this.doCommitTermFrequencies();
     LOG.info("HBaseIndexStore#Flushed " + sz + " terms of " + table + " in "
         + (double) (System.nanoTime() - start) / (double) 1000000 + " m.secs ");
@@ -223,6 +222,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
       put.setWriteToWAL(true);
       this.table.getWriteBuffer().add(put);
     }
+    this.table.flushCommits();
     this.termVector.clear();
   }
 
@@ -263,7 +263,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     for (final Map.Entry<String, byte[]> entry : fieldsToStore.entrySet()) {
       Put put = new Put(currentRow);
       put.add(FAMILY_FIELDS, Bytes.toBytes(entry.getKey()), entry.getValue());
-      put.setWriteToWAL(true);// Do not write to val
+      put.setWriteToWAL(true);
       this.table.getWriteBuffer().add(put);
     }
   }
