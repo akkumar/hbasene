@@ -20,6 +20,10 @@
  */
 package org.hbasene.index;
 
+/**
+ * Information about a given segment, returned by the store after inserting a document into the store.
+ * 
+ */
 public class SegmentInfo {
 
   private final int documentId;
@@ -31,10 +35,18 @@ public class SegmentInfo {
     this.segmentId = segmentId;
   }
   
+  /**
+   * The segment of the given document in the store.
+   * @return
+   */
   public long getSegmentId() { 
     return this.segmentId;
   }
   
+  /**
+   * The document Id in a given segment.
+   * @return
+   */
   public int getDocumentId() { 
     return this.documentId;
   }
