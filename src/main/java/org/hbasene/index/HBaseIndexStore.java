@@ -58,14 +58,28 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private static final Log LOG = LogFactory.getLog(HBaseIndexStore.class);
 
+  /**
+   * Key -> fieldTerm . 
+   * Value -> OpenBitSet for densely populated bitsets,
+   *        List<Integer> for sparsely populated bitsets.
+   */
   private final Map<String, Object> termVector = new HashMap<String, Object>();
 
+  
+  /**
+   * Key -> fieldTerm + segmentId
+   * Value ->  {  docId, List of Term Frequencies } tuples. 
+   */
   private final Map<String, Map<Integer, List<Integer>>> termFrequencies = new HashMap<String, Map<Integer, List<Integer>>>();
 
+  
   private long segmentId = 0;
 
   private int documentId = -1;
 
+  /**
+   * See HBaseneConstants#CONF_AUTOCOMMIT_MAXDOCS .
+   */
   private final int maxCommitDocs;
 
   private final int arrayThreshold;
