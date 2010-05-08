@@ -194,12 +194,12 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     this.doCommitTermVector();
     this.doCommitTermFrequencies();
     LOG.info("HBaseIndexStore#Flushed " + sz + " terms of " + table + " in "
-        + (double) (System.nanoTime() - start) / (double) 1000000 + " m.secs ");
+        + (double) (System.nanoTime() - start) / (double) 1000000000 + " secs ");
     this.documentId = 0;
     this.segmentId = doIncrementSegmentId();
   }
 
-  private void doCommitTermVector() throws IOException {
+  void doCommitTermVector() throws IOException {
     for (final Map.Entry<String, Object> entry : this.termVector.entrySet()) {
       final String key = entry.getKey();
       final Object value = entry.getValue();
@@ -226,7 +226,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     this.termVector.clear();
   }
 
-  private void doCommitTermFrequencies() throws IOException {
+  void doCommitTermFrequencies() throws IOException {
     List<Put> puts = new ArrayList<Put>();
     for (Map.Entry<String, Map<Integer, List<Integer>>> entry : termFrequencies
         .entrySet()) {
