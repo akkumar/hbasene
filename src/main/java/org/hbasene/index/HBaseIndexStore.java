@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,9 +39,9 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.hfile.Compression.Algorithm;
-import org.apache.hadoop.hbase.regionserver.lucene.HBaseneUtil;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.util.OpenBitSet;
+import org.hbasene.index.util.HBaseneUtil;
 
 import com.google.common.collect.Maps;
 
@@ -84,6 +86,8 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private final int arrayThreshold;
 
+  private final ExecutorService EXECUTORS = Executors.newFixedThreadPool(3);
+  
   /**
    * For maximum throughput, use a single table, since the .META. of the term
    * vector is cached in the table as we continue to add more information about

@@ -29,9 +29,10 @@ import jsr166y.RecursiveAction;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.regionserver.lucene.HBaseneUtil;
+
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.util.OpenBitSet;
+import org.hbasene.index.util.HBaseneUtil;
 
 /**
  * Recursive task to generate a bunch of puts before inserting in.
