@@ -24,7 +24,6 @@ package org.hbasene.index;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +41,8 @@ import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.store.LockObtainFailedException;
 
+import com.google.common.collect.Lists;
+
 /**
  * Index Writer in the noSQL world.
  * 
@@ -49,7 +50,7 @@ import org.apache.lucene.store.LockObtainFailedException;
 public class HBaseIndexWriter { // TODO: extends IndexWriter {
 
   private static final Log LOG = LogFactory.getLog(HBaseIndexWriter.class);
-
+  
   /**
    * Abstraction of the index store
    */
@@ -127,7 +128,7 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
           List<Integer> pvec = termPositions.get(term);
 
           if (pvec == null) {
-            pvec = new ArrayList<Integer>();
+            pvec = Lists.newArrayList();
             termPositions.put(term, pvec);
           }
 
@@ -164,7 +165,6 @@ public class HBaseIndexWriter { // TODO: extends IndexWriter {
         fieldsToStore));
     termPositions.clear();
     fieldsToStore.clear();
-    // this.indexStore.commit();
   }
 
   public void commit() throws IOException {
