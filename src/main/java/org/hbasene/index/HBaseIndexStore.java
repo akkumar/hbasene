@@ -164,6 +164,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     this.table.getWriteBuffer().add(put);
   }
 
+
   void doAddTermFrequency(final int docId,
       final Map<String, List<Integer>> termFrequencies) throws IOException {
     for (final Map.Entry<String, List<Integer>> entry : termFrequencies
@@ -290,14 +291,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     return Bytes.toBytes("s" + this.segmentId + "/" + this.documentId);
   }
 
-  void insertUserIdToSegmentId(final HTable table, final byte[] primaryKey,
-      final byte[] docId) throws IOException {
-    Put put = new Put(primaryKey);
-    put.add(FAMILY_DOC_TO_INT, QUALIFIER_INT, docId);
-    put.setWriteToWAL(true);
-    table.put(put);
-
-  }
 
   // TABLE MANIPULATION ROUTINES .
 
