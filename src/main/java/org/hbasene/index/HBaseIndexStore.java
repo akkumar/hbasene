@@ -122,14 +122,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements
   @Override
   public synchronized void commit() throws IOException {
     this.doCommit();
-    // this.doCommit();
-    // TODO: Close all tables in the tablepool
-    // HTable table = this.tablePool.getTable(this.indexName);
-    // try {
-    // table.close();
-    // } finally {
-    // this.tablePool.putTable(table);
-    // }
   }
 
   /**
@@ -261,7 +253,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
         // the actual positions.
       }
       puts.add(put);
-      if (puts.size() == 30000) {
+      if (puts.size() == 30000) { //TODO: Do not hard-code this
         this.table.getWriteBuffer().addAll(puts);
         this.table.flushCommits();
         puts.clear();
