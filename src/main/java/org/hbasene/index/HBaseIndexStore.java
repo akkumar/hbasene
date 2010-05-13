@@ -26,8 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -87,7 +85,6 @@ public class HBaseIndexStore extends AbstractIndexStore implements
 
   private final int arrayThreshold;
 
-  private final ExecutorService EXECUTORS = Executors.newFixedThreadPool(3);
   
   /**
    * For maximum throughput, use a single table, since the .META. of the term
@@ -124,6 +121,10 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     this.doCommit();
   }
 
+  public int getMaxCommitDocs() { 
+    return this.maxCommitDocs;
+  }
+  
   /**
    * Index a given document.
    * 
