@@ -244,7 +244,7 @@ public class HBaseIndexStore extends AbstractIndexStore implements
     for (Map.Entry<String, Map<Integer, List<Integer>>> entry : termFrequencies
         .entrySet()) {
       Put put = new Put(Bytes.toBytes(HBaseneConstants.TERM_FREQ_PREFIX + "/"
-          + entry.getKey()));
+          + entry.getKey() + "/" + this.segmentId));//TODO: Factored out as a function
       for (final Map.Entry<Integer, List<Integer>> termFrequencyEntry : entry
           .getValue().entrySet()) {
         put.add(HBaseneConstants.FAMILY_TERMFREQUENCIES, Bytes
